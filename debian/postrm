@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#DEBHELPER#
+
+echo "Unmount state"
+kdb umount spec:/state/libelektra/opensesame/#0/current || /bin/true
+kdb umount /state/libelektra/opensesame/#0/current || /bin/true
+
+echo "Unmount configuration"
+kdb umount spec:/sw/libelektra/opensesame/#0/current || /bin/true
+kdb umount /sw/libelektra/opensesame/#0/current || /bin/true

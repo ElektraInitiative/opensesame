@@ -1,0 +1,10 @@
+opensesame:
+  hosts:
+    haustuer:
+      ansible_host: haustuer
+    schreibtisch:
+      ansible_host: schreibtisch
+    garage:
+      ansible_host: garage
+  vars:
+    ansible_user: olimex

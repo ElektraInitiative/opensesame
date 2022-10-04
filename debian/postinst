@@ -1,0 +1,13 @@
+#!/bin/sh
+
+echo "Mount configuration"
+kdb umount spec:/sw/libelektra/opensesame/#0/current 2> /dev/null || /bin/true
+kdb mount opensesame.spec spec:/sw/libelektra/opensesame/#0/current ni
+kdb spec-mount /sw/libelektra/opensesame/#0/current
+
+echo "Mount state"
+kdb umount spec:/state/libelektra/opensesame/#0/current 2> /dev/null || /bin/true
+kdb mount opensesame.state.spec spec:/state/libelektra/opensesame/#0/current ni
+kdb spec-mount /state/libelektra/opensesame/#0/current
+
+#DEBHELPER#

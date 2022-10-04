@@ -1,0 +1,70 @@
+[package]
+name = "opensesame"
+version = "0.7.0"
+authors = ["Markus Raab"]
+edition = "2018"
+readme = "README.md"
+license = "BSD"
+description  = "Awesome home automation"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+
+# comment in if you need the tool
+#[[bin]]
+#name = "count_errors"
+#path = "src/count_errors.rs"
+
+
+# https://github.com/kornelski/cargo-deb
+[package.metadata.deb]
+maintainer="Markus Raab <markus@libelektra.org>"
+copyright="BSD"
+maintainer-scripts = "debian/"
+systemd-units = { enable = true }
+pre-depends = "elektra-bin"
+
+assets = [
+    ["target/release/opensesame", "usr/bin/", "755"],
+    ["files/reload-opensesame", "usr/bin/", "755"],
+
+    ["files/opensesame.spec", "usr/share/elektra/specification/", "644"],
+    ["files/opensesame.state.spec", "usr/share/elektra/specification/", "644"],
+
+    ["files/opensesame.mo", "usr/share/locale/de/LC_MESSAGES/", "644"],
+
+    ["files/91-gpio.rules", "etc/udev/rules.d/", "644"],
+    ["files/alarm.ogg", "usr/share/sounds/opensesame/", "644"],
+    ["files/bell.ogg", "usr/share/sounds/opensesame/", "644"],
+    ["README.md", "usr/share/doc/opensesame/README.md", "644"],
+    ["doc/*", "usr/share/doc/opensesame/", "644"],
+]
+
+
+[dependencies]
+gpio-cdev = { version = "0.5.1", features = ["async-tokio"]}
+
+i2cdev = "0.5.1"
+
+elektra = { version = "0.9.10", features = ["pkg-config"] }
+
+reqwest = "0.9.24"
+
+bme280 = "0.3.0"
+linux-embedded-hal = { version = "0.3", features = ["gpio_cdev"] }
+
+systemstat = "0.1.11"
+
+ssh2 = "0.9.3"
+chrono = "0.4.19"
+
+signal-hook = "0.3.14"
+signal-hook-tokio = "0.3.1"
+
+tokio = { version = "1.15.0", features = ["full"] }
+futures = "0.3.19"
+
+gettext-rs = "0.7.0"
+
+serial_test = "0.4.0" # TODO, remove when issues.libelektra.org/4466 is fixed

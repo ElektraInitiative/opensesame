@@ -1,0 +1,5 @@
+#/etc/udev/rules.d/91-gpio.rules
+
+KERNEL=="gpiochip0", MODE:="0660", GROUP="i2c"
+
+KERNEL=="watchdog", MODE:="0660", GROUP="i2c"
