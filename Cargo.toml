@@ -36,7 +36,6 @@ assets = [
 
     ["files/91-gpio.rules", "etc/udev/rules.d/", "644"],
     ["files/alarm.ogg", "usr/share/sounds/opensesame/", "644"],
-    ["files/bell.ogg", "usr/share/sounds/opensesame/", "644"],
     ["README.md", "usr/share/doc/opensesame/README.md", "644"],
     ["doc/*", "usr/share/doc/opensesame/", "644"],
 ]

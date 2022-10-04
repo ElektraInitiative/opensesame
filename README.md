@@ -1,8 +1,8 @@
 # Introduction and Goals
 
-Opensesame, or German: "Sesam, öffne dich"
-is an awesome home automation software with
-focus on door/garage entry.
+Opensesame, or German: "Sesam, öffne dich" is an awesome home automation software with focus on door/garage entry.
+
+![PIN entry via buttons](/files/pin.jpg)
 
 What already works:
 
