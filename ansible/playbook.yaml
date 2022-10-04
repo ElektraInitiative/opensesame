@@ -1,0 +1,120 @@
+- name: Configure opensesame for all hosts (generic parts)
+  hosts: opensesame localhost
+  collections:
+   - elektra_initiative.libelektra
+  tasks:
+   - name: set keys for opensesame
+     elektra:
+      mountpoint: user:/sw/libelektra/opensesame/#0/current
+      keys:
+       debug:
+         backtrace: full
+         ping:
+          enable: 1
+          timeout: 24
+       audio:
+         bell: '/dev/null'
+         alarm: '/dev/null'
+       nextcloud:
+         url: "https://example.com/nextcloud"
+         user: "test"
+         pass: "<password here>"
+         format:
+           time: "%H:%M:%S"
+           datetime: "%d.%m.%Y %H:%M:%S"
+         chat:
+           value: "1254c44a"
+           licht: "xwy332ou"
+           ping: "v112y1vk"
+       watchdog:
+         enable: 0
+       environment:
+         name: ""
+         device: "/dev/i2c-2"
+         data:
+           interval: 6000
+       garage:
+         enable: 0
+       pwr:
+         enable: 0
+       light:
+         timeout: 60
+       validator:
+         'test': "[14, 15, 13, 15, 11, 15, 7, 15]"
+- name: Configure opensesame specific to schreibtisch
+  hosts: schreibtisch
+  collections:
+   - elektra_initiative.libelektra
+  tasks:
+   - name: set keys for opensesame
+     elektra:
+      mountpoint: user:/sw/libelektra/opensesame/#0/current
+      keys:
+       sensors:
+         '#0':
+           loc: "Schlafzimmer"
+           quality: "++"
+           bell: 250
+           alarm: 314
+           min:  54
+           avg: 158
+           max: 387
+           pin: "A0 gruen; GND braun; +5V gelb"
+         '#1':
+           loc: "Wohnzimmer"
+           quality: "~"
+           bell: 280
+           alarm: 322
+           min: 160
+           avg: 216
+           max: 466
+           pin: "A1 weiss; +5V orange; GND blau"
+       garage:
+         enable: 1
+       environment:
+         name: "Yvo 2"
+         device: "/dev/i2c-2"
+         data:
+           interval: 1
+- name: Configure opensesame specific to garage
+  hosts: garage
+  collections:
+   - elektra_initiative.libelektra
+  tasks:
+   - name: set keys for opensesame
+     elektra:
+      mountpoint: user:/sw/libelektra/opensesame/#0/current
+      keys:
+       nextcloud:
+         user: "garagentor"
+         pass: "<<other pass>>"
+       audio:
+         bell: '/usr/share/sounds/opensesame/bell.ogg'
+         alarm: '/usr/share/sounds/opensesame/alarm.ogg'
+       garage:
+         enable: 1
+       watchdog:
+         enable: 1
+       environment:
+         name: "bei Garagentor"
+         device: "/dev/i2c-1"
+- name: Configure opensesame specific to haustuere
+  hosts: haustuer
+  collections:
+   - elektra_initiative.libelektra
+  tasks:
+   - name: set keys for opensesame
+     elektra:
+      mountpoint: user:/sw/libelektra/opensesame/#0/current
+      keys:
+       nextcloud:
+         user: "haustuer"
+           pass: "<<other pass>>"
+       environment:
+         name: "im Wohnzimmer"
+       bell:
+         enable: 1
+       watchdog:
+         enable: 1
+       pwr:
+         enable: 1

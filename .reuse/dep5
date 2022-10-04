@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: opensesame
+Upstream-Contact: Markus Raab <markus@libelektra.org>
+Source: https://opensesame.libelektra.org
+
+FILES: *
+Copyright: 2022 Markus Raab <markus@libelektra.org>
+License: AGPL-3.0-or-later
+
+Files: files/*.ogg
+Copyright: 2022 Wildfire Games
+License:  CC-BY-SA-3.0
