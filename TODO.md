@@ -108,13 +108,15 @@ also install opensesame (via repo)
 use Handlers to send SIGHUP only as needed https://docs.ansible.com/ansible/latest/user_guide/playbooks_handlers.html
 
 /usr/share/alsa/alsa.conf
+
 	"pcm.front cards.pcm.front" must be updated to "pcm.front cards.pcm.default"
 	see also https://forums.raspberrypi.com/viewtopic.php?t=136974
 
 /etc/default/keyboard (dpkg-reconfigure keyboard-configuration) not correct
-  # keyboard-configuration  keyboard-configuration/layoutcode       string  at
-  # keyboard-configuration  keyboard-configuration/modelcode        string  pc105
-  # keyboard-configuration  keyboard-configuration/model    select  Generic 105-key PC (intl.
+
+	  # keyboard-configuration  keyboard-configuration/layoutcode       string  at
+	  # keyboard-configuration  keyboard-configuration/modelcode        string  pc105
+	  # keyboard-configuration  keyboard-configuration/model    select  Generic 105-key PC (intl.
 
 wrong timezone
 
