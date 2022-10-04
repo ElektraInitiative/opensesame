@@ -6,7 +6,7 @@ Opensesame, or German: "Sesam, öffne dich" is an awesome home automation softwa
 
 What already works:
 
-- [X] opening (garage) doors
+- [x] opening (garage) doors via a novel PIN entry method: you can press and release buttons in any sequence (e.g. press 1, press 2, release 1, release 2)
 - [X] switching on entry lights
 - [X] doorbell
 - [X] fire alert
