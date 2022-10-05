@@ -19,7 +19,7 @@ For what is missing, see [TODO.md](TODO.md).
 
 Currently there is no full beginner-friendly documentation on how to setup the system.
 If you are interested, please open an issue.
-[Installation](/doc/INSTALL.md) is easy, though.
+[Installation](/doc/Install.md) is easy, though.
 
 As hardware hacking is involved I cannot guarantee that anything will work for you.
 It works for me, though.
