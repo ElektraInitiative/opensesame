@@ -273,7 +273,7 @@ impl Environment {
 
 impl fmt::Display for Environment {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "AirQuality {} is {:?}. {}", self.name, self.air_quality, self.print_values())
+		write!(f, "{}. {}", self.name, self.print_values())
 	}
 }
 
