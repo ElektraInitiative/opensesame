@@ -89,7 +89,7 @@ To detect if Garage door is at end position:
 
 - e.g. Basic Switch Hinge Lever Low OP
 
-Furthermore you might need to switch 230V circuits:
+Furthermore to switch 230V circuits (with the relays of the MOD-IO2) you might need:
 
 - https://en.wikipedia.org/wiki/Snubber
 - https://www.homemade-circuits.com/prevent-relay-arcing-using-rc-snubber-circuits/

@@ -88,6 +88,8 @@ cross-compile
 
 use rustfmt
 
+https://github.com/viperproject/prusti-dev
+
 refactor parts to be a lib? https://doc.rust-lang.org/stable/book/ch12-03-improving-error-handling-and-modularity.html
 
 Destructors: https://doc.rust-lang.org/stable/reference/destructors.html

@@ -82,5 +82,12 @@ Info: Licht außen: Phase und Linie (Verbinden: Licht brennt)
 
 ## I2C
 
-Sensor Medi
+Sensor Mod-ENV
 
+## Power Supplies
+
+12V 0.7A for board 21
+12V 2.0A for board 20+door opener
+24V 0.5A for relais
+6V~ 0.3A for bell
+5V  2.0A for A20
