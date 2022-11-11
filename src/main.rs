@@ -23,6 +23,7 @@ use gettextrs::*;
 
 use systemstat::{System, Platform};
 use chrono::prelude::*;
+use sunrise::sunrise_sunset;
 
 use config::Config;
 use buttons::Buttons;
@@ -388,7 +389,13 @@ fn main() -> Result<(), Error> {
 		Validation::Validated(user) => {
 			buttons.open_door();
 			nc.send_message(gettext!("🤗 Opened for {}", user));
-			nc.licht(gettext!("💡 Switch lights in and out. {}", buttons.switch_lights(true, true)));
+			let now = Local::now();
+			let (sunrise, sunset) = sunrise_sunset(48.210033, 16.363449, now.year(), now.month(), now.day());
+			if now.timestamp() < sunrise || now.timestamp() > sunset {
+				nc.licht(gettext!("💡 Switch lights in and out. {}", buttons.switch_lights(true, true)));
+			} else {
+				nc.licht(gettext!("🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}", now.timestamp(), sunrise, sunset));
+			}
 		},
 		Validation::Timeout => {
 			if sequence != vec![0, 15] {

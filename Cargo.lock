@@ -34,6 +34,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "approx"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1273,6 +1282,7 @@ dependencies = [
  "signal-hook",
  "signal-hook-tokio",
  "ssh2",
+ "sunrise",
  "systemstat",
  "tokio 1.15.0",
 ]
@@ -1918,6 +1928,16 @@ name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
+
+[[package]]
+name = "sunrise"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31eab24a5525f35ab4fc2fa1a9bd09a0cfe1e738bcfb1fd400d64a562a7fdf2f"
+dependencies = [
+ "approx",
+ "chrono",
+]
 
 [[package]]
 name = "syn"
