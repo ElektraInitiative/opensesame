@@ -368,11 +368,11 @@ impl Buttons {
 	/// returns what was done
 	/// usually extends light time
 	/// on double press event (on true) -> make light permanent on (until next press event)
-	pub fn switch_lights(&mut self, innen: bool, aussen: bool) -> String {
-		assert!(innen || aussen, "logic error, at least one must be switched on!");
+	pub fn switch_lights(&mut self, inside: bool, outside: bool) -> String {
+		assert!(inside || outside, "logic error, at least one must be switched on!");
 
 		let init_light_timeout =
-			if aussen { self.init_light_timeout+10 }
+			if outside { self.init_light_timeout+10 }
 			else { self.init_light_timeout-1 };
 
 		let ret;
@@ -380,7 +380,7 @@ impl Buttons {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
 			return "Light not permanent anymore".to_string();
-		} else if innen && self.light_timeout > init_light_timeout-200 {
+		} else if inside && self.light_timeout > init_light_timeout-200 {
 			// make permanent
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
@@ -394,8 +394,8 @@ impl Buttons {
 			ret = "Light switched on.".to_string();
 		}
 
-		// now actually switch on (might also extend light if it was only aussen before)
-		if innen {
+		// now actually switch on (might also extend light if it was only outside before)
+		if inside {
 			self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN).unwrap();
 		}
 		return ret;
