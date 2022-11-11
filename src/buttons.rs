@@ -379,7 +379,7 @@ impl Buttons {
 		if self.light_permanent {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
-			ret = "Light not permanent anymore".to_string();
+			return "Light not permanent anymore".to_string();
 		} else if innen && self.light_timeout > init_light_timeout-200 {
 			// make permanent
 			self.light_permanent = true;
@@ -389,12 +389,14 @@ impl Buttons {
 			self.light_timeout = init_light_timeout;
 			ret = "Time extended.".to_string();
 		} else {
-			if innen {
-				self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN).unwrap();
-			}
 			self.light_timeout = init_light_timeout;
 			self.led_light = true;
 			ret = "Light switched on.".to_string();
+		}
+
+		// now actually switch on (might also extend light if it was only aussen before)
+		if innen {
+			self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN).unwrap();
 		}
 		return ret;
 	}
