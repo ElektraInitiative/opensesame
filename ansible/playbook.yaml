@@ -15,6 +15,9 @@
        audio:
          bell: '/dev/null'
          alarm: '/dev/null'
+       location:
+         latitude: 48.210033
+         longitude: 16.363449
        nextcloud:
          url: "https://example.com/nextcloud"
          user: "test"

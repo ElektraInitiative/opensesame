@@ -95,6 +95,16 @@ default=/dev/null
 check/path=
 check/path/mode = r
 
+[location/latitude]
+description=Latitude for sunrise/sunset calculation. Default: Vienna
+default=48.210033
+type=double
+
+[location/longitude]
+description=Longitude for sunrise/sunset calculation. Default: Vienna
+default=16.363449
+type=double
+
 [light/timeout]
 description = time in seconds until lights go off by themselves
 type = unsigned_long

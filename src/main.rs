@@ -390,7 +390,10 @@ fn main() -> Result<(), Error> {
 			buttons.open_door();
 			nc.send_message(gettext!("🤗 Opened for {}", user));
 			let now = Local::now();
-			let (sunrise, sunset) = sunrise_sunset(48.210033, 16.363449, now.year(), now.month(), now.day());
+			let (sunrise, sunset) = sunrise_sunset(
+					config.get::<f64>("location/latitude"),
+					config.get::<f64>("location/longitude"),
+					now.year(), now.month(), now.day());
 			if now.timestamp() < sunrise || now.timestamp() > sunset {
 				nc.licht(gettext!("💡 Switch lights in and out. {}", buttons.switch_lights(true, true)));
 			} else {
