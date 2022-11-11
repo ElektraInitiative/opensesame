@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-11 16:10+0000\n"
+"POT-Creation-Date: 2022-11-11 16:14+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -171,29 +171,22 @@ msgstr ""
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/main.rs:392
-msgid "💡 Switch lights in and out garage. {}"
-msgstr "💡 Schalte Licht innen und außen bei Garage ein. {}"
+#: src/main.rs:391
+msgid "💡 Switch lights in and out. {}"
+msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/main.rs:399
+#: src/main.rs:397
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {:?}"
 
-#: src/main.rs:405
+#: src/main.rs:403
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {:?}"
 
-#: src/main.rs:420
+#: src/main.rs:418
 msgid "📴 OFF"
 msgstr "📴 ABGESCHALTEN"
 
-#: src/main.rs:421
+#: src/main.rs:419
 msgid "👋 opensesame {} bye-bye {:?}"
 msgstr "👋 Opensesame {} auf Wiedersehen {}"
-
-#~ msgid ""
-#~ "💡 Pressed below switch at garage door. Open garage and switch lights in "
-#~ "and out garage. {}"
-#~ msgstr ""
-#~ "💡 Unterer Taster bei Tor gedrückt. Öffne Garage und schalte Licht innen "
-#~ "und außen ein. {}"

@@ -388,9 +388,7 @@ fn main() -> Result<(), Error> {
 		Validation::Validated(user) => {
 			buttons.open_door();
 			nc.send_message(gettext!("🤗 Opened for {}", user));
-			if config.get_bool("garage/enable") {
-				nc.licht(gettext!("💡 Switch lights in and out garage. {}", buttons.switch_lights(true, true)));
-			}
+			nc.licht(gettext!("💡 Switch lights in and out. {}", buttons.switch_lights(true, true)));
 		},
 		Validation::Timeout => {
 			if sequence != vec![0, 15] {

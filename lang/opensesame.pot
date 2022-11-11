@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-11 16:10+0000\n"
+"POT-Creation-Date: 2022-11-11 16:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -161,22 +161,22 @@ msgstr ""
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/main.rs:392
-msgid "💡 Switch lights in and out garage. {}"
+#: src/main.rs:391
+msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/main.rs:399
+#: src/main.rs:397
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/main.rs:405
+#: src/main.rs:403
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/main.rs:420
+#: src/main.rs:418
 msgid "📴 OFF"
 msgstr ""
 
-#: src/main.rs:421
+#: src/main.rs:419
 msgid "👋 opensesame {} bye-bye {:?}"
 msgstr ""
