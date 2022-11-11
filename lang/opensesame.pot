@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-11 11:50+0000\n"
+"POT-Creation-Date: 2022-11-11 12:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -105,74 +105,78 @@ msgstr ""
 msgid "💡 Pressed top switch at garage door. Switch lights in and out garage. {}"
 msgstr ""
 
-#: src/main.rs:313
+#: src/main.rs:310
+msgid "💡 Pressed below switch at garage door. Open garage and switch lights in and out garage. {}"
+msgstr ""
+
+#: src/main.rs:314
 msgid "🔓 Garage door closes automatically. {}"
 msgstr ""
 
-#: src/main.rs:317
+#: src/main.rs:318
 msgid "🔒 Open"
 msgstr ""
 
-#: src/main.rs:318
+#: src/main.rs:319
 msgid "🔒 Garage door closed. {}"
 msgstr ""
 
-#: src/main.rs:321
+#: src/main.rs:322
 msgid "🔓 Closed"
 msgstr ""
 
-#: src/main.rs:322
+#: src/main.rs:323
 msgid "🔓 Garage door open. {}"
 msgstr ""
 
-#: src/main.rs:340
+#: src/main.rs:341
 msgid "🔔 Pressed button bell. {}"
 msgstr ""
 
-#: src/main.rs:343
+#: src/main.rs:344
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/main.rs:347
+#: src/main.rs:348
 msgid "💡 Pressed switch inside. {}. {}"
 msgstr ""
 
-#: src/main.rs:350
+#: src/main.rs:351
 msgid "💡 Pressed switch outside or light button. {}. {}"
 msgstr ""
 
-#: src/main.rs:356
+#: src/main.rs:357
 msgid "🔔 Pressed switch bell. {}"
 msgstr ""
 
-#: src/main.rs:359
+#: src/main.rs:360
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/main.rs:367
+#: src/main.rs:368
 msgid "🕶️ Light was turned off. {}"
 msgstr ""
 
-#: src/main.rs:373
+#: src/main.rs:374
 msgid "⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/main.rs:390
+#: src/main.rs:391
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/main.rs:396
+#: src/main.rs:397
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/main.rs:402
+#: src/main.rs:403
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/main.rs:417
+#: src/main.rs:418
 msgid "📴 OFF"
 msgstr ""
 
-#: src/main.rs:418
+#: src/main.rs:419
 msgid "👋 opensesame {} bye-bye {:?}"
 msgstr ""

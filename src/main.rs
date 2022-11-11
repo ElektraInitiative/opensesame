@@ -307,6 +307,7 @@ fn main() -> Result<(), Error> {
 			},
 			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
 				buttons.open_door();
+				nc.licht(gettext!("💡 Pressed below switch at garage door. Open garage and switch lights in and out garage. {}", buttons.switch_lights(true, true)));
 			}
 			GarageChange::AutoClose => {
 				buttons.open_door();
