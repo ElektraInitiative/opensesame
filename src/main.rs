@@ -225,6 +225,8 @@ fn main() -> Result<(), Error> {
 	}
 	let mut alarm_not_active = true;
 
+	nc.set_info_online(gettext("🪫 ON"));
+
 	while !term.load(Ordering::Relaxed) {
 		watchdog.trigger();
 
@@ -276,6 +278,7 @@ fn main() -> Result<(), Error> {
 		} else if started_message_timeout == 1 {
 			nc.ping(gettext!("👋 opensesame {} started {}", env!("CARGO_PKG_VERSION"), startup_time));
 			started_message_timeout = 0; // job done, disable
+			nc.set_info_online(gettext("🔋 ON"));
 		}
 
 		if environment.handle() {
