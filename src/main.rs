@@ -122,6 +122,11 @@ fn main() -> Result<(), Error> {
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
 		nc.ping(text.to_string());
 		eprintln!("{}", text);
+		let mut pwr = Pwr::new(&mut config);
+		if pwr.enabled() {
+			eprintln!("{}", "Switch PWR off");
+			pwr.switch(false);
+		}
 		}));
 
 	let mut nc: Nextcloud = Nextcloud::new(&mut config);
