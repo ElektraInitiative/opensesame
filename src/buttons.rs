@@ -139,7 +139,7 @@ impl Buttons {
 	}
 
 	fn init(&mut self) {
-		self.board20.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS).unwrap();
+		self.board20.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS).expect("I2C Communication to Buttons does not work");
 		self.board21.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS).unwrap();
 
 		self.board20.smbus_write_byte_data(SET_PULLUPS, ALL_BUTTONS).unwrap();

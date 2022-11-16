@@ -118,7 +118,7 @@ impl Environment {
 			baseline: 0,
 			name: config.get::<String>("environment/name"),
 		};
-		s.board5a.smbus_write_i2c_block_data(SW_RESET, &[0x11, 0xE5, 0x72, 0x8A]).unwrap();
+		s.board5a.smbus_write_i2c_block_data(SW_RESET, &[0x11, 0xE5, 0x72, 0x8A]).expect("I2C Communication to ModEnv does not work");
 		s.bme280.init().unwrap();
 		s
 	}
