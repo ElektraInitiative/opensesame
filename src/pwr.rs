@@ -42,3 +42,9 @@ impl Pwr {
 		self.state = state;
 	}
 }
+
+impl Drop for Pwr {
+	fn drop(&mut self) {
+		let _ = self.switch(false);
+	}
+}
