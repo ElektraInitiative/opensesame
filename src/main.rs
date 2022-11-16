@@ -221,14 +221,16 @@ fn main() -> Result<(), Error> {
 		}
 	}
 
+	let mut pwr = Pwr::new(&mut config);
+	if pwr.enabled() {
+		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
+		watchdog.trigger();
+		thread::sleep(time::Duration::from_millis(1000));
+	}
 	let mut validator = Validator::new(&mut config);
 	let mut buttons = Buttons::new(&mut config);
 	let mut environment = Environment::new(&mut config);
 	let mut garage = Garage::new(&mut config);
-	let mut pwr = Pwr::new(&mut config);
-	if pwr.enabled() {
-		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
-	}
 	let mut alarm_not_active = true;
 
 	nc.set_info_online(gettext("🪫 ON"));
