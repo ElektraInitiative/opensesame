@@ -1,8 +1,23 @@
-## New Features
+## Bugs
+
+Nov 25 15:18:06 garage opensesame[2835]: Couldn't ping Ein unbehebbarer Fehler ist bei src/config.rs:52: Set config failed: Sorry, module resolver_fm_hpu_b issued error C01100:
+Nov 25 15:18:06 garage opensesame[2835]: Resource: Could not reopen configuration file '/usr/share/elektra/specification/opensesame.state.spec' for writing. Reason: Keine Berechtigung passiert because https://nextcloud.markus-raab.org/nextcloud/ocs/v2.php/apps/spreed/ap>
+Nov 25 15:18:06 garage opensesame[2835]: Ein unbehebbarer Fehler ist bei src/config.rs:52: Set config failed: Sorry, module resolver_fm_hpu_b issued error C01100:
+Nov 25 15:18:06 garage opensesame[2835]: Resource: Could not reopen configuration file '/usr/share/elektra/specification/opensesame.state.spec' for writing. Reason: Keine Berechtigung passiert
+
+opensesame status/light fixes
+
+
+## Features to be Implemented Soon
+
+Configurable corrections on Temperature
 
 warn on other fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
 
 temperature alarm e.g. 70° (check max temp from sensor) and warning 28° (window left open)
+
+
+## Bigger Features
 
 allow to also talk to sensors via Nextcloud
 
