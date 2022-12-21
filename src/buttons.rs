@@ -49,16 +49,15 @@ pub enum StateChange {
 	LightsOff,
 }
 
-const FAILED_COUNTER: u8 = 20;    // = 200ms how long to wait after failure before resetting (*10ms)
-const BELL_MINIMUM_PERIOD: u32 = 20;    // = 200ms shortest period time for bell
+const FAILED_COUNTER: u8 = 20; // = 200ms how long to wait after failure before resetting (*10ms)
+const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
 
-const SET_TRIS: u8 = 0x01;    // Set GPIO direction
-const SET_PORTS: u8 = 0x02;   // Set GPIO output level
-const GET_PORTS: u8 = 0x03;   // Get GPIO input level
+const SET_TRIS: u8 = 0x01; // Set GPIO direction
+const SET_PORTS: u8 = 0x02; // Set GPIO output level
+const GET_PORTS: u8 = 0x03; // Get GPIO input level
 const SET_PULLUPS: u8 = 0x04; // Set GPIO pull-ups
-const SET_RELAYS_ON: u8 = 0x41;  // Set relay(s) on
-const SET_RELAYS_OFF: u8 = 0x42;  // Set relay(s) off
-
+const SET_RELAYS_ON: u8 = 0x41; // Set relay(s) on
+const SET_RELAYS_OFF: u8 = 0x42; // Set relay(s) off
 
 // board 20
 
@@ -82,7 +81,6 @@ const RELAY_LICHT_AUSSEN: u8 = 0x01 << 1;
 const ALL_RELAYS: u8 = RELAY_DOOR | RELAY_LICHT_AUSSEN;
 
 const PINS1_INIT: u8 = 15;
-
 
 // board 21
 
@@ -121,7 +119,7 @@ impl Buttons {
 
 			door_timeout: 0,
 
-			init_light_timeout: config.get::<u32>("light/timeout")*100,
+			init_light_timeout: config.get::<u32>("light/timeout") * 100,
 			light_timeout: 0,
 			light_permanent: false,
 
@@ -139,11 +137,19 @@ impl Buttons {
 	}
 
 	fn init(&mut self) {
-		self.board20.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS).expect("I2C Communication to Buttons does not work");
-		self.board21.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS).unwrap();
+		self.board20
+			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
+			.expect("I2C Communication to Buttons does not work");
+		self.board21
+			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
+			.unwrap();
 
-		self.board20.smbus_write_byte_data(SET_PULLUPS, ALL_BUTTONS).unwrap();
-		self.board21.smbus_write_byte_data(SET_PULLUPS, ALL_BUTTONS).unwrap();
+		self.board20
+			.smbus_write_byte_data(SET_PULLUPS, ALL_BUTTONS)
+			.unwrap();
+		self.board21
+			.smbus_write_byte_data(SET_PULLUPS, ALL_BUTTONS)
+			.unwrap();
 
 		self.turn_everything_off().unwrap();
 	}
@@ -163,8 +169,10 @@ impl Buttons {
 		self.bell_counter = 0;
 		self.bell_timeout = 0;
 
-		self.board20.smbus_write_byte_data(SET_RELAYS_OFF, ALL_RELAYS)?;
-		self.board21.smbus_write_byte_data(SET_RELAYS_OFF, ALL_RELAYS)?;
+		self.board20
+			.smbus_write_byte_data(SET_RELAYS_OFF, ALL_RELAYS)?;
+		self.board21
+			.smbus_write_byte_data(SET_RELAYS_OFF, ALL_RELAYS)?;
 
 		self.board20.smbus_write_byte_data(SET_PORTS, ALL_BUTTONS)?;
 		self.board21.smbus_write_byte_data(SET_PORTS, ALL_BUTTONS)?;
@@ -173,7 +181,9 @@ impl Buttons {
 
 	fn handle_door(&mut self) {
 		if self.door_timeout == 1 {
-			self.board20.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_DOOR).unwrap();
+			self.board20
+				.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_DOOR)
+				.unwrap();
 			self.led_bell = false;
 			self.door_timeout = 0;
 		} else if self.door_timeout > 0 {
@@ -187,13 +197,19 @@ impl Buttons {
 		if self.light_permanent {
 			timeout_progress = 0;
 		} else if self.light_timeout == self.init_light_timeout {
-			self.board20.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_AUSSEN).unwrap();
+			self.board20
+				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_AUSSEN)
+				.unwrap();
 			timeout_progress = 1;
 		} else if self.light_timeout == 10 {
-			self.board20.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_LICHT_AUSSEN).unwrap();
+			self.board20
+				.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_LICHT_AUSSEN)
+				.unwrap();
 			timeout_progress = 1;
 		} else if self.light_timeout == 1 {
-			self.board21.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_LICHT_INNEN).unwrap();
+			self.board21
+				.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_LICHT_INNEN)
+				.unwrap();
 
 			self.led_light = false;
 
@@ -202,7 +218,7 @@ impl Buttons {
 			ret = true;
 		} else if self.light_timeout > 0 {
 			timeout_progress = 1;
-		} else  {
+		} else {
 			assert!(self.light_timeout == 0, "wrong logic");
 			timeout_progress = 0;
 		}
@@ -220,9 +236,13 @@ impl Buttons {
 		if self.bell_timeout == 0 {
 			self.bell_timeout = self.bell_timeout_init;
 			if self.bell_counter % 2 == 0 {
-				self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL).unwrap();
+				self.board21
+					.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL)
+					.unwrap();
 			} else {
-				self.board21.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_BELL).unwrap();
+				self.board21
+					.smbus_write_byte_data(SET_RELAYS_OFF, RELAY_BELL)
+					.unwrap();
 				self.led_bell = false;
 			}
 			self.bell_counter -= 1;
@@ -305,32 +325,50 @@ impl Buttons {
 		}
 
 		// now calculate output
-		if pins1 & BUTTON_1 == 0 || self.led1 { pins1 |= LED_1; }
-		if pins1 & BUTTON_2 == 0 || self.led2 { pins1 |= LED_2; }
-		if pins1 & BUTTON_3 == 0 || self.led3 { pins1 |= LED_3; }
-		if pins1 & BUTTON_4 == 0 || self.led4 { pins2 |= LED_4; } // LED_4 is on second board
-		if pins2 & BUTTON_LIGHT == 0 || self.led_light { pins2 |= LED_LIGHT; }
-		if pins2 & BUTTON_BELL == 0 || self.led_bell { pins2 |= LED_BELL; }
+		if pins1 & BUTTON_1 == 0 || self.led1 {
+			pins1 |= LED_1;
+		}
+		if pins1 & BUTTON_2 == 0 || self.led2 {
+			pins1 |= LED_2;
+		}
+		if pins1 & BUTTON_3 == 0 || self.led3 {
+			pins1 |= LED_3;
+		}
+		if pins1 & BUTTON_4 == 0 || self.led4 {
+			pins2 |= LED_4;
+		} // LED_4 is on second board
+		if pins2 & BUTTON_LIGHT == 0 || self.led_light {
+			pins2 |= LED_LIGHT;
+		}
+		if pins2 & BUTTON_BELL == 0 || self.led_bell {
+			pins2 |= LED_BELL;
+		}
 
 		// println!("pins1 {} {:08b}, self.pins1 {} {:08b}, pins2 {} {:08b}, self.pins2 {} {:08b}", pins1, pins1, self.pins1, self.pins1, pins2, pins2, self.pins2, self.pins2);
 
 		if pins1 != self.pins1 {
 			// println!("will write pins1 {:02} {:08b}", pins1, pins1);
-			self.board20.smbus_write_byte_data(SET_PORTS, pins1 & !ALL_BUTTONS).unwrap();
+			self.board20
+				.smbus_write_byte_data(SET_PORTS, pins1 & !ALL_BUTTONS)
+				.unwrap();
 			self.pins1 = pins1;
 		}
 
 		if pins2 != self.pins2 {
 			// println!("will write pins2 {:02} {:08b}", pins2, pins2);
-			self.board21.smbus_write_byte_data(SET_PORTS, pins2 & !ALL_BUTTONS).unwrap();
+			self.board21
+				.smbus_write_byte_data(SET_PORTS, pins2 & !ALL_BUTTONS)
+				.unwrap();
 			self.pins2 = pins2;
 		}
 		return ret;
 	}
 
 	/// opensesame!
-	pub fn open_door (&mut self) {
-		self.board20.smbus_write_byte_data(SET_RELAYS_ON, RELAY_DOOR).unwrap();
+	pub fn open_door(&mut self) {
+		self.board20
+			.smbus_write_byte_data(SET_RELAYS_ON, RELAY_DOOR)
+			.unwrap();
 		self.led_bell = true;
 		self.door_timeout = 150;
 	}
@@ -346,10 +384,12 @@ impl Buttons {
 
 	/// start ringing bell with given period, for very long or until ring_bell is called, which terminates the alarm
 	pub fn ring_bell_alarm(&mut self, period: u32) {
-		self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL).unwrap();
+		self.board21
+			.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL)
+			.unwrap();
 		self.led_light = true;
 		self.bell_counter = u32::MAX; // never stop
-		self.bell_timeout_init = period*BELL_MINIMUM_PERIOD;
+		self.bell_timeout_init = period * BELL_MINIMUM_PERIOD;
 		self.bell_timeout = self.bell_timeout_init;
 	}
 
@@ -358,10 +398,12 @@ impl Buttons {
 		if !self.bell_enable {
 			return;
 		}
-		self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL).unwrap();
+		self.board21
+			.smbus_write_byte_data(SET_RELAYS_ON, RELAY_BELL)
+			.unwrap();
 		self.led_bell = true;
-		self.bell_counter = counter*2+1;
-		self.bell_timeout_init = period*BELL_MINIMUM_PERIOD;
+		self.bell_counter = counter * 2 + 1;
+		self.bell_timeout_init = period * BELL_MINIMUM_PERIOD;
 		self.bell_timeout = self.bell_timeout_init;
 	}
 
@@ -369,18 +411,23 @@ impl Buttons {
 	/// usually extends light time
 	/// on double press event (on true) -> make light permanent on (until next press event)
 	pub fn switch_lights(&mut self, inside: bool, outside: bool) -> String {
-		assert!(inside || outside, "logic error, at least one must be switched on!");
+		assert!(
+			inside || outside,
+			"logic error, at least one must be switched on!"
+		);
 
-		let init_light_timeout =
-			if outside { self.init_light_timeout+10 }
-			else { self.init_light_timeout-1 };
+		let init_light_timeout = if outside {
+			self.init_light_timeout + 10
+		} else {
+			self.init_light_timeout - 1
+		};
 
 		let ret;
 		if self.light_permanent {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
 			return "Light not permanent anymore".to_string();
-		} else if inside && self.light_timeout > init_light_timeout-200 {
+		} else if inside && self.light_timeout > init_light_timeout - 200 {
 			// make permanent
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
@@ -396,7 +443,9 @@ impl Buttons {
 
 		// now actually switch on (might also extend light if it was only outside before)
 		if inside {
-			self.board21.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN).unwrap();
+			self.board21
+				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN)
+				.unwrap();
 		}
 		return ret;
 	}

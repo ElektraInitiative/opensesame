@@ -2,11 +2,11 @@ use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
 use crate::config::Config;
 
-const TASTER_EINGANG_OBEN_LINE : u32 = 234;      // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
-const TASTER_EINGANG_UNTEN_LINE : u32 = 235;     // - Taster Eingang Unten            -> Pin38 GPIO235 EINT11
-const TASTER_TOR_OBEN_LINE : u32 = 236;          // - Taster Tor Oben                 -> Pin36 GPIO236 EINT12
-const TASTER_TOR_UNTEN_LINE : u32 = 237;         // - Taster Tor Unten                -> Pin32 GPIO237 EINT13
-const SCHALTER_TOR_ENDPOSITION_LINE : u32 = 238; // - Schalter Garagentor Endposition -> Pin26 GPIO238 EINT14
+const TASTER_EINGANG_OBEN_LINE: u32 = 234; // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
+const TASTER_EINGANG_UNTEN_LINE: u32 = 235; // - Taster Eingang Unten            -> Pin38 GPIO235 EINT11
+const TASTER_TOR_OBEN_LINE: u32 = 236; // - Taster Tor Oben                 -> Pin36 GPIO236 EINT12
+const TASTER_TOR_UNTEN_LINE: u32 = 237; // - Taster Tor Unten                -> Pin32 GPIO237 EINT13
+const SCHALTER_TOR_ENDPOSITION_LINE: u32 = 238; // - Schalter Garagentor Endposition -> Pin26 GPIO238 EINT14
 
 #[derive(PartialEq, Debug)]
 pub enum GarageChange {
@@ -51,11 +51,31 @@ impl Garage {
 			line_handles: if config.get_bool("garage/enable") {
 				let mut chip = Chip::new("/dev/gpiochip0").unwrap();
 				Some(LineHandles {
-					taster_eingang_oben_line: chip.get_line(TASTER_EINGANG_OBEN_LINE).unwrap().request(LineRequestFlags::INPUT, 0, "taster_eingang_oben").unwrap(),
-					taster_eingang_unten_line: chip.get_line(TASTER_EINGANG_UNTEN_LINE).unwrap().request(LineRequestFlags::INPUT, 0, "taster_eingang_unten").unwrap(),
-					taster_tor_oben_line: chip.get_line(TASTER_TOR_OBEN_LINE).unwrap().request(LineRequestFlags::INPUT, 0, "taster_tor_oben").unwrap(),
-					taster_tor_unten_line: chip.get_line(TASTER_TOR_UNTEN_LINE).unwrap().request(LineRequestFlags::INPUT, 0, "taster_tor_unten").unwrap(),
-					schalter_tor_endposition_line: chip.get_line(SCHALTER_TOR_ENDPOSITION_LINE).unwrap().request(LineRequestFlags::INPUT, 0, "schalter_tor_endposition").unwrap(),
+					taster_eingang_oben_line: chip
+						.get_line(TASTER_EINGANG_OBEN_LINE)
+						.unwrap()
+						.request(LineRequestFlags::INPUT, 0, "taster_eingang_oben")
+						.unwrap(),
+					taster_eingang_unten_line: chip
+						.get_line(TASTER_EINGANG_UNTEN_LINE)
+						.unwrap()
+						.request(LineRequestFlags::INPUT, 0, "taster_eingang_unten")
+						.unwrap(),
+					taster_tor_oben_line: chip
+						.get_line(TASTER_TOR_OBEN_LINE)
+						.unwrap()
+						.request(LineRequestFlags::INPUT, 0, "taster_tor_oben")
+						.unwrap(),
+					taster_tor_unten_line: chip
+						.get_line(TASTER_TOR_UNTEN_LINE)
+						.unwrap()
+						.request(LineRequestFlags::INPUT, 0, "taster_tor_unten")
+						.unwrap(),
+					schalter_tor_endposition_line: chip
+						.get_line(SCHALTER_TOR_ENDPOSITION_LINE)
+						.unwrap()
+						.request(LineRequestFlags::INPUT, 0, "schalter_tor_endposition")
+						.unwrap(),
 				})
 			} else {
 				None
@@ -76,7 +96,8 @@ impl Garage {
 		if now == 0 && !*prev {
 			*prev = true;
 			ret = true;
-		} if now == 1 && *prev {
+		}
+		if now == 1 && *prev {
 			*prev = false;
 		}
 		return ret;
@@ -94,32 +115,47 @@ impl Garage {
 
 	pub fn handle(&mut self) -> GarageChange {
 		match &self.line_handles {
-		Some(line_handles) => {
-			let s = line_handles.schalter_tor_endposition_line.get_value().unwrap();
-			if s == 0 && !self.schalter_tor_endposition {
-				self.schalter_tor_endposition = true;
-				return GarageChange::ReachedTorEndposition;
-			} else if s == 1 && self.schalter_tor_endposition {
-				self.schalter_tor_endposition = false;
-				return GarageChange::LeftTorEndposition;
-			}
+			Some(line_handles) => {
+				let s = line_handles
+					.schalter_tor_endposition_line
+					.get_value()
+					.unwrap();
+				if s == 0 && !self.schalter_tor_endposition {
+					self.schalter_tor_endposition = true;
+					return GarageChange::ReachedTorEndposition;
+				} else if s == 1 && self.schalter_tor_endposition {
+					self.schalter_tor_endposition = false;
+					return GarageChange::LeftTorEndposition;
+				}
 
-			if Garage::handle_line(line_handles.taster_eingang_oben_line.get_value().unwrap(), &mut self.taster_eingang_oben) {
-				return GarageChange::PressedTasterEingangOben;
+				if Garage::handle_line(
+					line_handles.taster_eingang_oben_line.get_value().unwrap(),
+					&mut self.taster_eingang_oben,
+				) {
+					return GarageChange::PressedTasterEingangOben;
+				}
+				if Garage::handle_line(
+					line_handles.taster_eingang_unten_line.get_value().unwrap(),
+					&mut self.taster_eingang_unten,
+				) {
+					self.handle_auto_close();
+					return GarageChange::PressedTasterEingangUnten;
+				}
+				if Garage::handle_line(
+					line_handles.taster_tor_oben_line.get_value().unwrap(),
+					&mut self.taster_tor_oben,
+				) {
+					return GarageChange::PressedTasterTorOben;
+				}
+				if Garage::handle_line(
+					line_handles.taster_tor_unten_line.get_value().unwrap(),
+					&mut self.taster_tor_unten,
+				) {
+					self.handle_auto_close();
+					return GarageChange::PressedTasterTorUnten;
+				}
 			}
-			if Garage::handle_line(line_handles.taster_eingang_unten_line.get_value().unwrap(), &mut self.taster_eingang_unten) {
-				self.handle_auto_close();
-				return GarageChange::PressedTasterEingangUnten;
-			}
-			if Garage::handle_line(line_handles.taster_tor_oben_line.get_value().unwrap(), &mut self.taster_tor_oben) {
-				return GarageChange::PressedTasterTorOben;
-			}
-			if Garage::handle_line(line_handles.taster_tor_unten_line.get_value().unwrap(), &mut self.taster_tor_unten) {
-				self.handle_auto_close();
-				return GarageChange::PressedTasterTorUnten;
-			}
-		},
-		None => (),
+			None => (),
 		}
 
 		if self.auto_close_timeout == 1 && self.auto_close {
@@ -134,17 +170,16 @@ impl Garage {
 			self.auto_close_timeout -= 1;
 		}
 
-
 		return GarageChange::None;
 	}
 }
 
 #[cfg(test)]
 mod tests {
-	use std::{thread, time, env};
 	use super::*;
+	use std::{env, thread, time};
 
-	const CONFIG_PARENT : &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 
 	#[ignore] // remove and run with: cargo test print_events -- --nocapture
 	#[test]
