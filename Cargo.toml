@@ -11,12 +11,6 @@ description  = "Awesome home automation"
 
 
 
-# comment in if you need the tool
-#[[bin]]
-#name = "count_errors"
-#path = "src/count_errors.rs"
-
-
 # https://github.com/kornelski/cargo-deb
 [package.metadata.deb]
 maintainer="Markus Raab <markus@libelektra.org>"
