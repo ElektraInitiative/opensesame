@@ -1,14 +1,4 @@
-## Bugs
-
-Nov 25 15:18:06 garage opensesame[2835]: Couldn't ping Ein unbehebbarer Fehler ist bei src/config.rs:52: Set config failed: Sorry, module resolver_fm_hpu_b issued error C01100:
-Nov 25 15:18:06 garage opensesame[2835]: Resource: Could not reopen configuration file '/usr/share/elektra/specification/opensesame.state.spec' for writing. Reason: Keine Berechtigung passiert because https://nextcloud.markus-raab.org/nextcloud/ocs/v2.php/apps/spreed/ap>
-Nov 25 15:18:06 garage opensesame[2835]: Ein unbehebbarer Fehler ist bei src/config.rs:52: Set config failed: Sorry, module resolver_fm_hpu_b issued error C01100:
-Nov 25 15:18:06 garage opensesame[2835]: Resource: Could not reopen configuration file '/usr/share/elektra/specification/opensesame.state.spec' for writing. Reason: Keine Berechtigung passiert
-
-opensesame status/light fixes
-
-
-## Features to be Implemented Soon
+## Smaller Features
 
 Configurable corrections on Temperature
 
@@ -19,13 +9,15 @@ temperature alarm e.g. 70° (check max temp from sensor) and warning 28° (windo
 
 ## Bigger Features
 
-allow to also talk to sensors via Nextcloud
+allow to also talk to sensors via Nextcloud, e.g.:
+- open door
+- set PIN code
 
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
 
-support some Android app e.g. trigger
+reading data from photovoltaik
 
-switching off heat pump for holidays https://github.com/chrishrb/hoval-gateway/issues/7
+switching off heat pump if no sunshine e.g. using https://github.com/chrishrb/hoval-gateway/issues/7
 
 
 ## Usability
@@ -96,6 +88,8 @@ allow reload of everything (reinit everything)
 
 Buttons and Environment without hardware (i.e. mock): https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
 
+put into own crate
+
 
 ## Rust
 
@@ -110,6 +104,8 @@ refactor parts to be a lib? https://doc.rust-lang.org/stable/book/ch12-03-improv
 Destructors: https://doc.rust-lang.org/stable/reference/destructors.html
 
 life-times in closures, lifetime within structs, ...
+
+https://marabos.nl/atomics/memory-ordering.html
 
 use more https://github.com/rust-embedded/embedded-hal
 
