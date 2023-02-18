@@ -58,7 +58,7 @@ Mod_IO2: 6xOUT für LEDs
 
 ## sonstiger Input
 
-- Taster bei Glocke außen (orange/weiß) -> Board21 GPIO0 (Taster Lampe)
+- Taster bei Glocke außen (orange/weiß) orange -> GND, weiß -> Board21 GPIO0 (Taster Lampe)
 - Taster Eingang Innen -> Board21 GPIO2
 - Taster Glocke außen -> Board21 GPIO3 (needs 47kΩ pull-up)
 
