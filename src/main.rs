@@ -63,13 +63,17 @@ fn play_audio_file(file: String, arg: String) {
 	}
 }
 
-fn do_reset(pwr: &mut Pwr) {
+fn do_reset(watchdog: &mut Watchdog, pwr: &mut Pwr) {
 	if pwr.enabled() {
 		pwr.switch(false);
-		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT / 4));
+		watchdog.trigger();
+		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
 		pwr.switch(true);
-		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT / 4));
+		watchdog.trigger();
+		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
+
+		watchdog.trigger();
 	}
 }
 
@@ -293,10 +297,8 @@ fn main() -> Result<(), Error> {
 	}
 
 	let mut pwr = Pwr::new(&mut config);
-	watchdog.trigger();
-	do_reset(&mut pwr);
+	do_reset(&mut watchdog, &mut pwr);
 	if pwr.enabled() {
-		watchdog.trigger();
 		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 	}
 	let mut validator = Validator::new(&mut config);
@@ -501,9 +503,7 @@ fn main() -> Result<(), Error> {
 				let sys = System::new();
 				let loadavg = sys.load_average().unwrap();
 				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
-				watchdog.trigger();
-				do_reset(&mut pwr);
-				watchdog.trigger();
+				do_reset(&mut watchdog, &mut pwr);
 			}
 		}
 
