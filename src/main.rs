@@ -66,10 +66,10 @@ fn play_audio_file(file: String, arg: String) {
 fn do_reset(pwr: &mut Pwr) {
 	if pwr.enabled() {
 		pwr.switch(false);
-		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
+		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT / 4));
 
 		pwr.switch(true);
-		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
+		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT / 4));
 	}
 }
 
