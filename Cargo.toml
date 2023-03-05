@@ -22,6 +22,7 @@ pre-depends = "elektra-bin"
 assets = [
     ["target/release/opensesame", "usr/bin/", "755"],
     ["files/reload-opensesame", "usr/bin/", "755"],
+    ["files/trigger-watchdog", "usr/bin/", "755"],
 
     ["files/opensesame.spec", "usr/share/elektra/specification/", "644"],
     ["files/opensesame.state.spec", "usr/share/elektra/specification/", "644"],

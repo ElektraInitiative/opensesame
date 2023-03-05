@@ -1,0 +1,7 @@
+#!/bin/sh
+
+while true
+do
+	echo "b" > /dev/watchdog
+	sleep 15
+done
