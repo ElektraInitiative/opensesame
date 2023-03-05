@@ -63,6 +63,16 @@ fn play_audio_file(file: String, arg: String) {
 	}
 }
 
+fn do_reset(pwr: &mut Pwr) {
+	if pwr.enabled() {
+		pwr.switch(false);
+		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
+
+		pwr.switch(true);
+		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
+	}
+}
+
 fn handle_environment(
 	environment: &mut Environment,
 	nc: &mut Nextcloud,
@@ -164,11 +174,6 @@ fn main() -> Result<(), Error> {
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
 		nc.ping(text.clone());
 		eprintln!("{}", text);
-		let mut pwr = Pwr::new(&mut config);
-		if pwr.enabled() {
-			eprintln!("{}", "Switch PWR off");
-			pwr.switch(false);
-		}
 	}));
 
 	let mut nc: Nextcloud = Nextcloud::new(&mut config);
@@ -288,10 +293,11 @@ fn main() -> Result<(), Error> {
 	}
 
 	let mut pwr = Pwr::new(&mut config);
+	watchdog.trigger();
+	do_reset(&mut pwr);
 	if pwr.enabled() {
-		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 		watchdog.trigger();
-		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
+		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 	}
 	let mut validator = Validator::new(&mut config);
 	let mut buttons = Buttons::new(&mut config);
@@ -495,15 +501,9 @@ fn main() -> Result<(), Error> {
 				let sys = System::new();
 				let loadavg = sys.load_average().unwrap();
 				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
-				if pwr.enabled() {
-					pwr.switch(false);
-					watchdog.trigger();
-					thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
-
-					pwr.switch(true);
-					watchdog.trigger();
-					thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
-				}
+				watchdog.trigger();
+				do_reset(&mut pwr);
+				watchdog.trigger();
 			}
 		}
 
