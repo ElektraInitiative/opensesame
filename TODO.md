@@ -6,6 +6,8 @@ warn on other fast raising values, next to MQ135 (temperature, CO2, VOC, Pressur
 
 temperature alarm e.g. 70° (check max temp from sensor) and warning 28° (window left open)
 
+on battery and low battery warning
+
 
 ## Bigger Features
 

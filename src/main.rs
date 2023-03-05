@@ -160,7 +160,7 @@ fn main() -> Result<(), Error> {
 		let mut config: Config = Config::new(CONFIG_PARENT);
 		let nc: Nextcloud = Nextcloud::new(&mut config);
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-		nc.ping(text.to_string());
+		nc.ping(text.clone());
 		eprintln!("{}", text);
 		let mut pwr = Pwr::new(&mut config);
 		if pwr.enabled() {
@@ -289,7 +289,7 @@ fn main() -> Result<(), Error> {
 	if pwr.enabled() {
 		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 		watchdog.trigger();
-		thread::sleep(time::Duration::from_millis(1000));
+		thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
 	}
 	let mut validator = Validator::new(&mut config);
 	let mut buttons = Buttons::new(&mut config);
@@ -495,11 +495,11 @@ fn main() -> Result<(), Error> {
 				if pwr.enabled() {
 					pwr.switch(false);
 					watchdog.trigger();
-					thread::sleep(time::Duration::from_millis(1000));
+					thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
 
 					pwr.switch(true);
 					watchdog.trigger();
-					thread::sleep(time::Duration::from_millis(1000));
+					thread::sleep(time::Duration::from_millis(watchdog::TIMEOUT/4));
 				}
 			}
 		}

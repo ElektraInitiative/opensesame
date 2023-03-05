@@ -3,6 +3,8 @@ use std::io::Write;
 
 use crate::config::Config;
 
+pub const TIMEOUT: u64 = 16 * 1000; // timeout in ms as seen in dmesg
+
 pub struct Watchdog {
 	handle: Option<fs::File>,
 	pub wait_for_watchdog_trigger: u64,
