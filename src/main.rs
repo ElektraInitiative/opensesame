@@ -65,11 +65,13 @@ fn play_audio_file(file: String, arg: String) {
 
 fn do_reset(watchdog: &mut Watchdog, nc: &mut Nextcloud, pwr: &mut Pwr) {
 	if pwr.enabled() {
-		nc.ping(gettext("👋 Turned PWR_SWITCH off"));
+		watchdog.trigger();
 		pwr.switch(false);
+		nc.ping(gettext("👋 Turned PWR_SWITCH off"));
 		watchdog.trigger();
 		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
+		watchdog.trigger();
 		pwr.switch(true);
 		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 		watchdog.trigger();
