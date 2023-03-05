@@ -1,5 +1,6 @@
 // opensesame
 
+mod bat;
 mod buttons;
 mod config;
 mod environment;
@@ -25,6 +26,7 @@ use chrono::prelude::*;
 use sunrise::sunrise_sunset;
 use systemstat::{Platform, System};
 
+use bat::Bat;
 use buttons::Buttons;
 use buttons::StateChange;
 use config::Config;
@@ -295,9 +297,10 @@ fn main() -> Result<(), Error> {
 	let mut buttons = Buttons::new(&mut config);
 	let mut environment = Environment::new(&mut config);
 	let mut garage = Garage::new(&mut config);
+	let bat = Bat::new();
 	let mut alarm_not_active = true;
 
-	nc.set_info_online(gettext("🪫 ON"));
+	nc.set_info_online(gettext!("🪫 ON {}", bat));
 
 	while !term.load(Ordering::Relaxed) {
 		watchdog.trigger();
@@ -364,7 +367,7 @@ fn main() -> Result<(), Error> {
 				startup_time
 			));
 			started_message_timeout = 0; // job done, disable
-			nc.set_info_online(gettext("🔋 ON"));
+			nc.set_info_online(gettext!("🔋 ON {}", bat));
 		}
 
 		if environment.handle() {
@@ -380,7 +383,7 @@ fn main() -> Result<(), Error> {
 		if wait_for_ping > wait_for_ping_timeout {
 			let sys = System::new();
 			let loadavg = sys.load_average().unwrap();
-			nc.ping (format!("{} Ping! Version {}, Watchdog {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {}", ping_counter, env!("CARGO_PKG_VERSION"), watchdog.wait_for_watchdog_trigger, environment.to_string(), environment.status, environment.error, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), startup_time));
+			nc.ping (format!("{} Ping! Version {}, Watchdog {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}", ping_counter, env!("CARGO_PKG_VERSION"), watchdog.wait_for_watchdog_trigger, environment.to_string(), environment.status, environment.error, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), startup_time, bat));
 			ping_counter += 1;
 			wait_for_ping = 0; // restart
 		}
@@ -491,7 +494,7 @@ fn main() -> Result<(), Error> {
 			StateChange::Err(board) => {
 				let sys = System::new();
 				let loadavg = sys.load_average().unwrap();
-				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap()));
+				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
 				if pwr.enabled() {
 					pwr.switch(false);
 					watchdog.trigger();
