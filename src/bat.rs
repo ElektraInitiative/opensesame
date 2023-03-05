@@ -16,7 +16,7 @@ impl Bat {
 
 	pub fn capacity(& self) -> u8 {
 		match fs::read_to_string(CAPACITY_FILE) {
-			Ok(str) => return str.parse::<u8>().unwrap(),
+			Ok(str) => return str.trim_end().parse::<u8>().unwrap(),
 			Err(_err) => return 100,
 		}
 	}
