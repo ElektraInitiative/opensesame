@@ -63,13 +63,15 @@ fn play_audio_file(file: String, arg: String) {
 	}
 }
 
-fn do_reset(watchdog: &mut Watchdog, pwr: &mut Pwr) {
+fn do_reset(watchdog: &mut Watchdog, nc: &mut Nextcloud, pwr: &mut Pwr) {
 	if pwr.enabled() {
+		nc.ping(gettext("👋 Turned PWR_SWITCH off"));
 		pwr.switch(false);
 		watchdog.trigger();
 		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
 		pwr.switch(true);
+		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
 		watchdog.trigger();
 		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
@@ -297,10 +299,7 @@ fn main() -> Result<(), Error> {
 	}
 
 	let mut pwr = Pwr::new(&mut config);
-	do_reset(&mut watchdog, &mut pwr);
-	if pwr.enabled() {
-		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
-	}
+	do_reset(&mut watchdog, &mut nc, &mut pwr);
 	let mut validator = Validator::new(&mut config);
 	let mut buttons = Buttons::new(&mut config);
 	let mut environment = Environment::new(&mut config);
@@ -503,7 +502,7 @@ fn main() -> Result<(), Error> {
 				let sys = System::new();
 				let loadavg = sys.load_average().unwrap();
 				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
-				do_reset(&mut watchdog, &mut pwr);
+				do_reset(&mut watchdog, &mut nc, &mut pwr);
 			}
 		}
 
