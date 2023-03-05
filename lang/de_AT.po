@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-05 10:23+0000\n"
+"POT-Creation-Date: 2023-03-05 13:35+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -23,143 +23,147 @@ msgstr ""
 msgid "failed to execute process"
 msgstr "Ausführen des Prozesses fehlgeschlagen"
 
-#: src/main.rs:75
+#: src/main.rs:70
+msgid "👋 Turned PWR_SWITCH off"
+msgstr "👋 PWR_SWITCH ausgeschalten"
+
+#: src/main.rs:76
+msgid "👋 Turned PWR_SWITCH on"
+msgstr "👋 PWR_SWITCH eingeschalten"
+
+#: src/main.rs:93
 msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
 msgstr ""
 "⚠️ Fehler {:#02b} beim Lesen vom Environment-Sensor! Status: {:#02b}. {}"
 
-#: src/main.rs:82
+#: src/main.rs:100
 msgid "💨 Airquality is ok. {}"
 msgstr "💨 Luftqualität ist ok. {}"
 
-#: src/main.rs:85
+#: src/main.rs:103
 msgid "💩 Airquality is moderate. {}"
 msgstr "💩 Luftqualität ist moderat. {}"
 
-#: src/main.rs:89
+#: src/main.rs:107
 msgid "💩 Airquality is bad! {}"
 msgstr "💩 Luftqualität ist schlecht! {}"
 
-#: src/main.rs:98
+#: src/main.rs:116
 msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
 msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
 
-#: src/main.rs:115
+#: src/main.rs:133
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
 
-#: src/main.rs:164
+#: src/main.rs:182
 msgid "A panic occurred at {}:{}: {}"
 msgstr "Ein unbehebbarer Fehler ist bei {}:{}: {} passiert"
 
-#: src/main.rs:183
+#: src/main.rs:196
 msgid "👋 opensesame {} init {}"
 msgstr "👋 Opensesame {} init {}"
 
-#: src/main.rs:258
+#: src/main.rs:271
 msgid "Fire Alarm {}"
 msgstr "Feueralarm {}"
 
-#: src/main.rs:266
+#: src/main.rs:279
 msgid "Fire Chat {}"
 msgstr "Feuerchat {}"
 
-#: src/main.rs:282
+#: src/main.rs:295
 msgid "👋 reloaded config&state in sensor mode for opensesame {} {}"
 msgstr "👋 config&state neu geladen im Sensor Modus für Opensesame {} {}"
 
-#: src/main.rs:292
-msgid "👋 Turned PWR_SWITCH on"
-msgstr "👋 PWR_SWITCH eingeschalten"
-
-#: src/main.rs:303
+#: src/main.rs:312
 msgid "🪫 ON {}"
 msgstr "🪫 EIN {}"
 
-#: src/main.rs:312
+#: src/main.rs:321
 msgid "🚨 Received alarm"
 msgstr "🚨 Befehl für Alarm empfangen"
 
-#: src/main.rs:323
+#: src/main.rs:332
 msgid "🔔 Received bell"
 msgstr "🔔 Befehl für Glocke empfangen"
 
-#: src/main.rs:329
+#: src/main.rs:338
 msgid "👋reloading config&state for opensesame {} {}"
 msgstr "👋 config&state für Opensesame neu geladen {} {}"
 
-#: src/main.rs:340
+#: src/main.rs:349
 msgid "🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}"
 msgstr "🚨 Feueralarm! Feueralarm! FEUERALARM! ⏰. {}"
 
-#: src/main.rs:365
+#: src/main.rs:374
 msgid "👋 opensesame {} started {}"
 msgstr "👋 Opensesame {} startet {}"
 
-#: src/main.rs:370
+#: src/main.rs:379
 msgid "🔋 ON {}"
 msgstr "🔋 EIN {}"
 
-#: src/main.rs:395
+#: src/main.rs:404
 msgid "💡 Pressed at entrance top switch. Switch lights in garage. {}"
 msgstr "💡 Oberer Taster bei Tür gedrückt. Schalte Licht in Garage ein. {}"
 
-#: src/main.rs:401
+#: src/main.rs:410
 msgid ""
 "💡 Pressed top switch at garage door. Switch lights in and out garage. {}"
 msgstr ""
 "💡 Oberer Taster bei Tor gedrückt. Schalte Licht innen und außen bei Garage "
 "ein. {}"
 
-#: src/main.rs:411
+#: src/main.rs:420
 msgid "🔓 Garage door closes automatically. {}"
 msgstr "🔓 Garagentor schließt automatisch. {}"
 
-#: src/main.rs:417
+#: src/main.rs:426
 msgid "🔒 Open"
 msgstr "🔒 Offen"
 
-#: src/main.rs:419
+#: src/main.rs:428
 msgid "🔒 Garage door closed. {}"
 msgstr "🔒 Garagentor zu. {}"
 
-#: src/main.rs:424
+#: src/main.rs:433
 msgid "🔓 Closed"
 msgstr "🔓 Geschlossen"
 
-#: src/main.rs:425
+#: src/main.rs:434
 msgid "🔓 Garage door open. {}"
 msgstr "🔓 Garagentor offen. {}"
 
-#: src/main.rs:450
+#: src/main.rs:459
 msgid "🔔 Pressed button bell. {}"
 msgstr "🔔 Knopf für Glocke gedrückt. {}"
 
-#: src/main.rs:455
+#: src/main.rs:464
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/main.rs:460
+#: src/main.rs:469
 msgid "💡 Pressed switch inside. {}. {}"
 msgstr "💡 Taster innen gedrückt. {}. {}"
 
-#: src/main.rs:467
+#: src/main.rs:476
 msgid "💡 Pressed switch outside or light button. {}. {}"
 msgstr "💡 Taster oder Knopf außen gedrückt. {}. {}"
 
-#: src/main.rs:477
+#: src/main.rs:486
 msgid "🔔 Pressed switch bell. {}"
 msgstr "🔔 Taster Glocke gedrückt. {}"
 
-#: src/main.rs:482
+#: src/main.rs:491
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/main.rs:490
+#: src/main.rs:499
 msgid "🕶️ Light was turned off. {}"
 msgstr "🕶️ Licht wurde abgeschalten. {}"
 
-#: src/main.rs:497
+#: src/main.rs:506
 msgid ""
 "⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} "
 "{}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
@@ -167,30 +171,32 @@ msgstr ""
 "⚠️ Fehler beim Lesen der Knöpfe am Board {}. Environment: {}, Load average: "
 "{} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
 
-#: src/main.rs:514
+#: src/main.rs:515
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/main.rs:525
+#: src/main.rs:526
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/main.rs:530
+#: src/main.rs:531
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
-msgstr "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} Sonnenuntergang: {}"
+msgstr ""
+"🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
+"Sonnenuntergang: {}"
 
-#: src/main.rs:542
+#: src/main.rs:543
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {:?}"
 
-#: src/main.rs:551
+#: src/main.rs:552
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {:?}"
 
-#: src/main.rs:568
+#: src/main.rs:569
 msgid "📴 OFF"
 msgstr "📴 ABGESCHALTEN"
 
-#: src/main.rs:570
+#: src/main.rs:571
 msgid "👋 opensesame {} bye-bye {:?}"
 msgstr "👋 Opensesame {} auf Wiedersehen {}"
