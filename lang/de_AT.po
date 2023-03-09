@@ -187,11 +187,11 @@ msgstr ""
 
 #: src/main.rs:543
 msgid "⌛ Timeout with sequence {}"
-msgstr "⌛ Timeout mit Sequenz {:?}"
+msgstr "⌛ Timeout mit Sequenz {}"
 
 #: src/main.rs:552
 msgid "⌛ Sequence {} too long"
-msgstr "⌛ Zu lange Sequenz {:?}"
+msgstr "⌛ Zu lange Sequenz {}"
 
 #: src/main.rs:569
 msgid "📴 OFF"
@@ -199,4 +199,4 @@ msgstr "📴 ABGESCHALTEN"
 
 #: src/main.rs:571
 msgid "👋 opensesame {} bye-bye {:?}"
-msgstr "👋 Opensesame {} auf Wiedersehen {}"
+msgstr "👋 Opensesame {} auf Wiedersehen {:?}"
