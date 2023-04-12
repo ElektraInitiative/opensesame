@@ -568,9 +568,9 @@ fn main() -> Result<(), Error> {
 	environment.remember_baseline(&mut state);
 	nc.set_info_online(gettext("📴 OFF"));
 	nc.ping(gettext!(
-		"👋 opensesame {} bye-bye {:?}",
+		"👋 opensesame {} bye-bye {}",
 		env!("CARGO_PKG_VERSION"),
-		Local::now()
+		Local::now().format(&date_time_format).to_string()
 	));
 
 	Ok(())

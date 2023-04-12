@@ -117,13 +117,12 @@ example = 1
 default = 0
 
 [environment/device]
-description=Which device to use for the environment sensor
-example = "/dev/i2c-2"
-default = "/dev/i2c"
+description=Which device to use for the environment sensor. /dev/null means that no environment sensor is connected.
+example = "/dev/i2c"
+default = "/dev/null"
 
 [environment/data/interval]
-description=How often to get new data (default: every 60 seconds, which is also fastest)
+description=How often to get new data (default: every 60 seconds, which is the highest interval)
 default = 6000
-example = 1
 type = unsigned_short
 
