@@ -1,3 +1,29 @@
+## Hardware
+
+currently, i2c cannot be switched off completely
+
+change i2c frequency to have less disturbances:
+
+> > 0x186a for about 6kHz
+>                          i2c@80058000 {
+>                                  #address-cells = <0x01>;
+>                                  #size-cells = <0x00>;
+>                                  compatible = "fsl,imx23-i2c";
+>                                  reg = <0x80058000 0x2000>;
+>                                  interrupts = <0x1b>;
+>                                  clock-frequency = <0x186a>;
+>                                  dmas = <0x08 0x03>;
+>                                  dma-names = "rx-tx";
+>                                  status = "okay";
+>                                  pinctrl-names = "default";
+>                                  pinctrl-0 = <0x09>;
+>                                  linux,phandle = <0x22>;
+>                                  phandle = <0x22>;
+>                          };
+
+weather station: needs libmodbus integration
+
+
 ## Smaller Features
 
 Configurable corrections on Temperature
@@ -59,8 +85,6 @@ fix sensor test cases
 
 ## Robustness
 
-allow to power-off mod-IOs via PWR-SWITCH
-
 make some not so loud sound on bootup+visual indication at buttons (to hear reboot loops)
 
 Test if it survives power-off/on
@@ -96,8 +120,6 @@ put into own crate
 ## Rust
 
 cross-compile
-
-use rustfmt
 
 https://github.com/viperproject/prusti-dev
 
