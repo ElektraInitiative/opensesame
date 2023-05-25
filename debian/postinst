@@ -1,13 +1,17 @@
 #!/bin/sh
 
-echo "Mount configuration"
+SPEC_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.spec"
+STATE_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.state.spec"
+
+
+#echo "Mount configuration"
 kdb umount spec:/sw/libelektra/opensesame/#0/current 2> /dev/null || /bin/true
-kdb mount opensesame.spec spec:/sw/libelektra/opensesame/#0/current ni
+kdb mount $SPEC_FILE spec:/sw/libelektra/opensesame/#0/current ni
 kdb spec-mount /sw/libelektra/opensesame/#0/current
 
-echo "Mount state"
+#echo "Mount state"
 kdb umount spec:/state/libelektra/opensesame/#0/current 2> /dev/null || /bin/true
-kdb mount opensesame.state.spec spec:/state/libelektra/opensesame/#0/current ni
+kdb mount $STATE_FILE spec:/state/libelektra/opensesame/#0/current ni
 kdb spec-mount /state/libelektra/opensesame/#0/current
 
 #DEBHELPER#
