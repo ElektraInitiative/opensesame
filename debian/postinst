@@ -1,8 +1,12 @@
 #!/bin/sh
 
-SPEC_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.spec"
-STATE_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.state.spec"
+SPEC_FILE="opensesame.spec"
+STATE_FILE="opensesame.state.spec"
 
+if [ "$(pwd | awk -F'/' '{print $NF}')" = "debian" ];then
+	SPEC_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.spec";
+	STATE_FILE="$(pwd | sed 's@/debian@@')/files/opensesame.state.spec";
+fi
 
 echo "Mount configuration"
 kdb umount spec:/sw/libelektra/opensesame/#0/current 2> /dev/null || /bin/true
