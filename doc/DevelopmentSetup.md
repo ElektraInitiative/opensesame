@@ -11,7 +11,7 @@ Therefor you have to edit the [nextcloud/url], [nextcloud/chat], [nextcloud/chat
 ```sh
 [nextcloud/url]
 description = URL to be used for sending messages.
-default = https://nextcloud.my-server.com/
+default = https://nextcloud.my-server.com/nextcloud
 ```
 
 ```sh
