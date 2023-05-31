@@ -66,9 +66,9 @@ As base to actually run opensesame you need:
 
 Probably you also want for every device:
 
-- https://www.olimex.com/Products/Modules/Sensors/MOD-ENV/
 - https://www.olimex.com/Products/OLinuXino/A20/LIME2-SHIELD/
 - https://www.olimex.com/Products/OLinuXino/BOXES/BOX-LIME/
+- https://www.olimex.com/Products/Modules/Sensors/MOD-ENV/ (unfortunately not available anymore, we investigate alternatives)
 
 To open the doors you need:
 
