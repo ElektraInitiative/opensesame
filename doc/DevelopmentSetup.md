@@ -6,31 +6,16 @@ For the devolpomnet setup you have to do some steps manually, so this page shoul
 ## 2. Try to build the project (cargo build)
 One importent dependencies is libelektra which can be installed by following [these steps](https://github.com/ElektraInitiative/libelektra/blob/master/doc/INSTALL.md)
 
-## 3. After the build was successfully you have to configure your nextcloud in the files/opensesame.spec file
-Therefor you have to edit the [nextcloud/url], [nextcloud/chat], [nextcloud/chat/licht], [nextcloud/chat/ping] and add [nextcloud/user], [nextcloud/pass]. Instead of the 'required ='-option you have to write 'default ='.
-```sh
-[nextcloud/url]
-description = URL to be used for sending messages.
-default = https://nextcloud.my-server.com/nextcloud
-```
+## 3. After the build was successfully you have to configure your nextcloud with `kdb set` 
+Therefore you have to add [nextcloud/url], [nextcloud/chat], [nextcloud/chat/licht], [nextcloud/chat/ping], [nextcloud/user] and [nextcloud/pass]. This is done with the following statements:
 
 ```sh
-[nextcloud/chat]
-description = which chat to use for sending messages.
-default = <Token>
-check/length/max = 8
-```
-
-```sh
-[nextcloud/user]
-description = which nextcloud user
-default = <username>
-```
-
-```sh
-[nextcloud/pass]
-description = password of the user
-default = <password>
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/url "https://nextcloud.my-server.com/nextcloud"
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/chat "<token>"
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/chat/licht "<token>"
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/chat/ping "<token>"
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/user "<user>"
+kdb set system:/sw/libelektra/opensesame/#0/current/nextcloud/pass "<password>"
 ```
 
 The chat-token can be extracted from the chat-url, e.g. `https://nextcloud.my-server.com/nextcloud/index.php/call/<token>`
