@@ -1,6 +1,6 @@
 [package]
 name = "opensesame"
-version = "0.7.6"
+version = "0.7.7"
 authors = ["Markus Raab"]
 edition = "2018"
 readme = "README.md"
