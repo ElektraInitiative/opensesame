@@ -6,7 +6,12 @@ For the development setup you have to do some steps manually, so this page shoul
 ## 2. Try to build the project (cargo build)
 One importent dependencies is libelektra which can be installed by following [these steps](https://github.com/ElektraInitiative/libelektra/blob/master/doc/INSTALL.md)
 
-## 3. After the build was successfully you have to configure your nextcloud with `kdb set` 
+## 5. Setup specs and states with Elektra
+In this step you have to run the `postinst` script, which is located in the debian folder. This script setup the specs, states and mount them into elektra. 
+
+If you want to clear or remove your elektra config you can execute the `postrm` script in the debian folder. 
+
+## 4. After the build and elektra setup was successfully you have to configure your nextcloud with `kdb set` 
 Therefore you have to add [nextcloud/url], [nextcloud/chat], [nextcloud/chat/licht], [nextcloud/chat/ping], [nextcloud/user] and [nextcloud/pass]. This is done with the following statements:
 
 ```sh
