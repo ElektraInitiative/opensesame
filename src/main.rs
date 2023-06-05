@@ -210,12 +210,7 @@ fn main() -> Result<(), Error> {
 	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
-		// first sensor is present
-		let mut environment1 = Environment::new(&mut config);
-		let mut config2 = Config::new(CONFIG_PARENT);
-		config2.set("environment/device", "/dev/i2c-1");
-		config2.set("environment/name", "Yvo Zimmer");
-		let mut environment2 = Environment::new(&mut config2);
+		let mut environment = Environment::new(&mut config);
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -235,11 +230,8 @@ fn main() -> Result<(), Error> {
 		let mut sensors = Sensors::new(&mut config);
 
 		for l in reader.lines() {
-			if environment1.handle() {
-				handle_environment(&mut environment1, &mut nc, None, &mut config);
-			}
-			if environment2.handle() {
-				handle_environment(&mut environment2, &mut nc, None, &mut config);
+			if environment.handle() {
+				handle_environment(&mut environment, &mut nc, None, &mut config);
 			}
 
 			let line = l.unwrap();
@@ -247,21 +239,15 @@ fn main() -> Result<(), Error> {
 			// record data
 			writeln!(
 				&mut outfile,
-				"{}	{}	Env1:	{}	{}	{}	{}	{}	{}	Env2:	{}	{}	{}	{}	{}	{}",
+				"{}	{}	Env:	{}	{}	{}	{}	{}	{}",
 				Local::now().format(&date_time_format).to_string(),
 				line.to_string(),
-				environment1.co2,
-				environment1.voc,
-				environment1.temperature,
-				environment1.humidity,
-				environment1.pressure,
-				environment1.baseline,
-				environment2.co2,
-				environment2.voc,
-				environment2.temperature,
-				environment2.humidity,
-				environment2.pressure,
-				environment2.baseline,
+				environment.co2,
+				environment.voc,
+				environment.temperature,
+				environment.humidity,
+				environment.pressure,
+				environment.baseline,
 			)
 			.unwrap();
 
@@ -281,7 +267,7 @@ fn main() -> Result<(), Error> {
 			}
 
 			if term.load(Ordering::Relaxed) {
-				environment1.remember_baseline(&mut state);
+				environment.remember_baseline(&mut state);
 				return Ok(());
 			}
 
@@ -289,8 +275,7 @@ fn main() -> Result<(), Error> {
 				sighup.store(false, Ordering::Relaxed);
 				config.sync();
 				state.sync();
-				environment1.restore_baseline(&mut state);
-				environment2.restore_baseline(&mut state);
+				environment.restore_baseline(&mut state);
 				nc.ping(gettext!(
 					"👋 reloaded config&state in sensor mode for opensesame {} {}",
 					env!("CARGO_PKG_VERSION"),
