@@ -32,7 +32,11 @@ The chat-token can be extracted from the chat-url, e.g. `https://nextcloud.my-se
 2. If you get an error with "TranslationNotFound("de")", then you have to copy the opensesame.mo into your locale/de directory
 
 ```sh
-cp file/opensesame.mo /usr/share/locale/de/LC_MESSAGES/
+cp files/opensesame.mo /usr/share/locale/de/LC_MESSAGES/
+```
+or
+```sh
+cp files/opensesame.mo /usr/share/locale/en/LC_MESSAGES/
 ```
 
 3. If you get an IO error in the button.rs file, then you have to [mock the I2CDevice](https://docs.rs/i2cdev/0.5.0/i2cdev/mock/struct.MockI2CDevice.html)
