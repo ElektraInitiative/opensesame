@@ -1,12 +1,12 @@
 # Development Setup 
-For the development setup you have to do some steps manually, so this page should help you to get you development environment (devl-env) ready to start.
+For the development setup you have to do some steps manually, so this page should help you to get your development environment ready to use.
 
-## 1. Clone the project on you local devl-env
+## 1. Clone the project on you local development environment
 
 ## 2. Try to build the project (cargo build)
-One importent dependencies is libelektra which can be installed by following [these steps](https://github.com/ElektraInitiative/libelektra/blob/master/doc/INSTALL.md)
+One dependency is libelektra which can be installed by following [these steps](https://github.com/ElektraInitiative/libelektra/blob/master/doc/INSTALL.md)
 
-## 5. Setup specs and states with Elektra
+## 3. Setup specs and states with Elektra
 In this step you have to run the `postinst` script, which is located in the debian folder. This script setup the specs, states and mount them into elektra. 
 
 If you want to clear or remove your elektra config you can execute the `postrm` script in the debian folder. 
@@ -27,9 +27,9 @@ The chat-token can be extracted from the chat-url, e.g. `https://nextcloud.my-se
 
 # Troubleshoot 
 
-1. If you get a panic,with no further information, while running opensesame you have to comment the line 164 out (`panic::set_hook` in main). That's a temporary workarount which is already issued [#6](https://github.com/ElektraInitiative/opensesame/issues/6)
+1. If you get a panic, with no further information, while running opensesame you have to comment the line 164 out (`panic::set_hook` in main). That's a temporary workarount which is already issued [#6](https://github.com/ElektraInitiative/opensesame/issues/6)
 
-2. If you get an error with "TranslationNotFound("de")", then you have to copy the opensesame.mo into your locale/de directory
+2. If you get an error with "TranslationNotFound("de")", then you have to copy the opensesame.mo into your locale/de directory.
 
 ```sh
 cp files/opensesame.mo /usr/share/locale/de/LC_MESSAGES/
