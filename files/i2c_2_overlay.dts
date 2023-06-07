@@ -1,0 +1,14 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "allwinner, sun7i-a20";
+	description = "Change I2C2 clock-frequency to 6000"; 	
+
+	fragment@0 {
+		target-path = "/soc/i2c@1c2b400";
+		__overlay__ {
+			clock-frequency = <6000>;
+		};
+	};
+};
