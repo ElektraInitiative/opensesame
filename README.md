@@ -64,6 +64,8 @@ As base to actually run opensesame you need:
 
 - https://www.olimex.com/Products/OLinuXino/A20/A20-OLinuXino-LIME2/
 
+If you want to try it out on your normal PC, we have provided an [emulation guide](doc/Emulating-Olimex.md).
+
 Probably you also want for every device:
 
 - https://www.olimex.com/Products/OLinuXino/A20/LIME2-SHIELD/
