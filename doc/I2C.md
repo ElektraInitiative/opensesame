@@ -3,12 +3,13 @@
 - larger AC loads (>>10W) might need snubber circuits
 - larger DC loads might need a diode
 - avoid switching relays faster than every ~200ms
-- avoid Snubber parallel to switch on small loads
+- avoid snubber parallel to switch on small loads
 - avoid multiple appliances that might create interferences on the same board (i.e. connect larger loads to different mod-io2)
-- Snubber as near to load as possible
+- snubber as near to load as possible
 
 If all of this fails, reduce the I2C speed by activating the overlay:
 5c10fd63f9efb3bb2d33f0afdf1a381d  i2c_2_clock_freq_overlay.dtbo
+(adding /usr/lib/olinuxino-overlays/sun7i-a20/i2c_2_clock_freq_overlay.dtbo to `fdtoverlays` in `/boot/uEnv.txt`)
 
 ## Bus
 
