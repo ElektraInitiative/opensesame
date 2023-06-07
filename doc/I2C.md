@@ -7,6 +7,9 @@
 - avoid multiple appliances that might create interferences on the same board (i.e. connect larger loads to different mod-io2)
 - Snubber as near to load as possible
 
+If all of this fails, reduce the I2C speed by activating the overlay:
+5c10fd63f9efb3bb2d33f0afdf1a381d  i2c_2_clock_freq_overlay.dtbo
+
 ## Bus
 
 with shield UEXT1 corresponds to /dev/i2c-2

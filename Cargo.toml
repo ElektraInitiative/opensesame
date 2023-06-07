@@ -29,6 +29,7 @@ assets = [
 
     ["files/opensesame.mo", "usr/share/locale/de/LC_MESSAGES/", "644"],
 
+    ["files/i2c_2_clock_freq_overlay.dtbo", "usr/lib/olinuxino-overlays/sun7i-a20", "644"],
     ["files/91-gpio.rules", "etc/udev/rules.d/", "644"],
     ["files/alarm.ogg", "usr/share/sounds/opensesame/", "644"],
     ["README.md", "usr/share/doc/opensesame/README.md", "644"],
