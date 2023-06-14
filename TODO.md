@@ -13,18 +13,22 @@ temperature alarm e.g. 70° (check max temp from sensor) and warning 28° (windo
 
 "on battery" and "low battery" warning, ideally with proper Bat impl https://github.com/svartalf/rust-battery/issues/96
 
+double extension length of light every time
+
 
 ## Bigger Features
+
+reading data from inverter/photovoltaik (https://community.goodwe.com/solution/GoodWe%20Modbus%20TCP%20Communication%20Solution)
+
+switching off heat pump if no sunshine e.g. using https://github.com/chrishrb/hoval-gateway/issues/7
+
+battery control
 
 allow to also talk to sensors via Nextcloud, e.g.:
 - open door
 - set PIN code
 
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
-
-reading data from photovoltaik
-
-switching off heat pump if no sunshine e.g. using https://github.com/chrishrb/hoval-gateway/issues/7
 
 
 ## Usability
