@@ -2,9 +2,33 @@ opensesame:
   hosts:
     haustuer:
       ansible_host: haustuer
+      os_nc_user: "haustuer"
+      os_nc_pass: "<<other pass>>"
+      os_environment_name: "im Wohnzimmer"
+      os_pwr_enable: 1
+      os_watchdog_enable: 1
+      os_bell_enable: 1 
+
     schreibtisch:
       ansible_host: schreibtisch
+      os_nc_user: "schreibtisch"
+      os_nc_pass: "<<other pass>>"
+      os_environment_name: "Yvo 2"
+      os_environment_data_interval: 1
+      os_garage_enable: 1
+
     garage:
       ansible_host: garage
+      os_nc_user: "garagentor"
+      os_nc_pass: "<<other pass>>"
+      os_environment_name: "bei Garagentor"
+      os_environment_device: "/dev/i2c-1"
+      os_audio_bell: "/usr/share/sounds/opensesame/bell.ogg"
+      os_audio_alarm: "/usr/share/sounds/opensesame/alarm.ogg"
+      os_garage_enable: 1
+      os_watchdog_enable: 1
+
   vars:
     ansible_user: olimex
+    os_nc_user: "user"
+    os_nc_pass: "<<other pass>>"
