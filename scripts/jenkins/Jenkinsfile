@@ -1,0 +1,25 @@
+// vim: ts=2:sw=2:expandtab:syntax=groovy
+
+// Buildjob properties
+properties([
+  buildDiscarder(
+    logRotator(
+      artifactDaysToKeepStr: '31',  // Keep artifacts for max 31 days
+      artifactNumToKeepStr: '5',    // Keep artifacts for last 5 builds
+      daysToKeepStr: '90',          // Keep build info for 90 days
+      numToKeepStr: '60'            // Keep a max of 60 builds
+    )
+  )
+])
+
+pipeline {
+    agent { docker { image 'python:3.10.7-alpine' } }
+    stages {
+        stage('build') {
+            steps {
+                sh 'python --version'
+            }
+        }
+    }
+}
+
