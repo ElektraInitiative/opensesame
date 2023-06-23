@@ -399,13 +399,6 @@ fn main() -> Result<(), Error> {
 			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
 				buttons.open_door();
 			}
-			GarageChange::AutoClose => {
-				buttons.open_door();
-				nc.send_message(gettext!(
-					"🔓 Garage door closes automatically. {}",
-					environment.to_string()
-				));
-			}
 
 			GarageChange::ReachedTorEndposition => {
 				nc.set_info_door(gettext("🔒 Open"));

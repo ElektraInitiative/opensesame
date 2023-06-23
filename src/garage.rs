@@ -19,8 +19,6 @@ pub enum GarageChange {
 
 	ReachedTorEndposition,
 	LeftTorEndposition,
-
-	AutoClose,
 }
 
 struct LineHandles {
@@ -40,9 +38,6 @@ pub struct Garage {
 	taster_tor_oben: bool,
 	taster_tor_unten: bool,
 	schalter_tor_endposition: bool,
-
-	auto_close_timeout: u16,
-	auto_close: bool,
 }
 
 impl Garage {
@@ -85,9 +80,6 @@ impl Garage {
 			taster_tor_oben: false,
 			taster_tor_unten: false,
 			schalter_tor_endposition: false,
-
-			auto_close_timeout: 0,
-			auto_close: false,
 		}
 	}
 
@@ -101,16 +93,6 @@ impl Garage {
 			*prev = false;
 		}
 		return ret;
-	}
-
-	fn handle_auto_close(&mut self) {
-		if self.schalter_tor_endposition && self.auto_close_timeout == 0 {
-			self.auto_close_timeout = 200
-		} else if self.auto_close_timeout > 1 {
-			// someone pressed within 2 sec, auto close in 2min
-			self.auto_close_timeout = 12000;
-			self.auto_close = true;
-		}
 	}
 
 	pub fn handle(&mut self) -> GarageChange {
@@ -138,7 +120,6 @@ impl Garage {
 					line_handles.taster_eingang_unten_line.get_value().unwrap(),
 					&mut self.taster_eingang_unten,
 				) {
-					self.handle_auto_close();
 					return GarageChange::PressedTasterEingangUnten;
 				}
 				if Garage::handle_line(
@@ -151,23 +132,10 @@ impl Garage {
 					line_handles.taster_tor_unten_line.get_value().unwrap(),
 					&mut self.taster_tor_unten,
 				) {
-					self.handle_auto_close();
 					return GarageChange::PressedTasterTorUnten;
 				}
 			}
 			None => (),
-		}
-
-		if self.auto_close_timeout == 1 && self.auto_close {
-			self.auto_close = false;
-			if !self.schalter_tor_endposition {
-				return GarageChange::AutoClose;
-			} else {
-				// already closed, don't try to close again
-				return GarageChange::None;
-			}
-		} else if self.auto_close_timeout > 0 {
-			self.auto_close_timeout -= 1;
 		}
 
 		return GarageChange::None;
@@ -201,7 +169,6 @@ mod tests {
 				GarageChange::ReachedTorEndposition => println!("Reached Tor Endposition"),
 				GarageChange::LeftTorEndposition => println!("Left Tor Endposition"),
 
-				GarageChange::AutoClose => println!("Autoclose"),
 			}
 			thread::sleep(time::Duration::from_millis(10));
 		}
