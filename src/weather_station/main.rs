@@ -7,14 +7,17 @@ use gpio::GpioOut;
 
 fn main() -> Result<(), Error> {
 
+    const PIN_SCL: u16 = 273;
+    const PIN_SS: u16 = 272;
+
     let args: Vec<String> = env::args().collect();
     let device = &args[1];
     let baudrate: u32 = args[2].parse().unwrap();
 
-    let mut gpio_scl = gpio::sysfs::SysFsGpioOutput::open(273).unwrap();
-    let mut gpio_ss = gpio::sysfs::SysFsGpioOutput::open(272).unwrap();
+    let mut gpio_scl = gpio::sysfs::SysFsGpioOutput::open(PIN_SCL).unwrap();
+    let mut gpio_ss = gpio::sysfs::SysFsGpioOutput::open(PIN_SS).unwrap();
 
-    // Öffne die serielle Schnittstelle
+    //open the serial interface
     let mut port = serialport::new(device,baudrate)
         .data_bits(DataBits::Eight)
         .parity(Parity::None)
@@ -22,7 +25,7 @@ fn main() -> Result<(), Error> {
         .timeout(Duration::from_secs(1))
         .open()?;
         
-    // Sende Daten über die serielle Schnittstelle
+    // Send data over the serial interface
     gpio_scl.set_value(true).expect("cant set gpio_scl to true");
     gpio_ss.set_value(true).expect("cant set gpio_ss to true");
 
@@ -31,14 +34,14 @@ fn main() -> Result<(), Error> {
 
 
     
-    // Empfange Daten von der seriellen Schnittstelle
+    // Receive data from the serial interface
     gpio_scl.set_value(false).expect("cant set gpio_scl to false");
     gpio_ss.set_value(false).expect("cant set gpio_ss to false");
 
     let mut buffer = Vec::new();
     port.read_to_end(&mut buffer)?;
     
-    // Verarbeite die empfangenen Daten
+    // Process the received data 
     let received_data = String::from_utf8_lossy(&buffer);
     println!("Received: {}", received_data);
     
