@@ -9,9 +9,9 @@ opensesame:
       os_watchdog_enable: 1
       os_bell_enable: 1 
 
-    schreibtisch:
-      ansible_host: schreibtisch
-      os_nc_user: "schreibtisch"
+    sensors:
+      ansible_host: sensors
+      os_nc_user: "sensors"
       os_nc_pass: "<<other pass>>"
       os_environment_name: "Yvo 2"
       os_environment_data_interval: 1
