@@ -53,18 +53,18 @@
               watchdog:
                 enable: "{{ os_watchdog_enable | default('0', true) }}"
               bell:
-                enable: "{{ os_dell_enable | default('0', true) }}"
+                enable: "{{ os_bell_enable | default('0', true) }}"
               light:
                 timeout: 60
               validator:
                 'test': "[14, 15, 13, 15, 11, 15, 7, 15]"            
  
-- name: Configure opensesame specific to schreibtisch
+- name: Add sensor configuration
   hosts: schreibtisch
   collections:
    - elektra_initiative.libelektra
   tasks:
-   - name: set keys for opensesame
+   - name: add keys for opensesame
      elektra:
         record:
           skip: yes
