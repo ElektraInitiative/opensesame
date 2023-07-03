@@ -22,8 +22,8 @@
               debug:
                 backtrace: full
                 ping:
-                enable: 1
-                timeout: 24
+                  enable: 1
+                  timeout: 24
               audio:
                 bell: "{{ os_audio_bell | default('/dev/null', true) }}"
                 alarm: "{{ os_audio_alarm | default('/dev/null', true) }}"
