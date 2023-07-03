@@ -4,7 +4,8 @@
    - elektra_initiative.libelektra
   tasks:
     # As the other tasks are running with user privileges, they can not change session recording state
-    # So we run this task as root user first to disable recording
+    # So we run this task as root user first to disable recording, as we do not want to 
+    # record changes made during the execution of this playbook
     - name: Disable session recording
       become: yes
       elektra:
@@ -93,3 +94,16 @@
                       avg: 216
                       max: 466
                       pin: "A1 weiss; +5V orange; GND blau"
+
+- name: Reenable recording on all hosts
+  hosts: opensesame
+  collections:
+   - elektra_initiative.libelektra
+  tasks:
+    # As the other tasks are running with user privileges, they can not change session recording state
+    # So we run this task root user to enable recording
+    - name: Enable session recording
+      become: yes
+      elektra:
+        record:
+          enable: yes
