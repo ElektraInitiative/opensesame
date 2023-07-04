@@ -29,9 +29,13 @@ fn main() -> Result<(), Error> {
     gpio_scl.set_value(true).expect("cant set gpio_scl to true");
     gpio_ss.set_value(true).expect("cant set gpio_ss to true");
 
-    let data = b"00KY1";
-    port.write_all(data)?;
+    let change_to_admin = b"00KY4711";
+    port.write_all(change_to_admin)?;
 
+    //sleep dazwischen
+
+    let set_half_duplex = b"00DM0";
+    port.write_all(set_half_duplex)?;
 
     
     // Receive data from the serial interface
