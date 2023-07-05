@@ -113,9 +113,9 @@ void close_gpio_pins(){
 }
 
 int main(void){
-    const int REMOTE_ID = 0;
+    const int REMOTE_ID = 1;
     modbus_t *ctx;
-    uint16_t tab_reg[32]={0};
+    uint16_t tab_reg[64]={0};
 
     config_gpio_pins();
 
@@ -132,16 +132,19 @@ int main(void){
     }
 
     ctx = modbus_new_rtu("/dev/ttyS5", 9600, 'N', 8, 1);
-    modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
+    modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS232);
     modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
+    modbus_set_response_timeout(ctx, 5, 0);
 
     if (ctx == NULL) {
         fprintf(stderr, "Unable to create the libmodbus context\n");
+        close_gpio_pins();
         return -1;
     }
 
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        close_gpio_pins();
         modbus_free(ctx);
         return -1;
     }
@@ -150,38 +153,14 @@ int main(void){
 
     if (modbus_rtu_set_custom_rts(ctx, &set_rts_custom) == -1){
         fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        close_gpio_pins();
         modbus_free(ctx);
         return -1;
     }
 
     // Read 2 registers from address 0 of server ID 10.
-    
-    uint16_t write_data = 0x1267;
-    if (modbus_write_registers(ctx, 0x9c49, 2, &write_data) == -1){
-        fprintf(stderr, "first write - Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-    write_data=0x0;
-
-    if (modbus_write_registers(ctx, 0x9c4b, 2, &write_data) == -1){
-        fprintf(stderr, "second write - Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-    if (modbus_write_registers(ctx, 0x9c49, 2, &write_data) == -1){
-        fprintf(stderr, "third write - Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-
-
-
-    if (modbus_read_registers(ctx, 0x9c4b, 2, tab_reg) == -1){
-        fprintf(stderr, "first read - Connection failed: %s\n", modbus_strerror(errno));
+    if (modbus_read_registers(ctx, 0x0200, 0x0008, tab_reg) == -1){
+        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
         close_gpio_pins();
         modbus_free(ctx);
         return -1;
