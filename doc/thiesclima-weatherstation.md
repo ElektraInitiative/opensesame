@@ -3,7 +3,14 @@ This documentation outlines the chosen steps for establishing communication with
 The hardware utilized for this communication includes an [A20-OLinuXino-LIME2](https://www.olimex.com/Products/OLinuXino/A20/A20-OLinuXino-LIME2/open-source-hardware) board with [LIME2-SHIELD](https://www.olimex.com/Products/OLinuXino/A20/LIME2-SHIELD/open-source-hardware) and a [MOD-RS485](https://www.olimex.com/Products/Modules/Interface/MOD-RS485/open-source-hardware) module. 
 Two command interpreters, namely THIES-ASCII and MODBUS RTU, can be chosen for communication, with THIES-ASCII being the default option. 
 We will be utilizing the THIES-ASCII command interpreter.
-Default ID on which every thiese weatherstation answers ist `99` so for detecting the device use `SLAVE_ID=99`. 
+Default ID on which every thiese weatherstation answers ist `99` so for detecting the device use `SLAVE_ID=99`.
+
+## wiring of the RS-485 connection
+According to the [documentation](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf), the wiring of the RS-485 connection should be done as follows:
+
+1. Connect the GND (color: gray) of the weather station to the pull-down resistor of the [MOD-RS485](https://www.olimex.com/Products/Modules/Interface/MOD-RS485/open-source-hardware) module.
+2. For the pins labeled `A` and `B`, it is important to connect all `A` pins together using a single wire, and similarly, connect all `B` pins together using a separate wire.
+3. Referring to the documentation, there is a yellow wire labeled `+` and a green wire labeled `-`. Connect the A pin to the yellow `+` wire, and connect the green `-` wire to the B pin.
 
 ## Initial Communication Steps
 
@@ -20,16 +27,6 @@ To resolve this, we found a solution on [GitHub](https://github.com/epsilonrt/mb
 
 
 ### Developing Custom Rust Code
-
-In our Rust code, we utilize the `serialport` and `gpio` modules. 
-The `serialport` module allows us to send serial packages to the MOD-RS485 board, while the `gpio` module enables read and write operations by configuring the SCL/SCK (GPIO273) and #SS/SDA (GPIO272) pins. 
-When both pins are set to `0`, the MOD-RS485 is ready to receive packages, and when both are set to `1`, the MOD-RS485 is ready to send packages.
-
-Currently, we are able to observe output on the RS485 bus, but we have not received a response. This could be due to the weather station being set to full-duplex by default, whereas we can only use half-duplex.
-
-To compile the Rust code, you need to install the `libudev` library. 
-During cross-compilation, we encountered issues, so we opted to compile it directly on the [A20-OLinuXino-LIME2](https://www.olimex.com/Products/OLinuXino/A20/A20-OLinuXino-LIME2/open-source-hardware).
-
 #### ASCII
 The initial attempt was to send ASCII messages over the serial connection, as implemented in the `src/weather_station/connection_ascii.rs` file. 
 In the `connection_ascii.rs` file, we attempted to send data to configure the weather station for half-duplex usage. 
@@ -47,10 +44,3 @@ To overcome this problem, our plan is to temporarily program this communication 
 Another approach we considered was utilizing minicom for serial communication since it provides additional options for RS-485. 
 However, we encountered the limitation of being unable to configure the SCL/SCK and #SS/SDA pins in minicom.
 
-## Troubles
-### MOD-RS485
-When using the [MOD-RS485](https://www.olimex.com/Products/Modules/Interface/MOD-RS485/open-source-hardware) in half-duplex mode, you have to switch SCK and #SS of the UEXT connection. 
-
-### libmodbus-rs
-## read_register timeout 
-Because switching of SCK and #SS isn't enabled, so we need to use `rtu_set_custom_rts`, which is not implemented in [libmodbus-rs](https://github.com/zzeroo/libmodbus-rs) so wie need to programm this connection in `C`.
