@@ -1,3 +1,9 @@
+/*This connection-progam tries to start a connection with the goodwe-inverter
+
+importent: the SLAVE_ID for the inverter is 247; baudate: 9600; Bits 8N1; one register has 16bit or 4byte
+ 
+execution: ./connection <register> <size of reg>*/
+
 #include <stdio.h>
 #include <modbus.h>
 #include <errno.h>
@@ -9,6 +15,72 @@
 
 int fd_272;
 int fd_273;
+
+void set_rts_custom(modbus_t*, int);
+void config_gpio_pins();
+void close_gpio_pins();
+
+int main(int argc, char* argv[]){
+
+    if (argc != 3){
+        printf("usage: %s <register> <size of reg>\n", argv[0]);
+        return -1;
+    }
+
+
+    const int REMOTE_ID = 247;
+    int reg = atoi(argv[1]);
+    int size_reg = atoi(argv[2]);
+
+    modbus_t *ctx;
+    uint16_t tab_reg[10]={0};
+
+    config_gpio_pins();
+
+    ctx = modbus_new_rtu("/dev/ttyS5", 9600, 'N', 8, 1);
+    modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS232);
+    modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
+    modbus_set_slave(ctx, REMOTE_ID);
+
+    //Set custom function
+    if (modbus_rtu_set_custom_rts(ctx, &set_rts_custom) == -1){
+        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        close_gpio_pins();
+        modbus_free(ctx);
+        return -1;
+    }
+
+    if (ctx == NULL) {
+        fprintf(stderr, "Unable to create the libmodbus context\n");
+        close_gpio_pins();
+        return -1;
+    }
+
+    if (modbus_connect(ctx) == -1) {
+        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        close_gpio_pins();
+        modbus_free(ctx);
+        return -1;
+    }
+
+    //Read register 
+    if (modbus_read_registers(ctx, reg, size_reg, tab_reg) == -1){
+        fprintf(stderr, "Connection failed: %s\n; reg: %d; reg-size: %d", modbus_strerror(errno),reg, size_reg);
+        close_gpio_pins();
+        modbus_free(ctx);
+        return -1;
+    }
+
+    //Output read register
+    for(int i=0;i<sizeof(tab_reg)/sizeof(tab_reg[0]);i++){
+        printf("%d: %hu\n",i,tab_reg[i]);
+    }
+
+    modbus_free(ctx);
+    close_gpio_pins();
+
+    return 0;
+}
 
 void set_rts_custom(modbus_t *ctx, int on){
     if (on){
@@ -89,6 +161,18 @@ void config_gpio_pins(){
     }
 
     close(fd);
+
+    fd_273 = open("/sys/class/gpio/gpio273/value", O_WRONLY);
+    if (fd_273 == -1) {
+        perror("Unable to open /sys/class/gpio/gpio273/value");
+        exit(1);
+    }
+
+    fd_272 = open("/sys/class/gpio/gpio272/value", O_WRONLY);
+    if (fd_272 == -1) {
+        perror("Unable to open /sys/class/gpio/gpio272/value");
+        exit(1);
+    }
 }
 
 void close_gpio_pins(){
@@ -110,68 +194,4 @@ void close_gpio_pins(){
     }
 
     close(fd);
-}
-
-int main(void){
-    const int REMOTE_ID = 1;
-    modbus_t *ctx;
-    uint16_t tab_reg[64]={0};
-
-    config_gpio_pins();
-
-    fd_273 = open("/sys/class/gpio/gpio273/value", O_WRONLY);
-    if (fd_273 == -1) {
-        perror("Unable to open /sys/class/gpio/gpio273/value");
-        exit(1);
-    }
-
-    fd_272 = open("/sys/class/gpio/gpio272/value", O_WRONLY);
-    if (fd_272 == -1) {
-        perror("Unable to open /sys/class/gpio/gpio272/value");
-        exit(1);
-    }
-
-    ctx = modbus_new_rtu("/dev/ttyS5", 9600, 'N', 8, 1);
-    modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS232);
-    modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
-    modbus_set_response_timeout(ctx, 5, 0);
-
-    if (ctx == NULL) {
-        fprintf(stderr, "Unable to create the libmodbus context\n");
-        close_gpio_pins();
-        return -1;
-    }
-
-    if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-
-    modbus_set_slave(ctx, REMOTE_ID);
-
-    if (modbus_rtu_set_custom_rts(ctx, &set_rts_custom) == -1){
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-
-    // Read 2 registers from address 0 of server ID 10.
-    if (modbus_read_registers(ctx, 0x0200, 0x0008, tab_reg) == -1){
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
-        close_gpio_pins();
-        modbus_free(ctx);
-        return -1;
-    }
-
-    for(int i=0;i<sizeof(tab_reg)/sizeof(tab_reg[0]);i++){
-        printf("%d: %hu\n",i,tab_reg[i]);
-    }
-
-    modbus_free(ctx);
-    close_gpio_pins();
-
-    return 0;
 }

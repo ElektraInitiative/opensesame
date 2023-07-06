@@ -1,0 +1,1 @@
+# Goodwe inverter

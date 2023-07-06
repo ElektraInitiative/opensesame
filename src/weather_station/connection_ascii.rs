@@ -1,3 +1,5 @@
+/*This programm does not work, with the thies-clima-weather-station, if configured with Modbus RTU*/
+
 use serialport::{DataBits, Parity, StopBits, Error};
 use std::io::{Read, Write};
 use std::time::Duration;
@@ -31,8 +33,6 @@ fn main() -> Result<(), Error> {
 
     let change_to_admin = b"00KY4711";
     port.write_all(change_to_admin)?;
-
-    //sleep dazwischen
 
     let set_half_duplex = b"00DM0";
     port.write_all(set_half_duplex)?;

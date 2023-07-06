@@ -1,3 +1,5 @@
+/*This program doesn't work, because there is no implementation of rtu_set_custom_rts in libmodbus-rs*/
+ 
 extern crate libmodbus_rs;
 
 use libmodbus_rs::*;
