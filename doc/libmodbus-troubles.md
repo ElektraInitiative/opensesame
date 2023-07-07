@@ -1,18 +1,19 @@
 # libmodbus Trouble Protocol
+The documentation of the libmodbus library can be found on [this website](https://libmodbus.org/reference/).
+This brief troubleshooting protocol contains essential information required for communicating with a modbus device. It also includes details about the challenges we encountered during our programming journey.
 
-## config modbus-rtu connection 
-1. `ctx = modbus_new_rtu("/dev/ttyS5", 9600, 'N', 8, 1)` - set ttyS5 for serial communication; Baudrate to 9600; No paritybit; 8 databit; 1 stopbit
-2. `modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485)`- set serial mode to RS485, other option would be RS323
-3. `modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP)` - set the RTS-PINS (9&10) to high while sending, and while receiving low
-4. `modbus_set_slave(ctx, REMOTE_ID)` - set the slave-id
-5. `modbus_rtu_set_custom_rts(ctx, &set_rts_custom)` - set a custom function which is called before and after sending data, this is needed to set `DE` & `!RE` on the MOD-RS485 Module
-6. `modbus_connect(ctx)` - starts the serial connection
-7. `modbus_write_registers(ctx, reg, n, &write_data)` - write data to `reg` with the register size `n` and `write_data` will be written into the register
+## Methodes mapped to modbus-functions
+The Modbus function codes provide a standardized set of commands for communication between Modbus devices.
+### function 0x01 -> modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
+### function 0x02 -> modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest) 
+### function 0x03 -> modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
+### function 0x04 -> modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
+### function 0x05 -> modbus_write_bit(modbus_t *ctx, int addr, int status)
+### function 0x06 -> modbus_write_register(modbus_t *ctx, int addr, const uint16_t value)
+### function 0x0F -> modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
+### function 0x10 -> modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
 
-## methodes mapped to modbus-functions
-### function 0x03 -> modbus_read_registers(...)
-
-## weatherstation
+## Weatherstation
 ### Date 05.07.2023 - execution of ./src/weather_station/connection
 - `Connection timed out` with the above config and the `SLAVE_ID=0`
 - `Illegal data value` with the above config and the `SLAVE_ID=1`
@@ -21,15 +22,15 @@
 ### Date 06.07.2023 - execution of ./src/goodwe-inverter/connection
 The problem was that, we didn't use the right `SLAVE_ID`. The configured `SLAVE_ID` had been set to `1`.
 
-## pv
+## Pv
 ### Date 05.07.2023
 - `Connection timed out` with the above config and multiple `SLAVE_IS`s
 ### Date 06.07.2023
 The problem was that, we didn't use the right `SLAVE_ID`. The configured `SLAVE_ID` had been set to `247`.
 
-## `Connection timed out`reasons
+## Error: `Connection timed out`reasons
 - usage of wrong `SLAVE_ID`
 - `DE`and `!RE`of MOD_RS485 is not set to `1` while sending or reset to `0` while receiving.  
 
-## `Illegal data address`reasons
+## Error: `Illegal data address`reasons
 - usage of wrong `register address`

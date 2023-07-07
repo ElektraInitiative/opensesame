@@ -2,7 +2,8 @@
 
 importent: the SLAVE_ID for the inverter is 1; baudate: 9600; Bits 8N1; one register has 16bit or 4byte
 -> only execution of 'Holding Register' with the implemented function 'modbus_read_registers(...)'
- 
+-> example registers are  Befehl AV (40015); Befehl (40031); from Page 40 of the doc which is linked in the thieclima-weatherstation.md file
+
 execution: ./connection <register> <size of reg>
 [INFO]: only Holding Register possible */
 
@@ -61,7 +62,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    //Read register 
+    //Read register only Registers which are enabled for function code 0x10
     if (modbus_read_registers(ctx, reg, size_reg, tab_reg) == -1){
         fprintf(stderr, "Connection failed: %s; reg: %d; reg-size: %d\n", modbus_strerror(errno),reg, size_reg);
         close_gpio_pins();
