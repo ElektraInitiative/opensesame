@@ -2,10 +2,14 @@
 # latest A20-Debian-Server-SD images at:
 #http://images.olimex.com/release/a20/
 
-unpack A20-OLinuXino-bullseye-base-20220413-094751.img.7z
-md5sum A20-OLinuXino-bullseye-base-20220413-094751.img.md5
-cp A20-OLinuXino-bullseye-base-20220413-094751.img /dev/sdi
-sync
+$ wget https://images.olimex.com/release/a20/A20-OLinuXino-bullseye-minimal-20230515-130040.img.7z
+$ 7z x A20-OLinuXino-bullseye-minimal-20230515-130040.img.7z
+Compressed: 179781272
+$ md5sum -c A20-OLinuXino-bullseye-minimal-20230515-130040.img.md5
+A20-OLinuXino-bullseye-minimal-20230515-130040.img: OK
+
+$ sudo cp A20-OLinuXino-bullseye-minimal-20230515-130040.img /dev/sdh
+$ sudo sync
 
 # boot into the new system
 
