@@ -1,0 +1,6 @@
+# https://doc.rust-lang.org/cargo/reference/config.html
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+
+[env]
+GETTEXT_SYSTEM = "1"
