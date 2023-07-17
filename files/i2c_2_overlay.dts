@@ -2,7 +2,7 @@
 /plugin/;
 
 / {
-	compatible = "allwinner, sun7i-a20";
+	compatible = "allwinner,sun7i-a20";
 	description = "Change I2C2 clock-frequency to 6000"; 	
 
 	fragment@0 {
