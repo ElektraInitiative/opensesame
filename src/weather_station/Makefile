@@ -3,3 +3,4 @@ all: connection.c
 
 clean:
 	$(RM) connection
+	

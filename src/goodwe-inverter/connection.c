@@ -1,6 +1,5 @@
-/*This connection-progam tries to start a connection with the goodwe-inverter
-
-importent: the SLAVE_ID for the inverter is 247; baudate: 9600; Bits 8N1; one register has 16bit or 4byte
+/*This connection-progam tries to start a connection with the goodwe-inverter and then 
+reads the given register, for now there is only the 0x03 function implemented.
  
 execution: ./connection <register> <size of reg>*/
 

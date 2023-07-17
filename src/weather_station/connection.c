@@ -1,11 +1,12 @@
 /*This connection-progam tries to start a connection with the thies-clima-weather-station
 
-importent: the SLAVE_ID for the inverter is 1; baudate: 9600; Bits 8N1; one register has 16bit or 4byte
+importent: the SLAVE_ID for the inverter is 1;
 -> only execution of 'Holding Register' with the implemented function 'modbus_read_registers(...)'
 -> example registers are  Befehl AV (40015); Befehl (40031); from Page 40 of the doc which is linked in the thieclima-weatherstation.md file
 
 execution: ./connection <register> <size of reg>
-[INFO]: only Holding Register possible */
+[INFO]: only Holding Register possible. The Holding Register can be found in the doc,
+examples of the holding registers are 40015 & 40031.*/
 
 #include <stdio.h>
 #include <modbus.h>
