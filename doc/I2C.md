@@ -8,8 +8,8 @@
 - snubber as near to load as possible
 
 If all of this fails, reduce the I2C speed by activating the overlay:
-5c10fd63f9efb3bb2d33f0afdf1a381d  i2c_2_clock_freq_overlay.dtbo
-(adding /usr/lib/olinuxino-overlays/sun7i-a20/i2c_2_clock_freq_overlay.dtbo to `fdtoverlays` in `/boot/uEnv.txt`)
+f3988a26e10c7b7f472284635a041c7e  i2c_2_clock_freq_6000_overlay.dtbo
+(adding /usr/lib/olinuxino-overlays/sun7i-a20/i2c_2_clock_freq_6000_overlay.dtbo to `fdtoverlays` in `/boot/uEnv.txt` or use `sudo olinuxino-overlay`)
 
 ## Bus
 
