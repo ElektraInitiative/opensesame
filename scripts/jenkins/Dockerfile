@@ -1,4 +1,4 @@
-# docker build -t opensesame_base . --build-arg VARIANT=bullseye RUST_VERSION=1.67.0
+# docker build -t opensesame_cross . --build-arg VARIANT=bullseye
 ARG VARIANT=bullseye
 ARG RUST_VERSION=1.67.0
 FROM rust:${RUST_VERSION}-slim-${VARIANT}
@@ -19,7 +19,7 @@ RUN apt-get install -y software-properties-common apt-transport-https
 RUN echo "deb [trusted=yes] https://thesis.maxirlinger.at/repo/ armhf/" > /etc/apt/sources.list.d/elektra-armhf.list && apt-get update
 RUN apt-get install -y --allow-unauthenticated libelektra-dev:armhf
 
-# elektra symlinks
+# Elektra symlinks
 RUN ln -s /usr/lib/arm-linux-gnueabi /usr/lib/pkgconfig/arm-linux-gnueabi
 RUN ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/pkgconfig/arm-linux-gnueabihf
 RUN ln -s /usr/lib/arm-none-eabi /usr/lib/pkgconfig/arm-none-eabi
@@ -56,13 +56,3 @@ RUN rustup component add clippy rustfmt
 RUN rustup target add armv7-unknown-linux-gnueabihf
 RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf 
 RUN chown 47110:47110 -R /usr/local/cargo
-
-# export PKG_CONFIG_PATH="/usr/lib/arm-linux-gnueabihf/pkgconfig"
-# export PKG_CONFIG_ALLOW_CROSS="true"
-
-# libdbus-1-dev:armhf
-# libdbus-1-dev 
-
-# g++-multilib \
-#  \
-#g++-arm-linux-gnueabihf \ 

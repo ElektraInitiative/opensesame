@@ -168,7 +168,6 @@ mod tests {
 
 				GarageChange::ReachedTorEndposition => println!("Reached Tor Endposition"),
 				GarageChange::LeftTorEndposition => println!("Left Tor Endposition"),
-
 			}
 			thread::sleep(time::Duration::from_millis(10));
 		}
