@@ -65,7 +65,6 @@ CCS811 Sensor
 fix sensor test cases
 
 
-
 ## Robustness
 
 make some not so loud sound on bootup+visual indication at buttons (to hear reboot loops)
@@ -73,7 +72,6 @@ make some not so loud sound on bootup+visual indication at buttons (to hear rebo
 Test if it survives power-off/on
 
 Writing to SD-Card should be reduced as much as possible, read-only as much as possible
-
 
 
 ## Proper start/shutdown
