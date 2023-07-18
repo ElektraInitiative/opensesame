@@ -9,13 +9,13 @@ Basically, we use the `qemu-user-static` emulator to emulate ARM binaries on our
 
 On Debian systems, install the following tools:
 
-```
+``` bash 
 apt install qemu-user-static systemd-container 
 ```
 
 On Fedora, use these:
 
-```
+``` bash
 dnf install qemu-user-static systemd-container
 ```
 
@@ -27,7 +27,7 @@ As an example, we have extracted the whole image into `/tmp/olimex`.
 
 All that's left is to execute the following command as root:
 
-```
+``` bash
 systemd-nspawn --bind=/dev/ttyACM0 -b -D /tmp/olimex
 ```
 
@@ -44,7 +44,7 @@ Use the credentials of the image (default root/olimex) to login and work on the 
 
 If you need network connectivity, you need to configure DNS lookup with the following command:
 
-```
+``` bash
 echo 'nameserver 8.8.8.8' >  /run/resolvconf/resolv.conf
 ```
 

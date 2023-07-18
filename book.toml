@@ -2,8 +2,5 @@
 authors = ["Opensesame Contributors"]
 language = "en"
 multilingual = false
-src = "doc"
 title = "Opensesame"
-
-[preprocessor.generate-summary]
-get_chapter_name_from_file = true
+src = "doc"
