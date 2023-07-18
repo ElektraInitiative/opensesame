@@ -1,0 +1,50 @@
+// Buildjob properties
+properties([
+  buildDiscarder(
+    logRotator(
+      artifactDaysToKeepStr: "31",  // Keep artifacts for max 31 days
+      artifactNumToKeepStr: "5",    // Keep artifacts for last 5 builds
+      daysToKeepStr: "90",          // Keep build info for 90 days
+      numToKeepStr: "60"            // Keep a max of 60 builds
+    )
+  )
+])
+
+pipeline {
+    options {
+        timeout(time: 2, unit: "HOURS")
+        disableConcurrentBuilds(abortPrevious: env.BRANCH_NAME != "master")
+    }
+
+    agent {
+        dockerfile {
+            filename "Dockerfile"
+            dir "scripts/jenkins"
+            label "docker"
+            additionalBuildArgs "-t opensesame:build"
+        }
+    }
+
+    stages {
+        stage("sanity") {
+            steps {
+                sh "cargo fmt --check"
+            }
+        }
+
+        stage("package") {
+            environment {
+                GETTEXT_SYSTEM=1
+            }
+            steps {
+                sh "cargo deb --target=armv7-unknown-linux-gnueabihf"
+            }
+        }
+    }
+
+    post {
+        success {
+            archiveArtifacts artifacts: "target/armv7-unknown-linux-gnueabihf/debian/*.deb", fingerprint: false
+        }
+    }
+}

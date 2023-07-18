@@ -17,7 +17,7 @@ maintainer="Markus Raab <markus@libelektra.org>"
 copyright="BSD"
 maintainer-scripts = "debian/"
 systemd-units = { enable = true }
-pre-depends = "elektra-bin"
+pre-depends = "elektra-bin, libelektra5, libelektra5-extra, libelektra5-experimental, libelektra5-python"
 
 assets = [
     ["target/release/opensesame", "usr/bin/", "755"],
