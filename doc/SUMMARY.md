@@ -14,5 +14,5 @@
 - [Inverter](goodwe-inverter.md)
 - [Troubles libmodbus](libmodbus-troubles.md)
 - [Energy](Energy.md)
-- [Translations](Translastions.md)
+- [Translations](Translations.md)
 - [Benchmark](Benchmark.md)
