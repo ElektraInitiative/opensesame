@@ -1,3 +1,5 @@
+[![Build badge](https://build.libelektra.org/job/opensesame/job/master/badge/icon)](https://build.libelektra.org/job/opensesame/job/master/lastBuild/)
+
 # Introduction and Goals
 
 Opensesame, or German: "Sesam, öffne dich" is an awesome home automation software with focus on door/garage entry.
