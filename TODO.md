@@ -1,39 +1,57 @@
-## Hardware
+## Weather station
 
-weather station: needs libmodbus integration
+libmodbus-rs fix
+
+implement all error codes
+
+dump all registers
+
+warn if `> 30°` and no wind
+warn if `> 35°`
+(and remove warning again if `< 20°`)
+
+publish to https://www.opensensemap.org
 
 
-## Smaller Features
+## Nextcloud Talk
 
-Configurable corrections on Temperature
+(allow to also talk to opensesame via Nextcloud)
 
-warn on other fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
+open door
 
-temperature alarm e.g. 70° (check max temp from sensor) and warning 28° (window left open)
+add/rem PIN code
 
-"on battery" and "low battery" warning, ideally with proper Bat impl https://github.com/svartalf/rust-battery/issues/96
+status
+
+lights on/off
+
+
+## Lights
 
 double extension length of light every time
 
 
-## Bigger Features
+## Env
 
-reading data from inverter/photovoltaik (https://community.goodwe.com/solution/GoodWe%20Modbus%20TCP%20Communication%20Solution)
+Implement "Alternative" Env HW
 
-switching off heat pump if no sunshine e.g. using https://github.com/chrishrb/hoval-gateway/issues/7
+Configurable corrections on Temperature
 
-battery control
+warn on fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
 
-allow to also talk to sensors via Nextcloud, e.g.:
-- open door
-- set PIN code
+temperature alarm e.g. 50° (check max temp from sensor) and warning  e.g. 28° (window left open)
+
+
+## Battery
+
+proper Bat impl https://github.com/svartalf/rust-battery/issues/96
+
+"on battery" and "low battery" warning (freezer would be without power then)
+
+
+## Nextcloud Analytics
 
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
-
-
-## Usability
-
-more interesting info in ping (give various modules a chance, averages of errors happened, humidity?)
 
 
 ## Code Smell
@@ -53,35 +71,27 @@ avoid double loop in main.rs
 env1/env2 allow to always use two sensors, or only one sensor fixed
 
 
-## Completeness
+## PV
 
-CCS811 Sensor
-- implement hysteresis
-- implement error codes
-- implement compensations
-- restore baseline
-- add unit tests
+implement all error codes
 
-fix sensor test cases
+dump all registers
 
+warn if battery `< 30%`
+
+switching off heat pump if no sunshine (MOD-2 relay)
 
 
 ## Robustness
 
-make some not so loud sound on bootup+visual indication at buttons (to hear reboot loops)
-
-Test if it survives power-off/on
-
 Writing to SD-Card should be reduced as much as possible, read-only as much as possible
 
-
-
-## Proper start/shutdown
-
-close garage door (needs up to 2x 10 sec wait)
+close garage door on reboots (needs up to 2x 10 sec wait)
 
 
 ## Elektrification
+
+cmd-line arguments
 
 make nice TOML sections in config files
 
@@ -91,30 +101,16 @@ allow generic serialization with specializations (e.g. for bool) using serde htt
 
 internal notification on state changes
 
-fix boolean (0 instead of false, 1 instead of true)
-
-allow reload of everything (reinit everything)
-
 Buttons and Environment without hardware (i.e. mock): https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
-
-put into own crate
 
 
 ## Rust
-
-cross-compile
-
-https://github.com/viperproject/prusti-dev
-
-refactor parts to be a lib? https://doc.rust-lang.org/stable/book/ch12-03-improving-error-handling-and-modularity.html
 
 Destructors: https://doc.rust-lang.org/stable/reference/destructors.html
 
 life-times in closures, lifetime within structs, ...
 
-https://marabos.nl/atomics/memory-ordering.html
-
-use more https://github.com/rust-embedded/embedded-hal
+use more of https://github.com/rust-embedded/embedded-hal
 
 
 ## Ansible
@@ -124,8 +120,6 @@ put .config into git
 default editor not working
 
 also install opensesame (via repo)
-
-use Handlers to send SIGHUP only as needed https://docs.ansible.com/ansible/latest/user_guide/playbooks_handlers.html
 
 /usr/share/alsa/alsa.conf
 
@@ -137,9 +131,5 @@ use Handlers to send SIGHUP only as needed https://docs.ansible.com/ansible/late
 	  # keyboard-configuration  keyboard-configuration/layoutcode       string  at
 	  # keyboard-configuration  keyboard-configuration/modelcode        string  pc105
 	  # keyboard-configuration  keyboard-configuration/model    select  Generic 105-key PC (intl.
-
-wrong timezone
-
-static IPv4 and IPv6 addresses
 
 add public gpg keys for login
