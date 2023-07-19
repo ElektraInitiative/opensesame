@@ -26,14 +26,13 @@ status
 lights on/off
 
 
-## Lights
-
-double extension length of light every time
-
-
 ## Env
 
-Implement "Alternative" Env HW
+Implement "Alternative" Env HW with:
+
+MOD-BME280 and MOD-IR-TEMP
+https://www.olimex.com/Products/Modules/Sensors/MOD-BME280/open-source-hardware
+https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware
 
 Configurable corrections on Temperature
 
