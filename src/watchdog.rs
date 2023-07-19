@@ -27,7 +27,7 @@ impl Watchdog {
 		if let Some(handle) = &mut self.handle {
 			self.wait_for_watchdog_trigger += 1;
 			if self.wait_for_watchdog_trigger > 1000 {
-				handle.write(b"a").expect("could not write to watchdog");
+				handle.write_all(b"a").expect("could not write to watchdog");
 				self.wait_for_watchdog_trigger = 0;
 			}
 		}
