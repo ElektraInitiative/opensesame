@@ -1,11 +1,11 @@
-## Allgemeine Infos
+# Allgemeine Infos
 
 - Lampe übern Garagentor: braun, blau, gelb/grün
 - Schalter Endstellung Garagentor: braun COM; schw NO; grau NC; gelb/grün am tor
 - Taster bei Eingang: oben: orange und weiß; unten: blau und weiß
 - Board21 GPIO3 is unused and needs to be connected to +5V (due to non-working internal pull-up)
 
-## GPIO Input
+# GPIO Input
 
 Layout Platine
 
@@ -16,7 +16,7 @@ Layout Platine
 - Schalter Garagentor Endposition -> Pin26 GPIO238 EINT14
 
 
-## LEDS
+# LEDS
 
 - LED_1 "1"     black/violet       -> Board20 GPIO4
 - LED_2 "2"     salmonorange       -> Board20 GPIO5
@@ -25,7 +25,7 @@ Layout Platine
 - LED_L "Light" cow pie brown      -> Board21 GPIO5
 - LED_B "Bell"  baby-blue          -> Board21 GPIO6
 
-## BUTTONS
+# BUTTONS
 
 - BUTTON_1 "1"      zitronengelb                    -> Board20 GPIO0
 - BUTTON_2 "2"      blassrosa                       -> Board20 GPIO1
@@ -34,7 +34,7 @@ Layout Platine
 - BUTTON_L "Light"  weiß                            -> Board21 GPIO0
 - BUTTON_B "Bell"   dunkelblau                      -> Board21 GPIO1
 
-## GND
+# GND
 
 "C" (ground from buttons)
 
@@ -45,7 +45,7 @@ Layout Platine
 - blassrosa/schwarz
 - dunkelblau/schwarz
 
-## not connected: (NC)
+# not connected: (NC)
 
 - rosa/schwarz
 - rosaorange/schwarz
@@ -55,7 +55,7 @@ Layout Platine
 - violett
 
 
-## Relay Output
+# Relay Output
 
 - Garagenöffner                   -> Board 20 Relay 1
 - Aussen Licht                    -> Board 20 Relay 2

@@ -1,6 +1,6 @@
-## Benchmark
+# Benchmark
 
-### with opensesame v0.6.2
+## with opensesame v0.6.2
 
 sensors: ~100ms per iteration (854ms first iteration)
 haustuer: ~46ms per iteration (695ms first iteration)

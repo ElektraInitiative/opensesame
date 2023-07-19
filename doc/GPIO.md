@@ -1,4 +1,4 @@
-## used GPIOs for PINs
+# used GPIOs for PINs
 
 "1"     GPIO53  P3  black/violet
 "2"     GPIO52  P5  salmonorange
@@ -50,7 +50,7 @@ echo "85"  > /sys/class/gpio/unexport
 echo "86"  > /sys/class/gpio/unexport
 
 
-## calculate GPIO numbers on A20 0.5''
+# calculate GPIO numbers on A20 0.5''
 
 PA, PB, PC, PD, PE, PF, PG, PH, PI
 
@@ -66,7 +66,7 @@ H-A = 7*32=224
 https://olimex.wordpress.com/2019/01/25/working-with-a20-olinuxino-or-som-gpios-when-using-new-armbian-based-a20-universal-linux-image/
 
 
-## debug GPIO
+# debug GPIO
 
 cat /sys/kernel/debug/gpio
 

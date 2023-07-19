@@ -1,0 +1,6 @@
+[book]
+authors = ["Opensesame Contributors"]
+language = "en"
+multilingual = false
+title = "Opensesame"
+src = "doc"

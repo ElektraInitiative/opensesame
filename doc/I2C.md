@@ -1,4 +1,4 @@
-## Important
+# Important
 
 - larger AC loads (>>10W) might need snubber circuits
 - larger DC loads might need a diode
@@ -11,31 +11,31 @@ If all of this fails, reduce the I2C speed by activating the overlay using `sudo
 f3988a26e10c7b7f472284635a041c7e  i2c_2_clock_freq_6000_overlay.dtbo
 (adding /usr/lib/olinuxino-overlays/sun7i-a20/i2c_2_clock_freq_6000_overlay.dtbo to `fdtoverlays` in `/boot/uEnv.txt` or use `sudo olinuxino-overlay`)
 
-## Bus
+# Bus
 
 with shield UEXT1 corresponds to /dev/i2c-2
 
-## Devices
+# Devices
 
-### Strip
+## Strip
 
 LED DRIVER XY12J-1201000H-EW (12V output)
 20mA Einschaltstrom
 15mA Dauer (0,015A)
 3,5W
 
-### Bulb
+## Bulb
 
 Philipps LED E27 socket
 13W (auch gemessen)
 0.06A
 
-### Panel
+## Panel
 
 0.15A
 37W
 
-### All
+## All
 
 Strip&Bulb&Panel Together
 
@@ -43,7 +43,7 @@ Strip&Bulb&Panel Together
 50W
 
 
-### 1
+## 1
 
 Board: Mod-IO2
 Relay1 -> All
@@ -54,7 +54,7 @@ CPU load during execution: 0.023320895% user, 0% nice, 8.762455% system, 0% intr
 Executed version 0.4.43 with boot time 2022-07-25 04:27:52 UTC
 Load average: 0.13 0.41 0.21, Memory usage: 1046.7 MB, Swap: 0 B, CPU temp: 46.5
 
-### 2
+## 2
 
 Board: Mod-IO2
 Relay1 -> All, powered off
@@ -66,7 +66,7 @@ CPU load during execution: 0.1398611% user, 0% nice, 9.6398735% system, 0% intr,
 Executed version 0.4.43 with boot time 2022-07-25 04:27:52 UTC
 Load average: 0.22 0.17 0.15, Memory usage: 1046.7 MB, Swap: 0 B, CPU temp: 46.8
 
-### 4
+## 4
 
 Board: Mod-IO2
 Relay1 -> All
@@ -78,7 +78,7 @@ CPU load during execution: 0% user, 0% nice, 9.193275% system, 0% intr, 90.80672
 Executed version 0.4.43 with boot time 2022-07-25 04:27:52 UTC
 Load average: 0.15 0.15 0.14, Memory usage: 1046.7 MB, Swap: 0 B, CPU temp: 46.4
 
-### 5
+## 5
 
 Board: Mod-IO2
 Relay1 -> Strip
@@ -527,7 +527,7 @@ Executed version 0.4.40 with boot time 2022-07-21 10:15:03 UTC
 Load average: 1.26 1.6 1.25, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 49.
 
 
-## 11
+### 11
 
 Nur LED connected, ohne Strom
 
@@ -537,7 +537,7 @@ CPU load during execution: 0.51077384% user, 0% nice, 11.015283% system, 0% intr
 Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0.09 0.24 0.16, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 48.1
 
-## 12
+### 12
 
 Mit LED, mit Strom (with snubber)
 
@@ -568,7 +568,7 @@ Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0.11 0.05 0.08, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 48
 
 
-## 13
+### 13
 
 Nochmals ohne Strom:
 
@@ -578,7 +578,7 @@ CPU load during execution: 0.51169074% user, 0% nice, 10.87159% system, 0% intr,
 Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0.22 0.28 0.18, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 48
 
-## 14
+### 14
 
 Nur Lampe connected, ohne Strom
 
@@ -588,7 +588,7 @@ CPU load during execution: 0.62920004% user, 0% nice, 11.008681% system, 0% intr
 Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0.19 0.16 0.15, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 48.1
 
-## 15
+### 15
 
 Mit Lampe und Strom:
 
@@ -598,7 +598,7 @@ CPU load during execution: 0.62924343% user, 0% nice, 11.014824% system, 0% intr
 Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0.16 0.15 0.15, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 48.1
 
-## 16
+### 16
 
 Lampe mit Snubber, LED mit Tyristor
 
@@ -611,7 +611,7 @@ Following errors occurred:
 ("get", 40, 870, 39, 0)
 
 
-## 17
+### 17
 
 LED-Lampe (Philipps) mit Snubber, LED Driver mit Tyristor
 OHNE Strom
@@ -622,7 +622,7 @@ CPU load during execution: 0.7064403% user, 0% nice, 10.126014% system, 0% intr,
 Executed version 0.4.41 with boot time 2022-07-21 10:15:03 UTC
 Load average: 0 0.02 0.06, Memory usage: 1037.6 MB, Swap: 0 B, CPU temp: 47.9
 
-## 18
+### 18
 
 wie 17, mit Strom
 
@@ -636,7 +636,7 @@ Following errors occurred:
 ("get", 28, 606, 27, 0)
 
 
-## 19
+### 19
 
 Completely without any relays
 
@@ -659,24 +659,16 @@ Executed version 0.4.42 with boot time 2022-07-23 04:31:09 UTC
 Load average: 1 1 1, Memory usage: 1046.7 MB, Swap: 0 B, CPU temp: 45.7
 
 
-
-
-
-
-
-
-
-
-## Allgemeine Infos
+# Allgemeine Infos
 
 ---------
 
 mod-IO2:
 
-# close jumper and execute
+## close jumper and execute
 ./modio2tool --setaddress 0x20 # works!
 /sbin/i2cset 2 0x21 0x22 #doesn't work
-# to rename board to 0x22
+## to rename board to 0x22
 
 
 relay ein:
@@ -688,7 +680,7 @@ mod-IO:
 i2cset -y 2 0x58 0x10 0x01
 i2cset -y 2 0x58 0x10 0x00
 
-# read IN1 AIN-2:
+## read IN1 AIN-2:
 i2ctransfer -y 2 w1@0x58 0x20 r1
 
 
@@ -698,7 +690,7 @@ i2ctransfer -y 2 w1@0x58 0x20 r1
 sudo adduser olimex i2c
 sudo chown root.i2c /dev/gpiochip*
 
-# strace /sbin/i2cset -y -f 2 0x58 0x10 0x00
+## strace /sbin/i2cset -y -f 2 0x58 0x10 0x00
 
 openat(AT_FDCWD, "/dev/i2c-2", O_RDWR)  = 3
 ioctl(3, _IOC(_IOC_NONE, 0x7, 0x5, 0), 0xbece468c) = 0
@@ -707,7 +699,7 @@ ioctl(3, _IOC(_IOC_NONE, 0x7, 0x20, 0), 0xbece4600) = 0
 close(3)                                = 0
 exit_group(0)                           = ?
 
-# strace /sbin/i2cset -y -f 2 0x58 0x10 0x0F
+## strace /sbin/i2cset -y -f 2 0x58 0x10 0x0F
 
 openat(AT_FDCWD, "/dev/i2c-2", O_RDWR)  = 3
 ioctl(3, _IOC(_IOC_NONE, 0x7, 0x5, 0), 0xbea2068c) = 0
