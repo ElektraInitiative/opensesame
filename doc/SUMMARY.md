@@ -4,6 +4,7 @@
 
 - [Installation](Install.md)
 - [Emulating-Olimex](Emulating-Olimex.md)
+- [Ansible](Ansible.md)
 - [GPIO](GPIO.md)
 - [I2C](I2C.md)
 - [MQ135](MQ135.md)
