@@ -3,7 +3,7 @@
 ## Setting up Development-Board
 
 ### Create image with static IP and password for olimex
-To begin, mount the default image and run it using `nspawn-systemd`,  as described [hier](Emulating-Olimex.md). 
+To begin, mount the default image and run it using `systemd-nspawn`,  as described [here](Emulating-Olimex.md). 
 Next, configure the static IP address to match your network setup by editing the file `/etc/network/interfaces` with the following details:
 ``` bash
 auto eth0
