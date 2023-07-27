@@ -6,8 +6,9 @@ implement all error codes
 
 dump all registers
 
-warn if `> 30°` and no wind
-warn if `> 35°`
+note when raising `> 23°` for closing
+warn when raising `> 30°` and no wind
+warn when raising `> 35°`
 (and remove warning again if `< 20°`)
 
 publish to https://www.opensensemap.org
