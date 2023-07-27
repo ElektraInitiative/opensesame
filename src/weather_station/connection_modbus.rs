@@ -14,7 +14,7 @@ fn main() {
     ctx.set_slave(1).expect("Setting Slave-ID failed!");
     assert!(ctx.rtu_set_serial_mode(SerialMode::RtuRS485).is_ok());
     assert!(ctx.rtu_set_rts(RequestToSendMode::RtuRtsUp).is_ok());
-    assert!(ctx.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).is_ok())
+    assert!(ctx.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).is_ok());
 
     // Modbus-Verbindung öffnen
     ctx.connect().expect("Verbindung mit ctx Fehlerhaft!");
