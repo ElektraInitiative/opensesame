@@ -54,5 +54,5 @@ RUN apt install -y --no-install-recommends \
 RUN cargo install cargo-deb
 RUN rustup component add clippy rustfmt
 RUN rustup target add armv7-unknown-linux-gnueabihf
-RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf 
+RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf
 RUN chown 47110:47110 -R /usr/local/cargo

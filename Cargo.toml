@@ -1,7 +1,7 @@
 [package]
 name = "opensesame"
-version = "0.7.7"
-authors = ["Markus Raab"]
+version = "0.7.8"
+authors = ["Opensesame Contributors"]
 edition = "2018"
 readme = "README.md"
 license = "BSD"
@@ -13,7 +13,7 @@ description  = "Awesome home automation"
 
 # https://github.com/kornelski/cargo-deb
 [package.metadata.deb]
-maintainer="Markus Raab <markus@libelektra.org>"
+maintainer="Opensesame Contributors <opensesame@libelektra.org>"
 copyright="BSD"
 maintainer-scripts = "debian/"
 systemd-units = { enable = true }
