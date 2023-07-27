@@ -5,118 +5,117 @@
 /// kdb set user:/sw/libelektra/opensesame/#0/current/climasensor/baudrate 9600
 /// 
 /// Otherwise the default config is used, which disables this struct by using /dev/null as device.
-
 extern crate libmodbus;
 use libmodbus::*;
-use crate::config::Config;
 
-///Constants 
+///Constants
+const DEVICE: &'static str = "/dev/ttyS5";
+const BAUDRATE: i32 = 9600;
+const PARITY: char = 'N';
+const DATA_BITS: i32 = 8;
+const STOP_BITS: i32 = 1;
+const SLAVE_ID: u8 = 1;
 
-const ERROR_CODE_S32: i32 = 0x7FFFFFFF;
-const ERROR_CODE_U32: i32 = 0xFFFFFFFF;
+const ERROR_CODE_S32: u32 = 0x7FFFFFFF;
+const ERROR_CODE_U32: u32 = 0xFFFFFFFF;
 
 //Special reg-addresses
 const REG_MEAN_WIND_SPEED: u16 = 0x7533;
 const REG_AIR_TEMP: u16 = 0x76C1;
 
+/// These functions create a single number out of a vector.
+/// The first entry in the vector are the most significant bytes and the second entry are the least significant bytes.
+/// For the unsigned function the input `vec` should be already in two complement, so that the function works right.
+fn conv_vec_to_value_s(vec: Vec<u16>) -> i32{
+    let usign_val: u32 = (vec[0] as u32) << 16 | (vec[1] as u32);
+    usign_val as i32
+}
+
+fn conv_vec_to_value_u(vec: Vec<u16>) -> u32{
+    (vec[0] as u32) << 16 | (vec[1] as u32) 
+}
+
+#[derive(Clone,Copy)]
+pub enum TempWarning {
+    None,
+    CloseWindow,
+    WarningTempNoWind,
+    WaringTemp,
+}
 
 pub struct ClimaSensorUS{
-    device: &String,
-    baudrate: i32,
-    parity: char,
-    data_bits: i32,
-    stop_bits: i32,
-    slave_id: u8,
-    ctx: Modbus,
-    alarm_active: bool,
+    ctx: Option<Modbus>,
+    warning_active: TempWarning,
 }
 
 impl ClimaSensorUS{
     
-    pub fn new(config: &mut Config) -> Self{
-        let device_name = config.get::<string>("climasensor/device");
-        if device_name != "/dev/null" {
-            let mut s = Self {
-                device: device_name,
-                baudrate: config.get::<i32>("climasensor/baudrate"),
-                parity: config.get::<char>("climasensor/parity"),
-                data_bits: config.get::<i32>("climasensor/databits"),
-                stop_bits: config.get::<i32>("climasensor/stopbits"),
-                slave_id: config.get::<i32>("climasensor/salveid"),
-                ctx: null,
-                alarm_active: false,
-            };
-            s.init();
-            s
-        }else{
-            Self {
-                device: device_name,
-                baudrate: 0,
-                parity: 'N',
-                data_bits: 0,
-                stop_bits: 0,
-                slave_id: 0,
-                ctx: null,
-                alarm_active: false,
-            }
-        }
+    pub fn new() -> Self{
+        let mut s = Self {
+            ctx: None,
+            warning_active: TempWarning::None,
+        };
+        s.init();
+        s
     }
 
     fn init(&mut self){
-        self.ctx = Modbus::new_rtu(self.device, self.baudrate, self.parity, self.data_bits, self.stop_bits).expect("Error accured while creating new RTU Object");
-        self.ctx.set_slave(self.slave_id).unwrap_or_else(|_| panic!("Error accured while setting slave-id to '{}'", self.slave_id));
-        self.ctx.rtu_set_serial_mode(SerialMode::RtuRS485).expect("Error accured while setting serial mode to RS485");
-        self.ctx.rtu_set_rts(RequestToSendMode::RtuRtsUp).expect("Error accured while setting RTS ti RTS-UP");
-        self.ctx.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).expect("Error accured while setting custom RTS-function");
+        self.ctx = Some(Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS).expect("Error accured while creating new RTU Object"));
+        
+        if let Some(conn) = &mut self.ctx {
+            conn.set_slave(SLAVE_ID).unwrap_or_else(|_| panic!("Error accured while setting slave-id to '{}'", SLAVE_ID));
+            conn.rtu_set_serial_mode(SerialMode::RtuRS232).expect("Error accured while setting serial mode to RS485");
+            conn.rtu_set_rts(RequestToSendMode::RtuRtsUp).expect("Error accured while setting RTS ti RTS-UP");
+            conn.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).expect("Error accured while setting custom RTS-function");
 
-        self.ctx.connect().expect("Error accured while connecting to Clima-Sensor");
-    }
+            conn.connect().expect("Error accured while connecting to Clima-Sensor");
+        }
+        
+    }    
 
-    /// These functions create a single number out of an vector.
-    /// The first entry in the vector are the most significant bytes and the second entry are the least significant bytes
-
-    fn conv_vec_to_value_s(vec: Vec<i16>) -> i32{
-        (vec[0]<<16 | vec[1]).into()
-    }
-
-    fn conv_vec_to_value_u(vec: Vec<u16>) -> u32{
-        (vec[0]<<16 | vec[1]).into()
-    }
-
-    
-
-    /// This function should be called periodically to check the temperature and wind speed.
+    /// This function should be called periodically to check the sensors' values.
     /// if temp > 30°C and no wind, then a warning should be issued
     /// if temp > 35°C a warning should be issued
-    /// if temp < 20° the warning should be removed
+    /// if temp < 20° either warning is removed
     /// (Input Register - 0x04) temp-reg address 0x76C1; typ S32; real_result = response_temp/10
     /// (Input Register - 0x04) wind-reg address 0x7533; typ U32; real_result = response_wind/10
     /// 
     /// The return value is bool on success, true if alarm is active and false is alarm is not active
     /// If no ctx is configured the this function returns always false, so no warning is triggered
+    pub fn handle(&mut self) -> Result<TempWarning,Error> {
+        match &self.ctx  {
+            Some(conn) => {
+                let mut response_temp = vec![0u16; 2];
+                let mut response_wind = vec![0u16; 2];
 
-    pub fn handle_temperature(&mut self) -> Result<bool,Error> {
-        if self.ctx != null {
-            let mut response_temp = vec![0i16; 2];
-            let mut response_wind = vec![0u16; 2];
+                conn.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
+                conn.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)?;
 
-            self.ctx.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
-            self.ctx.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)?;
+                let temp: f32 = (conv_vec_to_value_s(response_temp) as f32)/10.0;
+                let wind: f32 = (conv_vec_to_value_u(response_wind) as f32)/10.0;
+                
+                #[cfg(debug_assertions)]
+                println!("Weatherstation: temperature {} °C, windspeed {} m/s", temp, wind);
 
-            let temp: f32 = response_temp/10;
-            let wind: f32 = response_wind/10;
+                match self.warning_active {
+                    TempWarning::None if temp > 23.0 => {
+                        self.warning_active = TempWarning::CloseWindow;
+                    }
+                    TempWarning::WarningTempNoWind if temp > 30.0 && wind < 0.3 => {
+                        self.warning_active = TempWarning::WarningTempNoWind;
+                    }
+                    TempWarning::WaringTemp if temp > 35.0 => {
+                        self.warning_active = TempWarning::WaringTemp;
+                    }
+                    _ if temp < 20.0 => {
+                        self.warning_active = TempWarning::None;
+                    }
+                    _ => {}
+                }
 
-            if !self.alarm_active && temp > 30 && wind < 0.3 {
-                self.alarm_active = true;
-            } else if !self.alarm_active && temp > 35 {
-                self.alarm_active = true;
-            } else if self.alarm_active && temp < 20 {
-                self.alarm_active= false;
-            }
-
-            Ok(self.alarm_active)
-        }else{
-            Ok(false)
+                Ok(self.warning_active)
+            },
+            None => Ok(TempWarning::None)
         }
     }
 }
@@ -128,22 +127,32 @@ mod tests{
     /// Befor using this test you need to setup you configuration with libelektra
     #[test]
     #[ignore]
-    fn test_handle_temperature(){
+    fn test_handle(){
         
-        let weatherstation: ClimaSensorUS = new(Config::new("/sw/libelektra/opensesame/#0/current"));
-
-
     }
 
     #[test]
     fn test_conv_vec_to_value_s(){
-        assert!(conv_vec_to_value_s(vec![0,32]), "32");
-        assert!(conv_vec_to_value_s(vec![-1,0]),"-65536");
+        assert!(conv_vec_to_value_s(vec![0x0000u16, 0x0000u16]) == 0);
+        assert!(conv_vec_to_value_s(vec![0x0000u16, 0x0001u16]) == 1);
+        assert!(conv_vec_to_value_s(vec![0xffffu16, 0xffffu16]) == -1);
+        assert!(conv_vec_to_value_s(vec![0x0000u16, 0x000au16]) == 10);
+        assert!(conv_vec_to_value_s(vec![0xffffu16, 0xfff6u16]) == -10);
+        assert!(conv_vec_to_value_s(vec![0x0000u16, 0x0020u16]) == 32);
+        assert!(conv_vec_to_value_s(vec![0xffffu16, 0xffe0u16]) == -32);
+        assert!(conv_vec_to_value_s(vec![0x0000u16, 0x1524u16]) == 5412);
+        assert!(conv_vec_to_value_s(vec![0xffffu16, 0xeadcu16]) == -5412);
+        assert!(conv_vec_to_value_s(vec![0x7fffu16, 0xffffu16]) == 2147483647);
+        assert!(conv_vec_to_value_s(vec![0x8000u16, 0x0000u16]) == -2147483648);
     }
 
     #[test]
     fn test_conv_vec_to_value_u(){
-        let vec: Vec<u16> = [0,32];
-        assert!(conv_vec_to_value_u(vec), "32");
+        assert!(conv_vec_to_value_u(vec![0x0000u16, 0x0000u16]) == 0);
+        assert!(conv_vec_to_value_u(vec![0x0000u16, 0x0001u16]) == 1);
+        assert!(conv_vec_to_value_u(vec![0x0000u16, 0x000au16]) == 10);
+        assert!(conv_vec_to_value_u(vec![0x0000u16, 0x0020u16]) == 32);
+        assert!(conv_vec_to_value_u(vec![0x0000u16, 0x1524u16]) == 5412);
+        assert!(conv_vec_to_value_u(vec![0xffffu16, 0xffffu16]) == 4294967295);
     }
 }
