@@ -125,29 +125,3 @@ default = "/dev/null"
 description=How often to get new data (default: every 60 seconds, which is the highest interval)
 default = 6000
 type = unsigned_short
-
-[climasensor/device]
-description = Which device to use for Clima-Sensor-US. /dev/null means that no Clima-Sensor-US is connected
-example = "/dev/ttyS5"
-default = "/dev/null"
-
-[climasensor/baudrate]
-description = Which baudrate Clima-Sensor-US is using.
-default = 9600
-
-[climasensor/parity]
-description = Which parity-mode is used by Clima-Sensor-US.
-default = 'N'
-
-[climasensor/databits]
-description = How many data-bits are used by Clima-Sensor-US.
-default = 8
-
-[climasensor/stopbits]
-description = How many stop-bits are used by Clima-Sensor-US.
-default = 1
-
-[climasensor/slaveid]
-description = Which id is used by Clima-Sensor-US
-default = 1
-
