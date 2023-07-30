@@ -1,10 +1,3 @@
-/// Before using this struct you need setup the config with libelektra.
-/// 
-/// For example:
-/// kdb set user:/sw/libelektra/opensesame/#0/current/climasensor/device "/dev/ttyS5"
-/// kdb set user:/sw/libelektra/opensesame/#0/current/climasensor/baudrate 9600
-/// 
-/// Otherwise the default config is used, which disables this struct by using /dev/null as device.
 extern crate libmodbus;
 use libmodbus::*;
 
@@ -40,7 +33,7 @@ pub enum TempWarning {
     None,
     CloseWindow,
     WarningTempNoWind,
-    WaringTemp,
+    WarningTemp,
 }
 
 pub struct ClimaSensorUS{
@@ -97,25 +90,24 @@ impl ClimaSensorUS{
                 #[cfg(debug_assertions)]
                 println!("Weatherstation: temperature {} °C, windspeed {} m/s", temp, wind);
 
-                match self.warning_active {
-                    TempWarning::None if temp > 23.0 => {
-                        self.warning_active = TempWarning::CloseWindow;
-                    }
-                    TempWarning::WarningTempNoWind if temp > 30.0 && wind < 0.3 => {
-                        self.warning_active = TempWarning::WarningTempNoWind;
-                    }
-                    TempWarning::WaringTemp if temp > 35.0 => {
-                        self.warning_active = TempWarning::WaringTemp;
-                    }
-                    _ if temp < 20.0 => {
-                        self.warning_active = TempWarning::None;
-                    }
-                    _ => {}
-                }
+                self.set_warning_active(temp,wind);
 
                 Ok(self.warning_active)
             },
             None => Ok(TempWarning::None)
+        }
+    }
+
+    /// This function is used to set the warning_active varibale to a specific value.
+    fn set_warning_active(&mut self,temp: f32, wind: f32){
+        if temp > 35.0 {
+            self.warning_active = TempWarning::WarningTemp;
+        }else if temp > 30.0 && wind < 0.3 {
+            self.warning_active = TempWarning::WarningTempNoWind;
+        }else if temp > 23.0 {
+            self.warning_active = TempWarning::CloseWindow;
+        }else if temp < 20.0 {
+            self.warning_active = TempWarning::None;
         }
     }
 }
@@ -124,11 +116,45 @@ impl ClimaSensorUS{
 mod tests{
     use super::*;
 
-    /// Befor using this test you need to setup you configuration with libelektra
     #[test]
     #[ignore]
     fn test_handle(){
-        
+        let mut weatherstation = ClimaSensorUS::new();
+
+        match weatherstation.handle().unwrap(){
+            TempWarning::CloseWindow => println!("CloseWindow"),
+            TempWarning::WarningTempNoWind => println!("WarningTempNoWind"),
+            TempWarning::WarningTemp => println!("WarningTemp"),
+            TempWarning::None => println!("None"),
+        }
+    }
+
+    #[test]
+    fn test_set_warning_active(){
+        let mut clima_sens = ClimaSensorUS {
+                ctx: None,
+                warning_active: TempWarning::None,
+        };
+
+        clima_sens.set_warning_active(15.0,0.1);
+        assert!(matches!(clima_sens.warning_active,TempWarning::None));
+        clima_sens.set_warning_active(15.0,3.5);
+        assert!(matches!(clima_sens.warning_active,TempWarning::None));
+
+        clima_sens.set_warning_active(25.0,0.1);
+        assert!(matches!(clima_sens.warning_active, TempWarning::CloseWindow));
+        clima_sens.set_warning_active(25.0,3.5);
+        assert!(matches!(clima_sens.warning_active, TempWarning::CloseWindow));
+
+        clima_sens.set_warning_active(33.0,0.1);
+        assert!(matches!(clima_sens.warning_active,TempWarning::WarningTempNoWind));
+        clima_sens.set_warning_active(33.0,3.5);
+        assert!(matches!(clima_sens.warning_active, TempWarning::CloseWindow));
+
+        clima_sens.set_warning_active(36.0,0.1);
+        assert!(matches!(clima_sens.warning_active, TempWarning::WarningTemp));
+        clima_sens.set_warning_active(36.0,3.5);
+        assert!(matches!(clima_sens.warning_active, TempWarning::WarningTemp));
     }
 
     #[test]
