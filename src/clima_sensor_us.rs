@@ -163,6 +163,11 @@ impl ClimaSensorUS{
         result 
     }
 
+    /// This function publishes some Data to https://opensesemap.org
+    pub publish_to_opensensemap(){
+
+    }
+
 }
 
 #[cfg(test)]
