@@ -11,6 +11,7 @@ mod sensors;
 mod ssh;
 mod validator;
 mod watchdog;
+mod clima_sensor_us;
 
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Error};
@@ -42,6 +43,7 @@ use ssh::exec_ssh_command;
 use validator::Validation;
 use validator::Validator;
 use watchdog::Watchdog;
+use clima_sensor_us::{ClimaSensorUS,TempWarningStateChange};
 
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
@@ -292,6 +294,8 @@ fn main() -> Result<(), Error> {
 	let mut environment = Environment::new(&mut config);
 	let mut garage = Garage::new(&mut config);
 	let bat = Bat::new();
+	// Maybe check if weather station is connected, true if enabled
+	let mut weather_station = ClimaSensorUS::new(true);
 	let mut alarm_not_active = true;
 
 	nc.set_info_online(gettext!("🪫 ON {}", bat));
@@ -532,6 +536,23 @@ fn main() -> Result<(), Error> {
 				));
 			}
 			Validation::None => (),
+		}
+
+		match weather_station.handle() {
+			Ok(TempWarningStateChange::ChangeToCloseWindow) => {
+				nc.send_message(gettext!("Temperature above {}°C, close the window", 23));
+			},
+			Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
+				nc.send_message(gettext!("Temperature above {}°C an no Wind", 30));
+			}
+			Ok(TempWarningStateChange::ChangeToWarningTemp) => {
+				nc.send_message(gettext!("Temperature above {}°C an no Wind",35));
+			}
+			Ok(TempWarningStateChange::ChangeToRemoveWarning) =>{
+				nc.send_message(gettext!("Temperature again under {}°C, remove warning",20));
+			}
+			Ok(TempWarningStateChange::None) => (),
+			Err(_) => (),
 		}
 
 		remember_baseline_counter += 1;
