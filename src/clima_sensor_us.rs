@@ -1,5 +1,7 @@
 extern crate libmodbus;
 use libmodbus::*;
+use reqwest::header::HeaderMap;
+use reqwest::Client;
 
 ///Constants
 const DEVICE: &'static str = "/dev/ttyS5";
@@ -13,8 +15,22 @@ const ERROR_CODE_S32: u32 = 0x7FFFFFFF;
 const ERROR_CODE_U32: u32 = 0xFFFFFFFF;
 
 //Special reg-addresses
-const REG_MEAN_WIND_SPEED: u16 = 0x7533;
-const REG_AIR_TEMP: u16 = 0x76C1;
+const REG_MEAN_WIND_SPEED: u16 = 0x88B9;
+const REG_AIR_TEMP: u16 = 0x88BD;
+const REG_REL_HUMIDITY: u16 = 0x88C5;
+const REG_AIR_PRESSURE: u16 = 0x88C9;
+
+//OpenSenseMap
+const URL: &'static str = "https://api.opensensemap.org/boxes/64c7d45a7fe2400007df0087/data";
+const ACCESS_TOKEN: &'static str = "<enter your access-token>";
+
+//Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
+const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 4] = [
+    ("64c7d45a7fe2400007df008a", REG_AIR_TEMP, 10.0, 's'),
+    ("64c7d45a7fe2400007df0089", REG_REL_HUMIDITY, 10.0, 'u'),
+    ("64c7d45a7fe2400007df0088", REG_AIR_PRESSURE, 10.0, 'u'),
+    ("64ca09d8380b2b0008338605", REG_MEAN_WIND_SPEED, 10.0, 'u'),
+];
 
 /// These functions create a single number out of a vector.
 /// The first entry in the vector are the most significant bytes and the second entry are the least significant bytes.
@@ -163,11 +179,78 @@ impl ClimaSensorUS{
         result 
     }
 
-    /// This function publishes some Data to https://opensesemap.org
-    pub publish_to_opensensemap(){
+    /// This function publishes data of the thies clima sensor to https://opensesemap.org
+    /// For that it takes the values of an array of tuples (OPENSENSE_CLIMA_DATA).
+    /// Additional data can be added to this array. 
+    /// The URL is also a constant with the Box-ID in it.
+    /// The Access-Token for the opensensemap-API is also stored in a constant.
+    /// 
+    /// Bevor using this function you need to set the following constantes:
+    /// 
+    /// -URL = "https://api.opensensemap.org/boxes/<box-id>/data";
+    /// -ACCESS_TOKEN = "<access-token>";
+    /// -OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 4] = [
+    ///     ("64c7d45a7fe2400007df008a", REG_AIR_TEMP, 10.0, 's'),
+    ///     ("64c7d45a7fe2400007df0089", REG_REL_HUMIDITY, 10.0, 'u'),
+    ///     ("64c7d45a7fe2400007df0088", REG_AIR_PRESSURE, 10.0, 'u'),
+    ///     ("64ca09d8380b2b0008338605", REG_MEAN_WIND_SPEED, 10.0, 'u')];
+    pub fn publish_to_opensensemap(&mut self){
+        match &self.ctx  {
+            Some(conn) =>{
+                //first create a JSON format for sending Data
+                let mut json_payload: String = "[".to_string(); 
 
+                for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
+                    let mut response = vec![0u16; 2]; 
+                    
+                    match conn.read_input_registers(tuple_data.1, 2, &mut response){
+                        Ok(_) => {
+                            let value: f32;
+                            if tuple_data.3 == 's' {
+                                value = (conv_vec_to_value_s(response).unwrap() as f32)/tuple_data.2;
+                            }else{
+                                value = (conv_vec_to_value_u(response).unwrap() as f32)/tuple_data.2;
+                            }
+                            json_payload.push_str(&format!("{}\"sensor\":\"{}\",\"value\":\"{}\"{},", '{', tuple_data.0, value, '}'));
+                        },
+                        Err(error) => {
+                            json_payload.push_str(&format!("{}\"sensor\":\"{}\",\"value\":\"{}\"{},", '{', tuple_data.0, error, '}'));
+                        }
+                    }
+                }
+                //remove last ','
+                json_payload.pop();
+                json_payload.push_str(&"]");
+
+                //Send Jason to https://api.opensensemap.org
+                let mut headers = HeaderMap::new();
+                headers.insert("Authorization", ACCESS_TOKEN.parse().unwrap());
+                headers.insert("Content-Type", "application/json".parse().unwrap());
+            
+                let result = Client::new()
+                    .post(URL)
+                    .headers(headers)
+                    .body(json_payload)
+                    .send();
+                    
+                match result {
+                    Ok(response) => match response.error_for_status() {
+                        Ok(_response) => (),
+                        Err(error) => {
+                            eprintln!("API access to {}, with access_token {} throws \n[ERROR]: {}", URL, ACCESS_TOKEN, error);
+                            ()
+                        },
+                    },
+                    Err(error) => {
+                        eprintln!("API access to {}, with access_token {} throws \n[ERROR]: {}", URL, ACCESS_TOKEN, error);
+                        ()
+                    },
+                }
+                
+            }
+            None => ()
+        }
     }
-
 }
 
 #[cfg(test)]
