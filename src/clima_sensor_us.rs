@@ -1,4 +1,13 @@
+/// Before using this module you need to configure elektra with the following elements
+/// 
+/// [opensensemap/box_id] and [opensensemap/access_token]
+/// 
+/// For example:
+/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/box_id "<opensensemap-box-id>"
+/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/box_id "<access-token>"
 extern crate libmodbus;
+
+use crate::config::Config;
 use libmodbus::*;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
@@ -14,22 +23,86 @@ const SLAVE_ID: u8 = 1;
 const ERROR_CODE_S32: u32 = 0x7FFFFFFF;
 const ERROR_CODE_U32: u32 = 0xFFFFFFFF;
 
-//Special reg-addresses
+//Adresses of registers
 const REG_MEAN_WIND_SPEED: u16 = 0x88B9;
+const REG_MEAN_WIND_DIREC: u16 = 0x88BB;
 const REG_AIR_TEMP: u16 = 0x88BD;
+const REG_FRAME_TEMP: u16 = 0x88BF;
+const REG_ACOUSTIC_TEMP: u16 = 0x88C1;
+const REG_AIR_TEMP_UNCORRECTED: u16 = 0x88C3;
 const REG_REL_HUMIDITY: u16 = 0x88C5;
-const REG_AIR_PRESSURE: u16 = 0x88C9;
+const REG_DEW_POINT_TEMP: u16 = 0x88C7;
+const REG_ABS_AIR_PRESSURE: u16 = 0x88C9;
+const REG_REL_AIR_PRESSURE: u16 = 0x88CB;
+const REG_BRIGHTNESS_N: u16 = 0x88CD;
+const REG_BRIGHTNESS_E: u16 = 0x88CF;
+const REG_BRIGHTNESS_S: u16 = 0x88D1;
+const REG_BRIGHTNESS_W: u16 = 0x88D3;
+const REG_DIREC_BRIGHTNESS: u16 = 0x88D5;
+const REG_BRIGHTNESS_MAX: u16 = 0x88D7;
+const REG_PRECIPITATION_EVENT: u16 = 0x88D9;
+const REG_PRECIPITATION_INTENSITY: u16 = 0x88DB;
+const REG_PRECIPITATION_AMOUNT: u16 = 0x88DD;
+const REG_PRECIPITATION_TYPE: u16 = 0x88DF;
+const REG_SUN_ELEVATION: u16 = 0x88E9;
+const REG_SUN_AZIMUTH: u16 = 0x88EB;
+const REG_HEIGHT_ABOVE_SEA: u16 = 0x88ED;
+const REG_SENSOR_SUPPLY: u16 = 0x88F1;
+const REG_MAX_WIND_SPEED: u16 = 0x8901;
+const REG_WIND_DIREC: u16 = 0x8903;
+const REG_ABS_HUMIDITY: u16 = 0x8905;
+const REG_REL_HUMIDITY_UNCORRECTED: u16 = 0x8907;
+const REG_MAGNETIC_COMPASS_DIFF_ANGLE: u16 = 0x8909;
+const REG_BRIGHTNESS_VEC_SUM: u16 = 0x890B;
+const REG_WINDCHILL_TEMP: u16 = 0x890D;
+const REG_HEAT_INDEX_TEMP: u16 = 0x890F;
+const REG_ABS_PRECIPITATION_AMOUNT: u16 = 0x8911;
+const REG_GLOBAL_RADIATION: u16 = 0x8913;
+const REG_PITCH_MAGNETIC_COMPASS_NS: u16 = 0x8915;
+const REG_ROLL_MAGNETIC_COMPASS_EW: u16 =0x8917;
+
 
 //OpenSenseMap
-const URL: &'static str = "https://api.opensensemap.org/boxes/64c7d45a7fe2400007df0087/data";
-const ACCESS_TOKEN: &'static str = "<enter your access-token>";
+const UPDATE_FREQU: u32 = 30000; // 30000ms*10ms = 5min
 
 //Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
-const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 4] = [
-    ("64c7d45a7fe2400007df008a", REG_AIR_TEMP, 10.0, 's'),
-    ("64c7d45a7fe2400007df0089", REG_REL_HUMIDITY, 10.0, 'u'),
-    ("64c7d45a7fe2400007df0088", REG_AIR_PRESSURE, 10.0, 'u'),
-    ("64ca09d8380b2b0008338605", REG_MEAN_WIND_SPEED, 10.0, 'u'),
+const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
+    ("64cb602193c69500072a5813", REG_MEAN_WIND_SPEED, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a5f", REG_MEAN_WIND_DIREC, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a60", REG_AIR_TEMP, 10.0, 's'),
+    ("64cb7c21d588b90007d69a61", REG_FRAME_TEMP, 10.0, 's'),
+    ("64cb7c21d588b90007d69a62", REG_ACOUSTIC_TEMP, 10.0, 's'),
+    ("64cb7c21d588b90007d69a63", REG_AIR_TEMP_UNCORRECTED, 10.0, 's'),
+    ("64cb7c21d588b90007d69a64", REG_REL_HUMIDITY, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a65", REG_DEW_POINT_TEMP, 10.0, 's'),
+    ("64cb7c21d588b90007d69a66", REG_ABS_AIR_PRESSURE, 100.0, 'u'),
+    ("64cb7c21d588b90007d69a67", REG_REL_AIR_PRESSURE, 100.0, 'u'),
+    ("64cb7c21d588b90007d69a68", REG_BRIGHTNESS_N, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a69", REG_BRIGHTNESS_E, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a6a", REG_BRIGHTNESS_S, 10.0, 'u'),
+    ("64cb7c21d588b90007d69a6b", REG_BRIGHTNESS_W, 10.0, 'u'),
+    ("64cb7cfdd588b90007d702d6", REG_DIREC_BRIGHTNESS, 1.0, 'u'),
+    ("64cb7cfdd588b90007d702d7", REG_BRIGHTNESS_MAX, 10.0, 'u'),
+    ("64cb7cfdd588b90007d702d8", REG_PRECIPITATION_EVENT, 1.0, 'u'),
+    ("64cb7cfdd588b90007d702d9", REG_PRECIPITATION_INTENSITY, 1000.0, 'u'),
+    ("64cb7cfdd588b90007d702da", REG_PRECIPITATION_AMOUNT, 1000.0, 'u'),
+    ("64cb7cfdd588b90007d702db", REG_PRECIPITATION_TYPE, 1.0, 'u'),
+    ("64cb7d79d588b90007d7402e", REG_SUN_ELEVATION, 10.0, 's'),
+    ("64cb7d79d588b90007d7402f", REG_SUN_AZIMUTH, 10.0, 's'),
+    ("64cb7d79d588b90007d74030", REG_HEIGHT_ABOVE_SEA, 1.0, 's'),
+    ("64cb7d79d588b90007d74031", REG_SENSOR_SUPPLY, 10.0, 'u'),
+    ("64cb7dfbd588b90007d782fc", REG_MAX_WIND_SPEED, 10.0, 'u'),
+    ("64cb7dfbd588b90007d782fd", REG_WIND_DIREC, 10.0, 'u'),
+    ("64cb7dfbd588b90007d782fe", REG_ABS_HUMIDITY, 100.0, 'u'),
+    ("64cb7dfbd588b90007d782ff", REG_REL_HUMIDITY_UNCORRECTED, 10.0, 'u'),
+    ("64cb7eb2d588b90007d7dd96", REG_MAGNETIC_COMPASS_DIFF_ANGLE, 10.0, 'u'),
+    ("64cb7eb2d588b90007d7dd97", REG_BRIGHTNESS_VEC_SUM, 1.0, 'u'),
+    ("64cb7eb2d588b90007d7dd98", REG_WINDCHILL_TEMP, 10.0, 's'),
+    ("64cb7eb2d588b90007d7dd99", REG_HEAT_INDEX_TEMP, 10.0, 's'),
+    ("64cb7eb2d588b90007d7dd9a", REG_ABS_PRECIPITATION_AMOUNT, 1000.0, 'u'),
+    ("64cb7eb2d588b90007d7dd9b", REG_GLOBAL_RADIATION, 10.0, 's'),
+    ("64cb7eb2d588b90007d7dd9c", REG_PITCH_MAGNETIC_COMPASS_NS, 10.0, 's'),
+    ("64cb7eb2d588b90007d7dd9d", REG_ROLL_MAGNETIC_COMPASS_EW, 10.0, 's'),
 ];
 
 /// These functions create a single number out of a vector.
@@ -73,15 +146,21 @@ pub enum TempWarning {
 
 pub struct ClimaSensorUS{
     ctx: Option<Modbus>,
+    opensensebox_id: String,
+    opensense_access_token: String,
     warning_active: TempWarning,
+    opensensemap_counter: u32,
 }
 
 impl ClimaSensorUS{
     
-    pub fn new(enabled: bool) -> Self{
+    pub fn new(config: &mut Config, enabled: bool) -> Self{
         let mut s = Self {
             ctx: None,
+            opensensebox_id: config.get::<String>("opensensemap/box_id"),
+            opensense_access_token: config.get::<String>("opensensemap/access_token"),
             warning_active: TempWarning::None,
+            opensensemap_counter: 0,
         };
         if enabled {
             s.init();
@@ -126,6 +205,19 @@ impl ClimaSensorUS{
                 
                 #[cfg(debug_assertions)]
                 println!("Weatherstation: temperature {} °C, windspeed {} m/s", temp, wind);
+                
+                //check if new data should be published to opensensemap.org
+                if self.opensensemap_counter == UPDATE_FREQU {
+                    self.opensensemap_counter = 0;
+                    match self.publish_to_opensensemap(){
+                        Ok(_) => {},
+                        Err(error) => {
+                            eprintln!("publishing to opensensemap failed with {}", error);
+                        }
+                    }
+                }else{
+                    self.opensensemap_counter += 1;
+                }
 
                 Ok(self.set_warning_active(temp,wind))
             },
@@ -179,26 +271,16 @@ impl ClimaSensorUS{
         result 
     }
 
-    /// This function publishes data of the thies clima sensor to https://opensesemap.org
-    /// For that it takes the values of an array of tuples (OPENSENSE_CLIMA_DATA).
-    /// Additional data can be added to this array. 
-    /// The URL is also a constant with the Box-ID in it.
-    /// The Access-Token for the opensensemap-API is also stored in a constant.
-    /// 
-    /// Bevor using this function you need to set the following constantes:
-    /// 
-    /// -URL = "https://api.opensensemap.org/boxes/<box-id>/data";
-    /// -ACCESS_TOKEN = "<access-token>";
-    /// -OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 4] = [
-    ///     ("64c7d45a7fe2400007df008a", REG_AIR_TEMP, 10.0, 's'),
-    ///     ("64c7d45a7fe2400007df0089", REG_REL_HUMIDITY, 10.0, 'u'),
-    ///     ("64c7d45a7fe2400007df0088", REG_AIR_PRESSURE, 10.0, 'u'),
-    ///     ("64ca09d8380b2b0008338605", REG_MEAN_WIND_SPEED, 10.0, 'u')];
-    pub fn publish_to_opensensemap(&mut self){
+    /// This function pulls data from the weatherstation and forms a json file out of the weather station data and the opensensemap-sensor-id.
+    /// The created json file is send tho the opensensemap-api.
+    /// All information needed are stored in a const array of tuples. The tuples contain the opensensemap-sensor-id, register-address, factor and datatype.
+    /// The return value indicates if the api request was successfully or not. 
+    /// Information about the reading of registers can be accessed through the json_payload  
+    pub fn publish_to_opensensemap(&mut self) -> Result<(),reqwest::Error>{
         match &self.ctx  {
             Some(conn) =>{
                 //first create a JSON format for sending Data
-                let mut json_payload: String = "[".to_string(); 
+                let mut json_payload: String = "[".to_string();
 
                 for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
                     let mut response = vec![0u16; 2]; 
@@ -207,11 +289,19 @@ impl ClimaSensorUS{
                         Ok(_) => {
                             let value: f32;
                             if tuple_data.3 == 's' {
-                                value = (conv_vec_to_value_s(response).unwrap() as f32)/tuple_data.2;
+                                match conv_vec_to_value_s(response) {
+                                    Ok(conv_response) => {value = conv_response as f32/tuple_data.2;}
+                                    Err(_) => {value = ERROR_CODE_S32 as f32;}
+                                }
                             }else{
-                                value = (conv_vec_to_value_u(response).unwrap() as f32)/tuple_data.2;
+                                match conv_vec_to_value_u(response) {
+                                    Ok(conv_response) => {value = conv_response as f32/tuple_data.2;}
+                                    Err(_) => {value = ERROR_CODE_U32 as f32;}
+                                }
                             }
-                            json_payload.push_str(&format!("{}\"sensor\":\"{}\",\"value\":\"{}\"{},", '{', tuple_data.0, value, '}'));
+                            if value != ERROR_CODE_S32 as f32 && value != ERROR_CODE_U32 as f32 {
+                                json_payload.push_str(&format!("{}\"sensor\":\"{}\",\"value\":\"{}\"{},", '{', tuple_data.0, value, '}'));
+                            }
                         },
                         Err(error) => {
                             json_payload.push_str(&format!("{}\"sensor\":\"{}\",\"value\":\"{}\"{},", '{', tuple_data.0, error, '}'));
@@ -224,31 +314,29 @@ impl ClimaSensorUS{
 
                 //Send Jason to https://api.opensensemap.org
                 let mut headers = HeaderMap::new();
-                headers.insert("Authorization", ACCESS_TOKEN.parse().unwrap());
+                headers.insert("Authorization", self.opensense_access_token.parse().unwrap());
                 headers.insert("Content-Type", "application/json".parse().unwrap());
             
                 let result = Client::new()
-                    .post(URL)
+                    .post(&format!("https://api.opensensemmap.org/boxes/{}/data",self.opensensebox_id))
                     .headers(headers)
                     .body(json_payload)
                     .send();
                     
                 match result {
                     Ok(response) => match response.error_for_status() {
-                        Ok(_response) => (),
+                        Ok(_response) => Ok(()),
                         Err(error) => {
-                            eprintln!("API access to {}, with access_token {} throws \n[ERROR]: {}", URL, ACCESS_TOKEN, error);
-                            ()
+                            Err(error)
                         },
                     },
                     Err(error) => {
-                        eprintln!("API access to {}, with access_token {} throws \n[ERROR]: {}", URL, ACCESS_TOKEN, error);
-                        ()
+                        Err(error)
                     },
                 }
                 
             }
-            None => ()
+            None => Ok(())
         }
     }
 }
@@ -260,7 +348,8 @@ mod tests{
     #[test]
     #[ignore]
     fn test_handle(){
-        let mut weatherstation = ClimaSensorUS::new(true);
+        let mut config: Config = Config::new("/sw/libelektra/opensesame/#0/current");
+        let mut weatherstation = ClimaSensorUS::new(&mut config, true);
 
         match weatherstation.handle().unwrap(){
             TempWarningStateChange::ChangeToCloseWindow => println!("ChangeToCloseWindow"),
@@ -275,7 +364,10 @@ mod tests{
     fn test_set_warning_active(){
         let mut clima_sens = ClimaSensorUS {
                 ctx: None,
+                opensensebox_id: "null".to_string(),
+                opensense_access_token: "null".to_string(),
                 warning_active: TempWarning::None,
+                opensensemap_counter: 0,
         };
 
         assert!(clima_sens.set_warning_active(15.0,0.1) == TempWarningStateChange::None);

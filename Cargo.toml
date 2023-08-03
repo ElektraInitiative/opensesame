@@ -42,7 +42,7 @@ gpio-cdev = { version = "0.5.1", features = ["async-tokio"]}
 
 i2cdev = "0.5.1"
 
-elektra = { version = "0.9.10", features = ["pkg-config"] }
+elektra = { version = "0.10.0", features = ["pkg-config"] }
 
 reqwest = "0.9.24"
 

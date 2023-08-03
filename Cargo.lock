@@ -384,9 +384,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "elektra"
-version = "0.9.10"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d79fa93d21e9b66df6f5b94eb55af0da7cd23b11943731c1b4e62d400f3e2467"
+checksum = "a8fbc70b2bef44978c6063ff5856dfc5cd5e69078816925ae938c199446ac832"
 dependencies = [
  "bitflags",
  "elektra-sys",
