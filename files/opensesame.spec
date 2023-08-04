@@ -162,3 +162,14 @@ description = maximum value measured during calibration
 type = unsigned_short
 
 
+[weatherstation/enable]
+description = enables/disables weatherstation
+type = boolean
+default = 0
+
+[opensensemap/box_id]
+description = Which opensensemap Box should be connected to the weather station
+
+
+[opensensemap/access_token]
+description = Access-Token for opensensemap Box

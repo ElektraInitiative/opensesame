@@ -48,9 +48,6 @@ use watchdog::Watchdog;
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
-// const to enable modules
-const ENABLE_WEATHERSTATION_MODULE: bool = true;
-
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
 fn play_audio_file(file: String, arg: String) {
 	if file != "/dev/null" {
@@ -297,8 +294,7 @@ fn main() -> Result<(), Error> {
 	let mut environment = Environment::new(&mut config);
 	let mut garage = Garage::new(&mut config);
 	let bat = Bat::new();
-	// Maybe check if weather station is connected, true if enabled
-	let mut weather_station = ClimaSensorUS::new(&mut config, ENABLE_WEATHERSTATION_MODULE);
+	let mut weather_station = ClimaSensorUS::new(&mut config);
 	let mut alarm_not_active = true;
 
 	nc.set_info_online(gettext!("🪫 ON {}", bat));
@@ -540,7 +536,7 @@ fn main() -> Result<(), Error> {
 			}
 			Validation::None => (),
 		}
-		if ENABLE_WEATHERSTATION_MODULE {
+		if config.get_bool("weatherstation/enable") {
 			match weather_station.handle() {
 				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
 					nc.send_message(gettext!("Temperature above {}°C, close the window", 23));

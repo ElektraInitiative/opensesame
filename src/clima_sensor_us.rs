@@ -2,7 +2,7 @@
 /// [opensensemap/box_id] and [opensensemap/access_token]
 /// For example:
 /// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/box_id "<opensensemap-box-id>"
-/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/box_id "<access-token>"
+/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/access_token "<access-token>"
 extern crate libmodbus;
 
 use crate::config::Config;
@@ -195,7 +195,7 @@ pub struct ClimaSensorUS {
 }
 
 impl ClimaSensorUS {
-	pub fn new(config: &mut Config, enabled: bool) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		let mut s = Self {
 			ctx: None,
 			opensensebox_id: config.get::<String>("opensensemap/box_id"),
@@ -203,7 +203,7 @@ impl ClimaSensorUS {
 			warning_active: TempWarning::None,
 			opensensemap_counter: 0,
 		};
-		if enabled {
+		if config.get_bool("weatherstation/enable") {
 			s.init();
 		}
 		s
@@ -411,7 +411,7 @@ mod tests {
 	#[ignore]
 	fn test_handle() {
 		let mut config: Config = Config::new("/sw/libelektra/opensesame/#0/current");
-		let mut weatherstation = ClimaSensorUS::new(&mut config, true);
+		let mut weatherstation = ClimaSensorUS::new(&mut config);
 
 		match weatherstation.handle().unwrap() {
 			TempWarningStateChange::ChangeToCloseWindow => println!("ChangeToCloseWindow"),
