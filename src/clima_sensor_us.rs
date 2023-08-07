@@ -201,7 +201,7 @@ impl ClimaSensorUS {
 			ctx: None,
 			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
 			opensense_access_token: config
-				.get::<String>("weatherstation/opensensemap/access_token"),
+				.get::<String>("weatherstation/opensensemap/token"),
 			warning_active: TempWarning::None,
 			opensensemap_counter: 0,
 		};
@@ -402,7 +402,7 @@ impl ClimaSensorUS {
 				headers.insert("Content-Type", "application/json".parse().unwrap());
 				let result = Client::new()
 					.post(&format!(
-						"https://api.opensensemmap.org/boxes/{}/data",
+						"https://api.opensensemap.org/boxes/{}/data",
 						self.opensensebox_id
 					))
 					.headers(headers)
