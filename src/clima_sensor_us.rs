@@ -1,8 +1,9 @@
 /// Before using this module you need to configure elektra with the following elements
-/// [opensensemap/box_id] and [opensensemap/access_token]
+/// [weatherstation/enable], [weatherstation/opensensemap/id] and [weatherstation/opensensemap/token]
 /// For example:
-/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/box_id "<opensensemap-box-id>"
-/// kdb set user:/sw/libelektra/opensesame/#0/current/opensensemap/access_token "<access-token>"
+/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/enable 1
+/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/opensensemap/id "<opensensemap-box-id>"
+/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/opensensemap/token "<access-token>"
 extern crate libmodbus;
 
 use crate::config::Config;
@@ -60,7 +61,7 @@ const REG_PITCH_MAGNETIC_COMPASS_NS: u16 = 0x8915;
 const REG_ROLL_MAGNETIC_COMPASS_EW: u16 = 0x8917;
 
 //OpenSenseMap
-const UPDATE_FREQU: u32 = 30000; // 30000ms*10ms = 5min
+const UPDATE_FREQUENCY: u32 = 6000; // 6000ms*10ms = 1min
 
 //Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
 const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
@@ -198,8 +199,9 @@ impl ClimaSensorUS {
 	pub fn new(config: &mut Config) -> Self {
 		let mut s = Self {
 			ctx: None,
-			opensensebox_id: config.get::<String>("opensensemap/box_id"),
-			opensense_access_token: config.get::<String>("opensensemap/access_token"),
+			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
+			opensense_access_token: config
+				.get::<String>("weatherstation/opensensemap/access_token"),
 			warning_active: TempWarning::None,
 			opensensemap_counter: 0,
 		};
@@ -212,21 +214,21 @@ impl ClimaSensorUS {
 	fn init(&mut self) {
 		self.ctx = Some(
 			Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS)
-				.expect("Error accured while creating new RTU Object"),
+				.expect("Error occurred while creating new RTU Object"),
 		);
 		if let Some(conn) = &mut self.ctx {
 			conn.set_slave(SLAVE_ID).unwrap_or_else(|_| {
-				panic!("Error accured while setting slave-id to '{}'", SLAVE_ID)
+				panic!("Error occurred while setting slave-id to '{}'", SLAVE_ID)
 			});
 			conn.rtu_set_serial_mode(SerialMode::RtuRS232)
-				.expect("Error accured while setting serial mode to RS485");
+				.expect("Error occurred while setting serial mode to RS485");
 			conn.rtu_set_rts(RequestToSendMode::RtuRtsUp)
-				.expect("Error accured while setting RTS ti RTS-UP");
+				.expect("Error occurred while setting RTS ti RTS-UP");
 			conn.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp)
-				.expect("Error accured while setting custom RTS-function");
+				.expect("Error occurred while setting custom RTS-function");
 
 			conn.connect()
-				.expect("Error accured while connecting to Clima-Sensor");
+				.expect("Error occurred while connecting to Clima-Sensor");
 		}
 	}
 
@@ -238,14 +240,26 @@ impl ClimaSensorUS {
 	/// (Input Register - 0x04) wind-reg address 0x7533; typ U32; real_result = response_wind/10
 	/// The return value is bool on success, true if alarm is active and false is alarm is not active
 	/// If no ctx is configured the this function returns always false, so no warning is triggered
-	pub fn handle(&mut self) -> Result<TempWarningStateChange, Error> {
+	pub fn handle(&mut self) -> Result<TempWarningStateChange, std::io::Error> {
 		match &self.ctx {
 			Some(conn) => {
 				let mut response_temp = vec![0u16; 2];
 				let mut response_wind = vec![0u16; 2];
 
-				conn.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
-				conn.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)?;
+				if let Err(error) = conn.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp) {
+					return Err(std::io::Error::new(
+						std::io::ErrorKind::Other,
+						error.to_string(),
+					));
+				}
+				if let Err(error) =
+					conn.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)
+				{
+					return Err(std::io::Error::new(
+						std::io::ErrorKind::Other,
+						error.to_string(),
+					));
+				}
 
 				let temp: f32 = (conv_vec_to_value_s(response_temp).unwrap() as f32) / 10.0;
 				let wind: f32 = (conv_vec_to_value_u(response_wind).unwrap() as f32) / 10.0;
@@ -255,13 +269,11 @@ impl ClimaSensorUS {
 					temp, wind
 				);
 				//check if new data should be published to opensensemap.org
-				if self.opensensemap_counter == UPDATE_FREQU {
+				if self.opensensemap_counter == UPDATE_FREQUENCY {
 					self.opensensemap_counter = 0;
 					match self.publish_to_opensensemap() {
 						Ok(_) => {}
-						Err(error) => {
-							eprintln!("publishing to opensensemap failed with {}", error);
-						}
+						Err(error) => return Err(error),
 					}
 				} else {
 					self.opensensemap_counter += 1;
@@ -321,15 +333,10 @@ impl ClimaSensorUS {
 		result
 	}
 
-	/// This function pulls data from the weatherstation and forms a json file out of the weather station data and the opensensemap-sensor-id.
-	/// The created json file is send tho the opensensemap-api.
-	/// All information needed are stored in a const array of tuples. The tuples contain the opensensemap-sensor-id, register-address, factor and datatype.
-	/// The return value indicates if the api request was successfully or not.
-	/// Information about the reading of registers can be accessed through the json_payload  
-	pub fn publish_to_opensensemap(&mut self) -> Result<(), reqwest::Error> {
+	/// This methode creates a json payload out of the array `OPENSENSE_CLIMA_DATA` and the data from the weather station
+	pub fn create_json(&mut self) -> Result<String, libmodbus::Error> {
 		match &self.ctx {
 			Some(conn) => {
-				//first create a JSON format for sending Data
 				let mut json_payload: String = "[".to_string();
 
 				for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
@@ -363,19 +370,30 @@ impl ClimaSensorUS {
 								));
 							}
 						}
-						Err(error) => {
-							json_payload.push_str(&format!(
-								"{}\"sensor\":\"{}\",\"value\":\"{}\"{},",
-								'{', tuple_data.0, error, '}'
-							));
-						}
+						Err(_) => {}
 					}
 				}
 				//remove last ','
 				json_payload.pop();
 				json_payload.push_str(&"]");
+				Ok(json_payload)
+			}
+			None => Err(Error::Rtu {
+				msg: ("No modbus connection configured".to_string()),
+				source: (std::io::Error::new(std::io::ErrorKind::NotFound, "Not configured")),
+			}),
+		}
+	}
 
-				//Send Jason to https://api.opensensemap.org
+	/// This function pulls data from the weatherstation and forms a json file out of the weather station data and the opensensemap-sensor-id.
+	/// The created json file is send tho the opensensemap-api.
+	/// All information needed are stored in a const array of tuples. The tuples contain the opensensemap-sensor-id, register-address, factor and datatype.
+	/// The return value indicates if the api request was successfully or not.
+	/// Information about the reading of registers can be accessed through the json_payload  
+	pub fn publish_to_opensensemap(&mut self) -> Result<(), std::io::Error> {
+		match self.create_json() {
+			Ok(json) => {
+				//Send JSON to https://api.opensensemap.org
 				let mut headers = HeaderMap::new();
 				headers.insert(
 					"Authorization",
@@ -388,17 +406,26 @@ impl ClimaSensorUS {
 						self.opensensebox_id
 					))
 					.headers(headers)
-					.body(json_payload)
+					.body(json)
 					.send();
 				match result {
 					Ok(response) => match response.error_for_status() {
 						Ok(_response) => Ok(()),
-						Err(error) => Err(error),
+						Err(error) => Err(std::io::Error::new(
+							std::io::ErrorKind::Other,
+							error.to_string(),
+						)),
 					},
-					Err(error) => Err(error),
+					Err(error) => Err(std::io::Error::new(
+						std::io::ErrorKind::ConnectionRefused,
+						error.to_string(),
+					)),
 				}
 			}
-			None => Ok(()),
+			Err(error) => Err(std::io::Error::new(
+				std::io::ErrorKind::InvalidData,
+				error.to_string(),
+			)),
 		}
 	}
 }

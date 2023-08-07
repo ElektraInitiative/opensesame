@@ -167,8 +167,8 @@ description = enables/disables weatherstation
 type = boolean
 default = 0
 
-[opensensemap/box_id]
-description = Which opensensemap Box should be connected to the weather station
+[weatherstation/opensensemap/id]
+description = Which opensensemap Box should be connected to the weather station, see doc/Opensensemap.md
 
 
 [opensensemap/access_token]

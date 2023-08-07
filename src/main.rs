@@ -207,9 +207,10 @@ fn main() -> Result<(), Error> {
 	let wait_for_ping_timeout = 300000 * config.get::<u32>("debug/ping/timeout");
 	let mut wait_for_ping = 0;
 	let mut ping_counter = 0u64;
-
 	let mut remember_baseline_counter = 0;
 	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
+	let enable_weather_station = config.get_bool("weatherstation/enable");
+	let mut weather_station = ClimaSensorUS::new(&mut config);
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
 		let mut environment = Environment::new(&mut config);
@@ -234,6 +235,40 @@ fn main() -> Result<(), Error> {
 		for l in reader.lines() {
 			if environment.handle() {
 				handle_environment(&mut environment, &mut nc, None, &mut config);
+			}
+
+			if enable_weather_station {
+				match weather_station.handle() {
+					Ok(TempWarningStateChange::ChangeToCloseWindow) => {
+						nc.send_message(gettext!("Temperature above {}°C, close the window", 23));
+					}
+					Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
+						nc.send_message(gettext!("Temperature above {}°C and no Wind", 30));
+					}
+					Ok(TempWarningStateChange::ChangeToWarningTemp) => {
+						nc.send_message(gettext!("Temperature above {}°C", 35));
+					}
+					Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
+						nc.send_message(gettext!(
+							"Temperature again under {}°C, remove warning",
+							20
+						));
+					}
+					Ok(TempWarningStateChange::None) => (),
+					Err(error) => {
+						nc.send_message(gettext!(
+							"Error durring handling weather station: {}",
+							error.to_string()
+						));
+						writeln!(
+							&mut outfile,
+							"{} weather station: {}",
+							Local::now().format(&date_time_format).to_string(),
+							error.to_string(),
+						)
+						.unwrap();
+					}
+				}
 			}
 
 			let line = l.unwrap();
@@ -294,7 +329,6 @@ fn main() -> Result<(), Error> {
 	let mut environment = Environment::new(&mut config);
 	let mut garage = Garage::new(&mut config);
 	let bat = Bat::new();
-	let mut weather_station = ClimaSensorUS::new(&mut config);
 	let mut alarm_not_active = true;
 
 	nc.set_info_online(gettext!("🪫 ON {}", bat));
@@ -535,24 +569,6 @@ fn main() -> Result<(), Error> {
 				));
 			}
 			Validation::None => (),
-		}
-		if config.get_bool("weatherstation/enable") {
-			match weather_station.handle() {
-				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
-					nc.send_message(gettext!("Temperature above {}°C, close the window", 23));
-				}
-				Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
-					nc.send_message(gettext!("Temperature above {}°C an no Wind", 30));
-				}
-				Ok(TempWarningStateChange::ChangeToWarningTemp) => {
-					nc.send_message(gettext!("Temperature above {}°C", 35));
-				}
-				Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
-					nc.send_message(gettext!("Temperature again under {}°C, remove warning", 20));
-				}
-				Ok(TempWarningStateChange::None) => (),
-				Err(_) => (),
-			}
 		}
 
 		remember_baseline_counter += 1;

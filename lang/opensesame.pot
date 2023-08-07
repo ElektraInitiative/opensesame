@@ -61,130 +61,150 @@ msgstr ""
 msgid "👋 opensesame {} init {}"
 msgstr ""
 
-#: src/main.rs:257
+#: src/main.rs:243
+msgid "Temperature above {}°C, close the window"
+msgstr ""
+
+#: src/main.rs:246
+msgid "Temperature above {}°C an no Wind"
+msgstr ""
+
+#: src/main.rs:249
+msgid "Temperature above {}°C"
+msgstr ""
+
+#: src/main.rs:252
+msgid "Temperature again under {}°C, remove warning"
+msgstr ""
+
+#: src/main.rs:259
+msgid "Error durring handling weather station: {}"
+msgstr ""
+
+#: src/main.rs:294
 msgid "Fire Alarm {}"
 msgstr ""
 
-#: src/main.rs:265
+#: src/main.rs:302
 msgid "Fire Chat {}"
 msgstr ""
 
-#: src/main.rs:280
+#: src/main.rs:317
 msgid "👋 reloaded config&state in sensor mode for opensesame {} {}"
 msgstr ""
 
-#: src/main.rs:297
+#: src/main.rs:334
 msgid "🪫 ON {}"
 msgstr ""
 
-#: src/main.rs:306
+#: src/main.rs:343
 msgid "🚨 Received alarm"
 msgstr ""
 
-#: src/main.rs:317
+#: src/main.rs:354
 msgid "🔔 Received bell"
 msgstr ""
 
-#: src/main.rs:323
+#: src/main.rs:360
 msgid "👋reloading config&state for opensesame {} {}"
 msgstr ""
 
-#: src/main.rs:334
+#: src/main.rs:371
 msgid "🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}"
 msgstr ""
 
-#: src/main.rs:359
+#: src/main.rs:396
 msgid "👋 opensesame {} started {}"
 msgstr ""
 
-#: src/main.rs:364
+#: src/main.rs:401
 msgid "🔋 ON {}"
 msgstr ""
 
-#: src/main.rs:389
+#: src/main.rs:426
 msgid "💡 Pressed at entrance top switch. Switch lights in garage. {}"
 msgstr ""
 
-#: src/main.rs:395
+#: src/main.rs:432
 msgid "💡 Pressed top switch at garage door. Switch lights in and out garage. {}"
 msgstr ""
 
-#: src/main.rs:405
+#: src/main.rs:
 msgid "🔓 Garage door closes automatically. {}"
 msgstr ""
 
-#: src/main.rs:411
+#: src/main.rs:441
 msgid "🔒 Open"
 msgstr ""
 
-#: src/main.rs:413
+#: src/main.rs:443
 msgid "🔒 Garage door closed. {}"
 msgstr ""
 
-#: src/main.rs:418
+#: src/main.rs:448
 msgid "🔓 Closed"
 msgstr ""
 
-#: src/main.rs:419
+#: src/main.rs:449
 msgid "🔓 Garage door open. {}"
 msgstr ""
 
-#: src/main.rs:444
+#: src/main.rs:474
 msgid "🔔 Pressed button bell. {}"
 msgstr ""
 
-#: src/main.rs:449
+#: src/main.rs:479
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/main.rs:454
+#: src/main.rs:484
 msgid "💡 Pressed switch inside. {}. {}"
 msgstr ""
 
-#: src/main.rs:461
+#: src/main.rs:491
 msgid "💡 Pressed switch outside or light button. {}. {}"
 msgstr ""
 
-#: src/main.rs:471
+#: src/main.rs:501
 msgid "🔔 Pressed switch bell. {}"
 msgstr ""
 
-#: src/main.rs:476
+#: src/main.rs:506
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/main.rs:484
+#: src/main.rs:514
 msgid "🕶️ Light was turned off. {}"
 msgstr ""
 
-#: src/main.rs:491
+#: src/main.rs:521
 msgid "⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
 msgstr ""
 
-#: src/main.rs:500
+#: src/main.rs:530
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/main.rs:511
+#: src/main.rs:541
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/main.rs:516
+#: src/main.rs:546
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/main.rs:528
+#: src/main.rs:558
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/main.rs:537
+#: src/main.rs:567
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/main.rs:554
+#: src/main.rs:584
 msgid "📴 OFF"
 msgstr ""
 
-#: src/main.rs:556
+#: src/main.rs:586
 msgid "👋 opensesame {} bye-bye {}"
 msgstr ""
