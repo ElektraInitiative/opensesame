@@ -200,8 +200,7 @@ impl ClimaSensorUS {
 		let mut s = Self {
 			ctx: None,
 			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
-			opensense_access_token: config
-				.get::<String>("weatherstation/opensensemap/token"),
+			opensense_access_token: config.get::<String>("weatherstation/opensensemap/token"),
 			warning_active: TempWarning::None,
 			opensensemap_counter: 0,
 		};
