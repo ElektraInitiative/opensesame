@@ -61,7 +61,7 @@ const REG_PITCH_MAGNETIC_COMPASS_NS: u16 = 0x8915;
 const REG_ROLL_MAGNETIC_COMPASS_EW: u16 = 0x8917;
 
 //OpenSenseMap
-const UPDATE_FREQUENCY: u32 = 6000; // 6000ms*10ms = 1min
+const UPDATE_FREQUENCY: u32 = 0; // 1min
 
 //Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
 const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
