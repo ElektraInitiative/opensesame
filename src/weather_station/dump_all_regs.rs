@@ -110,6 +110,28 @@ const INPUT_REG: [(u16, &'static str, &'static str, i32, char); 96] = [
 	(0x8917, "Roll vom Magnetkompass Winkel zwischen West-Ost zur Horizontalen", "°", 10,'s'),
 ];
 
+///All x hold registers
+const HOLD_REG: [(u16, &'static str, &'static str); 18] = [
+	(40015, "Befehl AV", "Mittelungsintervall für Windgeschwindigkeit und Windrichtung. 0..6000 (x100ms)"),
+	(40031, "Befehl BP", "Parität, s. Befehl „BP“ Thies Format"),
+	(40005, "Befehl BR", "Baudrate, s. Befehl „BR“ Thies Format"),
+	(40013, "Befehl CI", "Kommandointerpreter, s. Befehl „CI“ThiesFormat"),
+	(40011, "Befehl DM", "Duplex-Modus, s. Befehl „DM“ Thies Format"),
+	(40023, "Befehl HC", "Heizungsbedingung"),
+	(40025, "Befehl HS", "Höheneinstellung"),
+	(40027, "Befehl HT", "Heizungssteuerung"),
+	(40003, "Befehl ID", "Identifikationsnummer / Slave-Adresse"),
+	(40009, "Befehl KY", "Schlüssel / Passwort setzen (Admin = 4711)"),
+	(40029, "Befehl MC", "Magnetkompass Korrektur, Gehäuse zu Sensor(0..359°)"),
+	(40017, "Befehl NC", "Nordkorrektur der Windrichtung (0..359°) / 1000 = automatische Richtungskorrektur nach Magnetkompass"),
+	(40253, "Befehl RS", "Reset: 1 -> Warmstart 2 -> Tagessumme Niederschlag = 0"),
+	(40019, "Befehl SH", "Stationshöhe (0...9000m)"),
+	(40007, "Befehl SN", "Seriennummer"),
+	(45005, "Befehl SV", "Software Version z.B.: 160 = V1.60"),
+	(45001, "Befehl TA", "Thies Artikelnummer z.B: 4.9200.00.000 (64Bit)"),
+	(40021, "Befehl TZ", "Zeitzone, s. Befehl „TZ“ Thies Format"),
+];
+
 fn conv_vec_to_value_s(vec: Vec<u16>) -> i32 {
 	let usign_val: u32 = (vec[0] as u32) << 16 | (vec[1] as u32);
 	usign_val as i32
@@ -124,7 +146,7 @@ fn main() {
 	// Modbus-Verbindung initialisieren
 	let mut ctx = Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS).unwrap();
 	ctx.set_slave(SLAVE_ID).expect("Setting Slave-ID failed!");
-	assert!(ctx.rtu_set_serial_mode(SerialMode::RtuRS485).is_ok());
+	assert!(ctx.rtu_set_serial_mode(SerialMode::RtuRS232).is_ok());
 	assert!(ctx.rtu_set_rts(RequestToSendMode::RtuRtsUp).is_ok());
 	assert!(ctx.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).is_ok());
 
@@ -132,6 +154,8 @@ fn main() {
 	ctx.connect().expect("Verbindung mit ctx Fehlerhaft!");
 
 	// reading input registers
+	println!("--- INPUT REGISTERS ---");
+	println!("Reg-Address - Parametername : value ");
 	for input_reg in INPUT_REG.iter() {
 		let mut data = vec![0u16; 2];
 		match ctx.read_input_registers(input_reg.0, 2, &mut data) {
@@ -149,6 +173,29 @@ fn main() {
 			}
 			Err(_) => {
 				println!("{} - {} : couldn't read data", input_reg.0, input_reg.1);
+			}
+		}
+	}
+
+	// reading hold registers
+	println!("--- HOLD REGISTERS ---");
+	println!("Reg-Address - Parametername : value ");
+	for hold_reg in HOLD_REG.iter() {
+		let mut data = vec![0u16; 4];
+		match ctx.read_registers(hold_reg.0, 4, &mut data) {
+			Ok(_) => {
+				if hold_reg.0 == 45001 {
+					let conv_data: u64 = (data[0] as u64) << 48
+						| (data[1] as u64) << 32 | (data[2] as u64) << 16
+						| (data[3] as u64);
+					println!("{} - {} : {}", hold_reg.0, hold_reg.1, conv_data);
+				} else {
+					let conv_data: u32 = conv_vec_to_value_u(vec![data[0], data[1]]);
+					println!("{} - {} : {}", hold_reg.0, hold_reg.1, conv_data);
+				}
+			}
+			Err(_) => {
+				println!("{} - {} : couldn't read data", hold_reg.0, hold_reg.1);
 			}
 		}
 	}
