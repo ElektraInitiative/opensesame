@@ -1,58 +1,50 @@
-# docker build -t opensesame_cross . --build-arg VARIANT=bullseye
+# docker build -t opensesame .
+# docker run -it --rm opensesame
 ARG VARIANT=bullseye
-ARG RUST_VERSION=1.67.0
-FROM rust:${RUST_VERSION}-slim-${VARIANT}
+FROM rust:1.67.0-slim-${VARIANT}
 ENV DEBIAN_FRONTEND=noninteractive
+ARG VARIANT
 
 # Set locale
 RUN apt-get update && apt-get upgrade -y  && \
-    apt-get install -y --no-install-recommends sudo tzdata locales ssh && \
+    apt-get install -y --no-install-recommends sudo gnupg tzdata locales ssh && \
     rm -rf /var/lib/apt/lists/*
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Install libelektra armhf
-RUN dpkg --add-architecture armhf && apt-get update
-RUN apt-get install -y software-properties-common apt-transport-https
-RUN echo "deb [trusted=yes] https://thesis.maxirlinger.at/repo/ armhf/" > /etc/apt/sources.list.d/elektra-armhf.list && apt-get update
-RUN apt-get install -y --allow-unauthenticated libelektra-dev:armhf
-
-# Elektra symlinks
-RUN ln -s /usr/lib/arm-linux-gnueabi /usr/lib/pkgconfig/arm-linux-gnueabi
-RUN ln -s /usr/lib/arm-linux-gnueabihf /usr/lib/pkgconfig/arm-linux-gnueabihf
-RUN ln -s /usr/lib/arm-none-eabi /usr/lib/pkgconfig/arm-none-eabi
+# Install libelektra for amd64
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F26BBE02F3C315A19BF1F791A9A25CC1CC83E839 && \
+    echo "deb https://debs.libelektra.org/$VARIANT $VARIANT main" | sudo tee /etc/apt/sources.list.d/elektra.list && \
+    apt-get update && apt-get install -y libelektra5-all
 
 RUN set -eux; \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    gcc \
     curl \
+    gcc \
     wget \
+    libssl-dev \
     clang \
     pkg-config \
     build-essential \
     ca-certificates \
-    libssl-dev:armhf \
-    apt-transport-https \
     software-properties-common \
-    gettext
-
-# For cross compilation
-RUN apt install -y --no-install-recommends \
-    openssl \
-    libc6-dev \
-    libclang-dev \
-    libc6-dev-i386 \
-    libc6-armhf-cross \
-    libc6-dev-armhf-cross \
-    gcc-arm-linux-gnueabihf \
-    binutils-arm-linux-gnueabihf
+    apt-transport-https \
+    gettext && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install deps
 RUN cargo install cargo-deb
 RUN rustup component add clippy rustfmt
-RUN rustup target add armv7-unknown-linux-gnueabihf
-RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf
 RUN chown 47110:47110 -R /usr/local/cargo
+RUN mkdir -p /etc/kdb && mkdir -p /usr/share/elektra/specification
+RUN chown 47110:47110 -R /etc/kdb /usr/share/elektra/specification
+
+
+# ENV OPENSESAME_PATH /home/batman/opensesame
+# WORKDIR $OPENSESAME_PATH
+# COPY . $OPENSESAME_PATH
+# ENV GETTEXT_SYSTEM=1
+# RUN ./debian/postinst
