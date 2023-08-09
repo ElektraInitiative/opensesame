@@ -11,40 +11,76 @@ properties([
 ])
 
 pipeline {
+    agent { node { label 'docker' } }
     options {
+        timestamps()
+        parallelsAlwaysFailFast()
         timeout(time: 2, unit: "HOURS")
         disableConcurrentBuilds(abortPrevious: env.BRANCH_NAME != "master")
     }
-
-    agent {
-        dockerfile {
-            filename "Dockerfile"
-            dir "scripts/jenkins"
-            label "docker"
-            additionalBuildArgs "-t opensesame:build"
-        }
-    }
-
     stages {
-        stage("sanity") {
+        stage("Sanity") {
+            agent {
+                dockerfile { 
+                    filename "Dockerfile"
+                    dir "scripts/jenkins"
+                    label "docker"
+                    additionalBuildArgs "-t opensesame"
+                }
+            }
             steps {
                 sh "cargo fmt --check"
             }
         }
-
-        stage("package") {
-            environment {
-                GETTEXT_SYSTEM=1
+        stage("Test") {
+            parallel {
+                stage('clippy') {
+                    agent {
+                        dockerfile {
+                            filename "Dockerfile"
+                            dir "scripts/jenkins"
+                            label "docker"
+                            additionalBuildArgs "-t opensesame"
+                        }
+                    }
+                    steps {
+                        script {
+                            sh "cargo clippy"
+                        }
+                    }
+                }
+                stage('cargo test') {
+                    agent {
+                        dockerfile {
+                            filename "Dockerfile"
+                            dir "scripts/jenkins"
+                            label "docker"
+                            additionalBuildArgs "-t opensesame"
+                        }
+                    }
+                    steps {
+                        script {
+                            sh "cd debian && ./postrm"
+                            sh "cd debian && ./postinst"
+                            sh "cargo test"
+                        }
+                    }
+                }
+            }
+        }
+        stage("Build") {
+            agent {
+                dockerfile { 
+                    filename "Dockerfile_cross"
+                    dir "scripts/jenkins"
+                    label "docker"
+                    additionalBuildArgs "-t opensesame_cross"
+                }
             }
             steps {
                 sh "cargo deb --target=armv7-unknown-linux-gnueabihf"
+                archiveArtifacts artifacts: "target/armv7-unknown-linux-gnueabihf/debian/*.deb", fingerprint: false
             }
-        }
-    }
-
-    post {
-        success {
-            archiveArtifacts artifacts: "target/armv7-unknown-linux-gnueabihf/debian/*.deb", fingerprint: false
         }
     }
 }
