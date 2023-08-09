@@ -66,3 +66,8 @@ serial_test = "0.4.0" # TODO, remove when issues.libelektra.org/4466 is fixed
 
 sunrise = "1.0.0"
 
+libmodbus = {git = "https://github.com/ElektraInitiative/libmodbus-rs.git", branch="test_lower_bindgen_version"} 
+
+[[bin]]
+name = "weatherstation_dump"
+path = "src/weather_station/dump_all_regs.rs"
