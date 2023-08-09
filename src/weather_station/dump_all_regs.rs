@@ -171,15 +171,20 @@ fn main() {
 					input_reg.0, input_reg.1, conv_data, input_reg.2
 				);
 			}
-			Err(_) => {
-				println!("{} - {} : couldn't read data", input_reg.0, input_reg.1);
+			Err(error) => {
+				eprintln!(
+					"{} - {} : [couldn't read data '{}']",
+					input_reg.0,
+					input_reg.1,
+					error.to_string()
+				);
 			}
 		}
 	}
 
 	// reading hold registers
 	println!("--- HOLD REGISTERS ---");
-	println!("Reg-Address - Parametername : value ");
+	println!("Reg-Address - Befehl - Parametername : value ");
 	for hold_reg in HOLD_REG.iter() {
 		let mut data = vec![0u16; 4];
 		match ctx.read_registers(hold_reg.0, 4, &mut data) {
@@ -188,14 +193,26 @@ fn main() {
 					let conv_data: u64 = (data[0] as u64) << 48
 						| (data[1] as u64) << 32 | (data[2] as u64) << 16
 						| (data[3] as u64);
-					println!("{} - {} -{} : {}", hold_reg.0, hold_reg.1, hold_reg.2, conv_data);
+					println!(
+						"{} - {} -{} : {}",
+						hold_reg.0, hold_reg.1, hold_reg.2, conv_data
+					);
 				} else {
 					let conv_data: u32 = conv_vec_to_value_u(vec![data[0], data[1]]);
-					println!("{} - {} - {} : {}", hold_reg.0, hold_reg.1, hold_reg.2, conv_data);
+					println!(
+						"{} - {} - {} : {}",
+						hold_reg.0, hold_reg.1, hold_reg.2, conv_data
+					);
 				}
 			}
 			Err(error) => {
-				println!("{} - {} - {} : couldn't read data '{}'", hold_reg.0, hold_reg.1, hold_reg.2, error.to_string());
+				eprintln!(
+					"{} - {} - {} : [couldn't read data '{}']",
+					hold_reg.0,
+					hold_reg.1,
+					hold_reg.2,
+					error.to_string()
+				);
 			}
 		}
 	}
