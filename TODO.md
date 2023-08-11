@@ -60,7 +60,7 @@ proper Bat impl https://github.com/svartalf/rust-battery/issues/96
 
 ## Nextcloud Analytics
 
-Assignee: Felix
+Assignee: Markus
 
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
 
@@ -82,7 +82,7 @@ better error handling
 
 ## PV
 
-Assignee: Felix
+Assignee: Markus
 
 implement all error codes
 
