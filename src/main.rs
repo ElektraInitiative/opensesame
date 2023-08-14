@@ -256,7 +256,7 @@ fn main() -> Result<(), Error> {
 					}
 					Ok(TempWarningStateChange::None) => (),
 					Err(error) => {
-						nc.send_message(gettext!(
+						nc.ping(gettext!(
 							"Error durring handling weather station: {}",
 							error.to_string()
 						));
