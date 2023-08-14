@@ -240,29 +240,29 @@ fn main() -> Result<(), Error> {
 			if enable_weather_station {
 				match weather_station.handle() {
 					Ok(TempWarningStateChange::ChangeToCloseWindow) => {
-						nc.send_message(gettext!("Temperature above {}°C, close the window", 23));
+						nc.send_message(gettext!("🌡️ Temperature above {} °C, close the window", 23));
 					}
 					Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
-						nc.send_message(gettext!("Temperature above {}°C and no Wind", 30));
+						nc.send_message(gettext!("🌡️ Temperature above {} °C and no Wind", 30));
 					}
 					Ok(TempWarningStateChange::ChangeToWarningTemp) => {
-						nc.send_message(gettext!("Temperature above {}°C", 35));
+						nc.send_message(gettext!("🌡️ Temperature above {} °C", 35));
 					}
 					Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
 						nc.send_message(gettext!(
-							"Temperature again under {}°C, remove warning",
+							"🌡 Temperature again under {} °C, warning was removed",
 							20
 						));
 					}
 					Ok(TempWarningStateChange::None) => (),
 					Err(error) => {
 						nc.ping(gettext!(
-							"Error durring handling weather station: {}",
+							"⚠️ Error from weather station: {}",
 							error.to_string()
 						));
-						writeln!(
+						write!(
 							&mut outfile,
-							"{} weather station: {}",
+							"{} weather sensors: {}",
 							Local::now().format(&date_time_format).to_string(),
 							error.to_string(),
 						)

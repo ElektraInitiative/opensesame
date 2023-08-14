@@ -12,6 +12,7 @@
 - [Environment](Environment.md)
 - [Front door](Haustüre.md)
 - [Weather station](thiesclima-weatherstation.md)
+- [Opensensemap](Opensensemap.md)
 - [Inverter](goodwe-inverter.md)
 - [Troubles libmodbus](libmodbus-troubles.md)
 - [Energy](Energy.md)

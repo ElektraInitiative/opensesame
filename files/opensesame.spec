@@ -168,8 +168,8 @@ type = boolean
 default = 0
 
 [weatherstation/opensensemap/id]
-description = Which opensensemap Box should be connected to the weather station, see doc/Opensensemap.md
+description = Which Opensensemap senseBoxes should be connected to the weather station, see doc/Opensensemap.md
 
 
-[opensensemap/access_token]
-description = Access-Token for opensensemap Box
+[weatherstation/opensensemap/token]
+description = Access-Token for Opensensemap senseBoxes, see doc/Opensensemap.md

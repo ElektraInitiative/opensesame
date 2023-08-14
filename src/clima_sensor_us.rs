@@ -1,4 +1,4 @@
-/// Before using this module you need to configure elektra with the following elements
+/// Before using this module you need to configure Elektra with the following elements
 /// [weatherstation/enable], [weatherstation/opensensemap/id] and [weatherstation/opensensemap/token]
 /// For example:
 /// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/enable 1
@@ -291,17 +291,20 @@ impl ClimaSensorUS {
 
 		if temp > 35.0 {
 			new_warning = TempWarning::WarningTemp;
-		} else if temp > 30.0 && wind < 0.3 {
+		} else if temp > 30.0 && wind < 0.3 && !matches!(self.warning_active, TempWarning::WarningTemp) {
 			new_warning = TempWarning::WarningTempNoWind;
-		} else if temp > 23.0 {
+		} else if temp > 23.0 
+			&& !matches!(self.warning_active, TempWarning::WarningTemp) 
+			&& !matches!(self.warning_active, TempWarning::WarningTempNoWind)
+		{
 			new_warning = TempWarning::CloseWindow;
 		} else if !matches!(self.warning_active, TempWarning::None)
 			&& !matches!(self.warning_active, TempWarning::RemoveWarning)
 			&& temp < 20.0
 		{
 			new_warning = TempWarning::RemoveWarning;
-		} else {
-			new_warning = TempWarning::None;
+		}else{
+			new_warning = self.warning_active;
 		}
 
 		// compaire old and new value of TempWarning
@@ -487,11 +490,11 @@ mod tests {
 			TempWarning::WarningTempNoWind
 		));
 		assert!(
-			clima_sens.set_warning_active(33.0, 3.5) == TempWarningStateChange::ChangeToCloseWindow
+			clima_sens.set_warning_active(33.0, 3.5) == TempWarningStateChange::None
 		);
 		assert!(matches!(
 			clima_sens.warning_active,
-			TempWarning::CloseWindow
+			TempWarning::WarningTempNoWind
 		));
 
 		assert!(
@@ -516,7 +519,7 @@ mod tests {
 			TempWarning::RemoveWarning
 		));
 		assert!(clima_sens.set_warning_active(15.0, 3.5) == TempWarningStateChange::None);
-		assert!(matches!(clima_sens.warning_active, TempWarning::None));
+		assert!(matches!(clima_sens.warning_active, TempWarning::RemoveWarning));
 	}
 
 	#[test]

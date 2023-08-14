@@ -18,17 +18,28 @@ This option is utilized for manually configuring the weather station's sensors.
 ### 2.1 Sensor Icon
 Choose an icon to represent the weather phenomenon you're measuring.
 ### 2.2 Sensor Details 
-Obtain the sensor information from the [ documentation](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf), focusing specifically on section `8.2.1 Measurement Values (Input Register)``.
-Extract the `Parameter Name` from the provided table and enter it in the `Phenomenon` input section.
-Retrieve the `Einheit` from the table and input it into the `Unit`` section.
-Identify the constant name in the [source code](../src/clima_sensor_us.rs) that corresponds to the register address of the row in the table, and input it into the `Type` section.
+- Obtain the sensor information from the [ documentation](https://www.thiesclima.com/db/dnl/4.92xx.x0.xxx_Clima_Sensor_US_e.pdf), focusing specifically on section `8.2.1 Measurement Values (Input Register)`.
+- Extract the `Parameter Name` from the provided table and enter it in the `Phenomenon` input section.
+- Retrieve the `Unit` from the table and input it into the `Unit` section.
+- Identify the constant name in the [source code](../src/clima_sensor_us.rs) that corresponds to the register address of the row in the table, and input it into the `Type` section.
+
+**Example:**
+
+| **Registeraddress** | **Parameter name** | **Unit** | **Multiplier** | **Explanation**                                   | **Data type** |
+|---------------------|--------------------|----------|----------------|---------------------------------------------------|---------------|
+| 30003 0x7533        | Average wind speed | m/s      | 10             | Value / 10 (to 1 decimal place, e.g. 101=10.1m/s) | U32           |
+| 35005 0x88BD        | Air temperature    | °C       | 10             | Value / 10 (to 1 decimal place, e.g. 255=25.5°C)  | S32           |
+
+A constant within the [source code](../src/clima_sensor_us.rs) takes the form: `const REG_AIR_TEMP: u16 = 0x88BD;`
+
+In this illustrative scenario, the variable `REG_AIR_TEMP` represents the air temperature. Our initial action involves transferring the parameter designation `Air temperature` to the `Phenomenon` input section. Subsequently, we proceed to incorporate `°C` from the provided table into the `Unit` input section. Finally, the variable name `REG_AIR_TEMP` is copied into the `Type` input field.
 
 ## 3. Obtaining IDs
 
 ### 3.1 senseBox-ID
 Find the senseBox-ID in the `Dashboard` section.
 ### 3.2 Access-Token
-Locate the Access-Token in `Dashboard/EDIT/Security``.
+Locate the Access-Token in `Dashboard/EDIT/Security`.
 ### 3.3 Sensor-IDs
 Retrieve the Sensor-IDs from `Dashboard/EDIT/Sensors`.
 
@@ -47,13 +58,11 @@ kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/opensensemap/to
 Enable sensor mode by creating a sensor profile with the following settings:
 ```bash
 kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/loc "Weatherstation"
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/quality "++"
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/bell 500
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/alarm 600
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/min 0
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/avg 25
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/max 100 
-kdb set user:/sw/libelektra/opensesame/#0/current/sensors/#0/pin "Shield-Lime2 uext2"
+```
+
+Should the process of creating this array encounter any difficulties, the alternative course of action involves manually incorporating the configuration information into the `~/.config/opensesame.toml` file:
+```bash
+sensors."#0".loc = "Weatherstation"
 ```
 
 ### 4.4 Environment Name
