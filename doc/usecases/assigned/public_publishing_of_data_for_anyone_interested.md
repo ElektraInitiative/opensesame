@@ -19,7 +19,7 @@
 	- Opensesame generates a JSON format using sensor IDs and register values.
 	- Opensesame transmits the JSON string to the Opensensemap API every minute.
 - **Error scenario:**
-	- Unable to read register value; return an error to the calling method.
-	- Connection to Opensensemap API fails; return an error to the calling method.
+	- Unable to read register value; return the error to Nextcloud
+	- Connection to Opensensemap API fails; retry connection to Opensensemap at least once; return error to Nextcloud
 - **Postcondition:**
 	- Opensensemap has full history of all sensor data.
