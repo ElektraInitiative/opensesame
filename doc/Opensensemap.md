@@ -10,15 +10,18 @@ Select the appropriate exposure setting: indoor, outdoor, or mobile.
 ### 1.3 Geographical Coordinates
 Enter the latitude and longitude or pick a location on the map.
 ### 1.4 Hardware Configuration
-Choose the "Manual configuration" option under hardware. 
-This is necessary as the Thies-Clima-Sensor isn't a default hardware configuration.
+Choose the "Manual configuration" option under hardware.
+This option is utilized for manually configuring the weather station's sensors.
 
 ## 2. Adding Sensors
 
 ### 2.1 Sensor Icon
 Choose an icon to represent the weather phenomenon you're measuring.
 ### 2.2 Sensor Details 
-Provide a name, unit (e.g., m/s, °C), and specify the sensor type using the variable names from the register address constants in clima_sensor_us.rs.
+Obtain the sensor information from the [ documentation](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf), focusing specifically on section `8.2.1 Measurement Values (Input Register)``.
+Extract the `Parameter Name` from the provided table and enter it in the `Phenomenon` input section.
+Retrieve the `Einheit` from the table and input it into the `Unit`` section.
+Identify the constant name in the [source code](../src/clima_sensor_us.rs) that corresponds to the register address of the row in the table, and input it into the `Type` section.
 
 ## 3. Obtaining IDs
 
