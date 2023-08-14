@@ -13,7 +13,7 @@
 
 - **Precondition:** 
 	- The user has configured Opensesame to use Clima-Sensor-US  and to publish to Opensensemap.
-	- The web interface must be properly configured, and the corresponding IDs need to be entered in Elektra and in the constants.
+	- The web interface must be properly configured, and the corresponding ID need to be entered in Elektra.
 - **Main Success Scenario:** 
 	- Opensesame retrieves the register values of the Thies-Clima-Sensor.
 	- Opensesame generates a JSON format using sensor IDs and register values.
