@@ -1,26 +1,25 @@
-# Use Case: public publishing of data for anyone interested
+# Use Case: Public Publishing of data for Anyone Interested
 
 ## Summary
 
-- **Scope:** Clima-Sensor-US - Module
-- **Level:** Backend
-- **Actors** Thies-Clima-Sensor, Opensensemap
-- **Brief:** The sensor informations are collected periodically and are published to opensensemap
+- **Scope:** Clima-Sensor-US
+- **Level:** User Goal
+- **Actors** Thies-Clima-Sensor, Opensesame, Opensensemap
+- **Brief:** The sensor informations are collected periodically and are published to Opensensemap
 - **Assignee:** Felix
 - **Status:** Assigned
 
 ## Scenarios
 
 - **Precondition:** 
-	- The user has configured opensesame to use sensor mode.
-	- Sensor IDs are set in constants.
-	- Update frequency is set.
+	- The user has configured Opensesame to use Clima-Sensor-US  and to publish to Opensensemap.
+	- The web interface must be properly configured, and the corresponding IDs need to be entered in Elektra and in the constants.
 - **Main Success Scenario:** 
-	- Retrieve the register values of the clima sensor.
-	- Generate a JSON format using sensor IDs and register values.
-	- Transmit the JSON string to the Opensensemap API.
+	- Opensesame retrieves the register values of the Thies-Clima-Sensor.
+	- Opensesame generates a JSON format using sensor IDs and register values.
+	- Opensesame transmits the JSON string to the Opensensemap API every minute.
 - **Error scenario:**
 	- Unable to read register value; return an error to the calling method.
 	- Connection to Opensensemap API fails; return an error to the calling method.
 - **Postcondition:**
-	- The method for publishing to Opensensemap is triggered periodically.
+	- Opensensemap has full history of all sensor data.
