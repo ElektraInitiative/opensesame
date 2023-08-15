@@ -291,10 +291,13 @@ impl ClimaSensorUS {
 
 		if temp > 35.0 {
 			new_warning = TempWarning::WarningTemp;
-		} else if temp > 30.0 && wind < 0.3 && !matches!(self.warning_active, TempWarning::WarningTemp) {
+		} else if temp > 30.0
+			&& wind < 0.3
+			&& !matches!(self.warning_active, TempWarning::WarningTemp)
+		{
 			new_warning = TempWarning::WarningTempNoWind;
-		} else if temp > 23.0 
-			&& !matches!(self.warning_active, TempWarning::WarningTemp) 
+		} else if temp > 23.0
+			&& !matches!(self.warning_active, TempWarning::WarningTemp)
 			&& !matches!(self.warning_active, TempWarning::WarningTempNoWind)
 		{
 			new_warning = TempWarning::CloseWindow;
@@ -303,7 +306,7 @@ impl ClimaSensorUS {
 			&& temp < 20.0
 		{
 			new_warning = TempWarning::RemoveWarning;
-		}else{
+		} else {
 			new_warning = self.warning_active;
 		}
 
@@ -489,9 +492,7 @@ mod tests {
 			clima_sens.warning_active,
 			TempWarning::WarningTempNoWind
 		));
-		assert!(
-			clima_sens.set_warning_active(33.0, 3.5) == TempWarningStateChange::None
-		);
+		assert!(clima_sens.set_warning_active(33.0, 3.5) == TempWarningStateChange::None);
 		assert!(matches!(
 			clima_sens.warning_active,
 			TempWarning::WarningTempNoWind
@@ -519,7 +520,10 @@ mod tests {
 			TempWarning::RemoveWarning
 		));
 		assert!(clima_sens.set_warning_active(15.0, 3.5) == TempWarningStateChange::None);
-		assert!(matches!(clima_sens.warning_active, TempWarning::RemoveWarning));
+		assert!(matches!(
+			clima_sens.warning_active,
+			TempWarning::RemoveWarning
+		));
 	}
 
 	#[test]

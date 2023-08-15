@@ -240,7 +240,10 @@ fn main() -> Result<(), Error> {
 			if enable_weather_station {
 				match weather_station.handle() {
 					Ok(TempWarningStateChange::ChangeToCloseWindow) => {
-						nc.send_message(gettext!("🌡️ Temperature above {} °C, close the window", 23));
+						nc.send_message(gettext!(
+							"🌡️ Temperature above {} °C, close the window",
+							23
+						));
 					}
 					Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
 						nc.send_message(gettext!("🌡️ Temperature above {} °C and no Wind", 30));
@@ -260,13 +263,6 @@ fn main() -> Result<(), Error> {
 							"⚠️ Error from weather station: {}",
 							error.to_string()
 						));
-						write!(
-							&mut outfile,
-							"{} weather sensors: {}",
-							Local::now().format(&date_time_format).to_string(),
-							error.to_string(),
-						)
-						.unwrap();
 					}
 				}
 			}
