@@ -156,7 +156,7 @@ impl Environment {
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
 			};
-			//if sending Reset failes it disables ccs811
+			//if sending SW_RESET failes it disables ccs811
 			match s
 				.board5a
 				.as_mut()
@@ -257,7 +257,24 @@ impl Environment {
 	/// to be periodically called every 10 ms
 	pub fn handle(&mut self) -> bool {
 		match self.board5a.as_mut() {
-			None => false,
+			None => match self.bme280.as_mut() {
+				None => false,
+				Some(bme280) => {
+					self.read_counter += 1;
+					if self.read_counter == self.data_interval {
+						self.read_counter = 0;
+
+						let measurement = bme280.measure().unwrap();
+
+						self.temperature = measurement.temperature;
+						self.humidity = measurement.humidity;
+						self.pressure = measurement.pressure;
+
+						return true;
+					}
+					return false;
+				}
+			},
 			Some(board5a) => {
 				self.read_counter += 1;
 

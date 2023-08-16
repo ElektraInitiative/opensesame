@@ -1,7 +1,7 @@
 # Environment sensors
 ## MOD-BME280
 
-### Setup and Wirring 
+### Setup and Wiring 
 
 #### 1. Enable i2c-2 by using `olinuxino-overlay` as root.
 
