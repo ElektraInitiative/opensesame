@@ -48,6 +48,11 @@ use watchdog::Watchdog;
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
+const TEMP_CLOSE_WINDOW: i32 = 23;
+const TEMP_WARNING_NO_WIND: i32 = 30;
+const TEMP_WARNING: i32 = 35;
+const TEMP_WARNING_REMOVE: i32 = 20;
+
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
 fn play_audio_file(file: String, arg: String) {
 	if file != "/dev/null" {
@@ -242,19 +247,22 @@ fn main() -> Result<(), Error> {
 					Ok(TempWarningStateChange::ChangeToCloseWindow) => {
 						nc.send_message(gettext!(
 							"🌡️ Temperature above {} °C, close the window",
-							23
+							TEMP_CLOSE_WINDOW
 						));
 					}
 					Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
-						nc.send_message(gettext!("🌡️ Temperature above {} °C and no Wind", 30));
+						nc.send_message(gettext!(
+							"🌡️ Temperature above {} °C and no Wind",
+							TEMP_WARNING_NO_WIND
+						));
 					}
 					Ok(TempWarningStateChange::ChangeToWarningTemp) => {
-						nc.send_message(gettext!("🌡️ Temperature above {} °C", 35));
+						nc.send_message(gettext!("🌡️ Temperature above {} °C", TEMP_WARNING));
 					}
 					Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
 						nc.send_message(gettext!(
 							"🌡 Temperature again under {} °C, warning was removed",
-							20
+							TEMP_WARNING_REMOVE
 						));
 					}
 					Ok(TempWarningStateChange::None) => (),

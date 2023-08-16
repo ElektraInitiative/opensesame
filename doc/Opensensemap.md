@@ -32,7 +32,9 @@ Choose an icon to represent the weather phenomenon you're measuring.
 
 A constant within the [source code](../src/clima_sensor_us.rs) takes the form: `const REG_AIR_TEMP: u16 = 0x88BD;`
 
-In this illustrative scenario, the variable `REG_AIR_TEMP` represents the air temperature. Our initial action involves transferring the parameter designation `Air temperature` to the `Phenomenon` input section. Subsequently, we proceed to incorporate `°C` from the provided table into the `Unit` input section. Finally, the variable name `REG_AIR_TEMP` is copied into the `Type` input field.
+In this illustrative scenario, the variable `REG_AIR_TEMP` represents the air temperature.
+Our initial action involves transferring the parameter designation `Air temperature` to the `Phenomenon` input section. Subsequently, we proceed to incorporate `°C` from the provided table into the `Unit` input section.
+Finally, the variable name `REG_AIR_TEMP` is copied into the `Type` input field.
 
 ## 3. Obtaining IDs
 

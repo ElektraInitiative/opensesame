@@ -510,7 +510,11 @@ mod tests {
 			clima_sens.warning_active,
 			TempWarning::WarningTemp
 		));
-
+		assert!(clima_sens.set_warning_active(25.3, 3.4) == TempWarningStateChange::None);
+		assert!(matches!(
+			clima_sens.warning_active,
+			TempWarning::WarningTemp
+		));
 		assert!(
 			clima_sens.set_warning_active(15.0, 0.1)
 				== TempWarningStateChange::ChangeToRemoveWarning
