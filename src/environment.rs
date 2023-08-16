@@ -157,13 +157,16 @@ impl Environment {
 				name: config.get::<String>("environment/name"),
 			};
 			//if sending Reset failes it disables ccs811
-			match s.board5a
+			match s
+				.board5a
 				.as_mut()
 				.unwrap()
-				.smbus_write_i2c_block_data(SW_RESET, &[0x11, 0xE5, 0x72, 0x8A]){
-					Ok(_) => (),
-					Err(_) => {s.board5a = None;}
-
+				.smbus_write_i2c_block_data(SW_RESET, &[0x11, 0xE5, 0x72, 0x8A])
+			{
+				Ok(_) => (),
+				Err(_) => {
+					s.board5a = None;
+				}
 			}
 			s.bme280.as_mut().unwrap().init().unwrap();
 			s
