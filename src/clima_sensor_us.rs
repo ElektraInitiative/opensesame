@@ -151,8 +151,8 @@ const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
 /// These functions create a single number out of a vector.
 /// The first entry in the vector are the most significant bytes and the second entry are the least significant bytes.
 /// For the unsigned function the input `vec` should be already in two complement, so that the function works right.
-fn conv_vec_to_value_s(vec: Vec<u16>) -> Result<i32, ()> {
-	let usign_val: u32 = (vec[0] as u32) << 16 | (vec[1] as u32);
+fn conv_vec_to_value_s(vec: (u16, u16)) -> Result<i32, ()> {
+	let usign_val: u32 = (vec.0 as u32) << 16 | (vec.1 as u32);
 	if usign_val == ERROR_CODE_S32 {
 		Err(())
 	} else {
@@ -160,8 +160,8 @@ fn conv_vec_to_value_s(vec: Vec<u16>) -> Result<i32, ()> {
 	}
 }
 
-fn conv_vec_to_value_u(vec: Vec<u16>) -> Result<u32, ()> {
-	let usign_val = (vec[0] as u32) << 16 | (vec[1] as u32);
+fn conv_vec_to_value_u(vec: (u16, u16)) -> Result<u32, ()> {
+	let usign_val = (vec.0 as u32) << 16 | (vec.1 as u32);
 	if usign_val == ERROR_CODE_U32 {
 		Err(())
 	} else {
@@ -270,8 +270,10 @@ impl ClimaSensorUS {
 					));
 				}
 
-				let temp: f32 = (conv_vec_to_value_s(response_temp).unwrap() as f32) / 10.0;
-				let wind: f32 = (conv_vec_to_value_u(response_wind).unwrap() as f32) / 10.0;
+				let temp: f32 = (conv_vec_to_value_s((response_temp[0], response_temp[1])).unwrap()
+					as f32) / 10.0;
+				let wind: f32 = (conv_vec_to_value_u((response_wind[0], response_wind[1])).unwrap()
+					as f32) / 10.0;
 				#[cfg(debug_assertions)]
 				println!(
 					"Weatherstation: temperature {} °C, windspeed {} m/s",
@@ -362,7 +364,7 @@ impl ClimaSensorUS {
 						Ok(_) => {
 							let value: f32;
 							if tuple_data.3 == 's' {
-								match conv_vec_to_value_s(response) {
+								match conv_vec_to_value_s((response[0], response[1])) {
 									Ok(conv_response) => {
 										value = conv_response as f32 / tuple_data.2;
 									}
@@ -371,7 +373,7 @@ impl ClimaSensorUS {
 									}
 								}
 							} else {
-								match conv_vec_to_value_u(response) {
+								match conv_vec_to_value_u((response[0], response[1])) {
 									Ok(conv_response) => {
 										value = conv_response as f32 / tuple_data.2;
 									}
@@ -544,29 +546,26 @@ mod tests {
 
 	#[test]
 	fn test_conv_vec_to_value_s() {
-		assert_eq!(conv_vec_to_value_s(vec![0x0000u16, 0x0000u16]), Ok(0));
-		assert_eq!(conv_vec_to_value_s(vec![0x0000u16, 0x0001u16]), Ok(1));
-		assert_eq!(conv_vec_to_value_s(vec![0xffffu16, 0xffffu16]), Ok(-1));
-		assert_eq!(conv_vec_to_value_s(vec![0x0000u16, 0x000au16]), Ok(10));
-		assert_eq!(conv_vec_to_value_s(vec![0xffffu16, 0xfff6u16]), Ok(-10));
-		assert_eq!(conv_vec_to_value_s(vec![0x0000u16, 0x0020u16]), Ok(32));
-		assert_eq!(conv_vec_to_value_s(vec![0xffffu16, 0xffe0u16]), Ok(-32));
-		assert_eq!(conv_vec_to_value_s(vec![0x0000u16, 0x1524u16]), Ok(5412));
-		assert_eq!(conv_vec_to_value_s(vec![0xffffu16, 0xeadcu16]), Ok(-5412));
-		assert_eq!(conv_vec_to_value_s(vec![0x7fffu16, 0xffffu16]), Err(()));
-		assert_eq!(
-			conv_vec_to_value_s(vec![0x8000u16, 0x0000u16]),
-			Ok(-2147483648)
-		);
+		assert_eq!(conv_vec_to_value_s((0x0000u16, 0x0000u16)), Ok(0));
+		assert_eq!(conv_vec_to_value_s((0x0000u16, 0x0001u16)), Ok(1));
+		assert_eq!(conv_vec_to_value_s((0xffffu16, 0xffffu16)), Ok(-1));
+		assert_eq!(conv_vec_to_value_s((0x0000u16, 0x000au16)), Ok(10));
+		assert_eq!(conv_vec_to_value_s((0xffffu16, 0xfff6u16)), Ok(-10));
+		assert_eq!(conv_vec_to_value_s((0x0000u16, 0x0020u16)), Ok(32));
+		assert_eq!(conv_vec_to_value_s((0xffffu16, 0xffe0u16)), Ok(-32));
+		assert_eq!(conv_vec_to_value_s((0x0000u16, 0x1524u16)), Ok(5412));
+		assert_eq!(conv_vec_to_value_s((0xffffu16, 0xeadcu16)), Ok(-5412));
+		assert_eq!(conv_vec_to_value_s((0x7fffu16, 0xffffu16)), Err(()));
+		assert_eq!(conv_vec_to_value_s((0x8000u16, 0x0000u16)), Ok(-2147483648));
 	}
 
 	#[test]
 	fn test_conv_vec_to_value_u() {
-		assert_eq!(conv_vec_to_value_u(vec![0x0000u16, 0x0000u16]), Ok(0));
-		assert_eq!(conv_vec_to_value_u(vec![0x0000u16, 0x0001u16]), Ok(1));
-		assert_eq!(conv_vec_to_value_u(vec![0x0000u16, 0x000au16]), Ok(10));
-		assert_eq!(conv_vec_to_value_u(vec![0x0000u16, 0x0020u16]), Ok(32));
-		assert_eq!(conv_vec_to_value_u(vec![0x0000u16, 0x1524u16]), Ok(5412));
-		assert_eq!(conv_vec_to_value_u(vec![0xffffu16, 0xffffu16]), Err(()));
+		assert_eq!(conv_vec_to_value_u((0x0000u16, 0x0000u16)), Ok(0));
+		assert_eq!(conv_vec_to_value_u((0x0000u16, 0x0001u16)), Ok(1));
+		assert_eq!(conv_vec_to_value_u((0x0000u16, 0x000au16)), Ok(10));
+		assert_eq!(conv_vec_to_value_u((0x0000u16, 0x0020u16)), Ok(32));
+		assert_eq!(conv_vec_to_value_u((0x0000u16, 0x1524u16)), Ok(5412));
+		assert_eq!(conv_vec_to_value_u((0xffffu16, 0xffffu16)), Err(()));
 	}
 }
