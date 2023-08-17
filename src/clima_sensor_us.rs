@@ -297,12 +297,10 @@ impl ClimaSensorUS {
 		{
 			new_warning = TempWarning::WarningTempNoWind;
 		} else if temp > 23.0
-			&& !matches!(self.warning_active, TempWarning::WarningTemp)
-			&& !matches!(self.warning_active, TempWarning::WarningTempNoWind)
+			&& !matches!(self.warning_active, TempWarning::WarningTemp | TempWarning::WarningTempNoWind)
 		{
 			new_warning = TempWarning::CloseWindow;
-		} else if !matches!(self.warning_active, TempWarning::None)
-			&& !matches!(self.warning_active, TempWarning::RemoveWarning)
+		} else if !matches!(self.warning_active, TempWarning::None | TempWarning::RemoveWarning)
 			&& temp < 20.0
 		{
 			new_warning = TempWarning::RemoveWarning;
