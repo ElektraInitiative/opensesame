@@ -205,30 +205,40 @@ impl ClimaSensorUS {
 			opensensemap_counter: 0,
 		};
 		if config.get_bool("weatherstation/enable") {
-			s.init();
+			match s.init() {
+				Ok(_) => (),
+				Err(error) => {
+					panic!("Error oucuured during init of modbus-connection: {}", error);
+				}
+			}
 		}
 		s
 	}
 
-	fn init(&mut self) {
-		self.ctx = Some(
-			Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS)
-				.expect("Error occurred while creating new RTU Object"),
-		);
-		if let Some(conn) = &mut self.ctx {
-			conn.set_slave(SLAVE_ID).unwrap_or_else(|_| {
-				panic!("Error occurred while setting slave-id to '{}'", SLAVE_ID)
-			});
-			conn.rtu_set_serial_mode(SerialMode::RtuRS232)
-				.expect("Error occurred while setting serial mode to RS485");
-			conn.rtu_set_rts(RequestToSendMode::RtuRtsUp)
-				.expect("Error occurred while setting RTS ti RTS-UP");
-			conn.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp)
-				.expect("Error occurred while setting custom RTS-function");
-
-			conn.connect()
-				.expect("Error occurred while connecting to Clima-Sensor");
+	fn init(&mut self) -> Result<(), libmodbus::Error> {
+		match Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS) {
+			Ok(conn) => {
+				self.ctx = Some(conn);
+			}
+			Err(error) => {
+				return Err(error);
+			}
 		}
+
+		if let Some(conn) = &mut self.ctx {
+			if let Err(error) = conn.set_slave(SLAVE_ID) {
+				return Err(error);
+			} else if let Err(error) = conn.rtu_set_serial_mode(SerialMode::RtuRS232) {
+				return Err(error);
+			} else if let Err(error) = conn.rtu_set_rts(RequestToSendMode::RtuRtsUp) {
+				return Err(error);
+			} else if let Err(error) = conn.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp) {
+				return Err(error);
+			} else if let Err(error) = conn.connect() {
+				return Err(error);
+			}
+		}
+		Ok(())
 	}
 
 	/// This function should be called periodically to check the sensors' values.
@@ -297,11 +307,15 @@ impl ClimaSensorUS {
 		{
 			new_warning = TempWarning::WarningTempNoWind;
 		} else if temp > 23.0
-			&& !matches!(self.warning_active, TempWarning::WarningTemp | TempWarning::WarningTempNoWind)
-		{
+			&& !matches!(
+				self.warning_active,
+				TempWarning::WarningTemp | TempWarning::WarningTempNoWind
+			) {
 			new_warning = TempWarning::CloseWindow;
-		} else if !matches!(self.warning_active, TempWarning::None | TempWarning::RemoveWarning)
-			&& temp < 20.0
+		} else if !matches!(
+			self.warning_active,
+			TempWarning::None | TempWarning::RemoveWarning
+		) && temp < 20.0
 		{
 			new_warning = TempWarning::RemoveWarning;
 		} else {
