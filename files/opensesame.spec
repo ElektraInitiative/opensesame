@@ -126,3 +126,39 @@ description=How often to get new data (default: every 60 seconds, which is the h
 default = 6000
 type = unsigned_short
 
+[sensors]
+description = a list of up to 12 MQ135 sensors
+
+[sensors/#/loc]
+description = Location of the sensor, used as the sensor name in messages. Must be set for every sensor. Only if `sensors/#0/loc` exists, sensors will be used at all.
+type = string
+
+[sensors/#/quality]
+description = information about how qualitative the information from this sensor is, e.g., if the sensor was calibrated or tested properly
+type = string
+
+[sensors/#/pin]
+description = Description of the pins used for the sensor
+type = string
+
+[sensors/#/chat]
+description = Trigger value for chat?
+type = unsigned_short
+
+[sensors/#/alarm]
+description = threshold value for the alarm
+type = unsigned_short
+
+[sensors/#/min]
+description = minimum value measured during calibration
+type = unsigned_short
+
+[sensors/#/avg]
+description = average value measured during calibration
+type = unsigned_short
+
+[sensors/#/max]
+description = maximum value measured during calibration
+type = unsigned_short
+
+
