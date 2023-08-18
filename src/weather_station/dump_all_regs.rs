@@ -1,4 +1,4 @@
-/// This programm dumps all registers of the clima-sensor-us weather station
+/// This program dumps all registers of the clima-sensor-us weather station
 extern crate libmodbus;
 use libmodbus::*;
 

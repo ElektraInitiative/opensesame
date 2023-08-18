@@ -4,6 +4,6 @@ The hardware utilized for this communication includes an [A20-OLinuXino-LIME2](h
 
 ## important information
 The `SLAVE_ID` by default `247`.
-In the [doc](https://loxwiki.atlassian.net/wiki/spaces/LOX/pages/1605274474/Goodwe+GW10+ET+MODBUS+TCP+IP?preview=/1605274474/1605274552/Goodwe_Modbus_Protocol_Hybrid_ET_EH_BH_BT__ARM205%20HV__V1.7%20_%20Read%20Only_20200226%20(1).pdf) there is a list of all registers which can be read or writen.
+In the [doc](https://loxwiki.atlassian.net/wiki/spaces/LOX/pages/1605274474/Goodwe+GW10+ET+MODBUS+TCP+IP?preview=/1605274474/1605274552/Goodwe_Modbus_Protocol_Hybrid_ET_EH_BH_BT__ARM205%20HV__V1.7%20_%20Read%20Only_20200226%20(1).pdf) there is a list of all registers which can be read or written.
 
 ## wiring of the RS-485 connection

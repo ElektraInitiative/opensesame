@@ -16,7 +16,7 @@ According to the [doc](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx
 3. Referring to the documentation, there is a yellow wire labeled `+` and a green wire labeled `-`. Connect the A pin to the yellow `+` wire, and connect the green `-` wire to the B pin.
 
 ## supported Modbus functions
-The libmodbus methode, which executes the different Modbus code function can be found in the [libmodbus-troubles.md](libmodbus-troubles.md) file.
+The libmodbus method, which executes the different Modbus code function can be found in the [libmodbus-troubles.md](libmodbus-troubles.md) file.
 
 ### 0x03 - Read Holding Register
 A listing of the registers of this function can be found in chapter 8.2.2 of the [doc]((https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf))

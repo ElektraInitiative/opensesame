@@ -39,4 +39,4 @@ To solve this issue we had to use the right address, which is configured on the 
 - usage of wrong `register address`
 
 ### Solve
-To solve this issue we had to use the right function (`0x01`, `0x02`, ...) for the chosen register. The function for any register is in the documantation of the [weatherstation](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf) or [inverter](https://loxwiki.atlassian.net/wiki/spaces/LOX/pages/1605274474/Goodwe+GW10+ET+MODBUS+TCP+IP?preview=/1605274474/1605274552/Goodwe_Modbus_Protocol_Hybrid_ET_EH_BH_BT__ARM205%20HV__V1.7%20_%20Read%20Only_20200226%20(1).pdf).
+To solve this issue we had to use the right function (`0x01`, `0x02`, ...) for the chosen register. The function for any register is in the documentation of the [weatherstation](https://www.vetterag.ch/images/pdf/thies/BA/4.920x.x0.xxx_ClimaSensor_US_d.pdf) or [inverter](https://loxwiki.atlassian.net/wiki/spaces/LOX/pages/1605274474/Goodwe+GW10+ET+MODBUS+TCP+IP?preview=/1605274474/1605274552/Goodwe_Modbus_Protocol_Hybrid_ET_EH_BH_BT__ARM205%20HV__V1.7%20_%20Read%20Only_20200226%20(1).pdf).

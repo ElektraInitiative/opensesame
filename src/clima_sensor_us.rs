@@ -22,7 +22,7 @@ const SLAVE_ID: u8 = 1;
 const ERROR_CODE_S32: u32 = 0x7FFFFFFF;
 const ERROR_CODE_U32: u32 = 0xFFFFFFFF;
 
-//Adresses of registers
+//Addresses of registers
 const REG_MEAN_WIND_SPEED: u16 = 0x88B9;
 const REG_MEAN_WIND_DIREC: u16 = 0x88BB;
 const REG_AIR_TEMP: u16 = 0x88BD;
@@ -293,7 +293,7 @@ impl ClimaSensorUS {
 		}
 	}
 
-	/// This function is used to set the warning_active varibale and compare it with the new value.
+	/// This function is used to set the warning_active variable and compare it with the new value.
 	fn set_warning_active(&mut self, temp: f32, wind: f32) -> TempWarningStateChange {
 		let new_warning: TempWarning;
 		let mut result: TempWarningStateChange = TempWarningStateChange::None;
@@ -349,7 +349,7 @@ impl ClimaSensorUS {
 		result
 	}
 
-	/// This methode creates a json payload out of the array `OPENSENSE_CLIMA_DATA` and the data from the weather station
+	/// This method creates a json payload out of the array `OPENSENSE_CLIMA_DATA` and the data from the weather station
 	pub fn create_json(&mut self) -> Result<String, libmodbus::Error> {
 		match &self.ctx {
 			Some(conn) => {
