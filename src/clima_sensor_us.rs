@@ -196,7 +196,7 @@ pub struct ClimaSensorUS {
 }
 
 impl ClimaSensorUS {
-	pub fn new(config: &mut Config) -> Self {
+	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
 		let mut s = Self {
 			ctx: None,
 			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
@@ -205,14 +205,11 @@ impl ClimaSensorUS {
 			opensensemap_counter: 0,
 		};
 		if config.get_bool("weatherstation/enable") {
-			match s.init() {
-				Ok(_) => (),
-				Err(error) => {
-					panic!("Error oucuured during init of modbus-connection: {}", error);
-				}
+			if let Err(error) = s.init() {
+				return Err(error);
 			}
 		}
-		s
+		Ok(s)
 	}
 
 	fn init(&mut self) -> Result<(), libmodbus::Error> {
@@ -457,7 +454,8 @@ mod tests {
 	#[ignore]
 	fn test_handle() {
 		let mut config: Config = Config::new("/sw/libelektra/opensesame/#0/current");
-		let mut weatherstation = ClimaSensorUS::new(&mut config);
+		let mut weatherstation =
+			ClimaSensorUS::new(&mut config).expect("Failed to init libmodbus connection");
 
 		match weatherstation.handle().unwrap() {
 			TempWarningStateChange::ChangeToCloseWindow => println!("ChangeToCloseWindow"),

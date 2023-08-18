@@ -215,7 +215,8 @@ fn main() -> Result<(), Error> {
 	let mut remember_baseline_counter = 0;
 	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
 	let enable_weather_station = config.get_bool("weatherstation/enable");
-	let mut weather_station = ClimaSensorUS::new(&mut config);
+	let mut weather_station =
+		ClimaSensorUS::new(&mut config).expect("Failed to init libmodbus connection");
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
 		let mut environment = Environment::new(&mut config);
