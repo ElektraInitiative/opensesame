@@ -14,6 +14,7 @@ mod ssh;
 mod validator;
 mod watchdog;
 
+use mlx9061x::Error as MlxError;
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Error};
 use std::ops::Deref;
@@ -37,7 +38,7 @@ use environment::AirQualityChange;
 use environment::Environment;
 use garage::Garage;
 use garage::GarageChange;
-use mod_ir_temp::ModIrTemps;
+use mod_ir_temp::{IrTempStateChange, ModIrTemps};
 use nextcloud::Nextcloud;
 use pwr::Pwr;
 use sensors::Sensors;
@@ -226,6 +227,9 @@ fn main() -> Result<(), Error> {
 			}
 		}
 
+		let mut ir_temp = ModIrTemps::new(config.get::<String>("ir_temp/device"), None)
+			.expect("Failed to init MOD-IR-TEMP");
+
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
 		if path.exists() {
@@ -280,6 +284,26 @@ fn main() -> Result<(), Error> {
 						error.to_string()
 					));
 				}
+			}
+			match ir_temp.handle() {
+				Ok(state) => {
+					if matches!(state, IrTempStateChange::AmbientToHot) {
+						nc.send_message(gettext("IrTempStateChange::AmbientToHot"));
+					} else if matches!(state, IrTempStateChange::ObjectToHot) {
+						nc.send_message(gettext("IrTempStateChange::ObjectToHot"));
+					}
+				}
+				Err(error_typ) => match error_typ {
+					MlxError::I2C(error) => {
+						nc.ping(gettext!("Error while handling ir_temp: {}", error));
+					}
+					MlxError::ChecksumMismatch => {
+						nc.ping(gettext("Error while handling ir_temp: ChecksumMismatch"));
+					}
+					MlxError::InvalidInputData => {
+						nc.ping(gettext("Error while handling ir_temp: InvalidInputData"));
+					}
+				},
 			}
 
 			let line = l.unwrap();

@@ -18,45 +18,48 @@ pub struct ModIrTemps {
 	mlx: Option<Mlx9061x<I2cdev, Mlx90614>>,
 	device: String,
 	addr: SlaveAddr,
-	ambient_temp: f32,
-	object_temp: f32,
+	pub ambient_temp: f32,
+	pub object_temp: f32,
 	emissivity: f32,
 	state: IrTempStateChange,
 }
 
 impl ModIrTemps {
 	//Using default address
-	pub fn new(
-		device_name: &'static str,
-		address: Option<u8>,
-	) -> Result<Self, Error<LinuxI2CError>> {
+	pub fn new(device_name: String, address: Option<u8>) -> Result<Self, Error<LinuxI2CError>> {
 		let mut s = Self {
 			mlx: None,
-			device: device_name.to_string(),
+			device: device_name,
 			addr: SlaveAddr::Default,
 			ambient_temp: 0.0,
 			object_temp: 0.0,
 			emissivity: 1.0,
 			state: IrTempStateChange::None,
 		};
-
-		match address {
-			Some(addr) => {
-				s.addr = SlaveAddr::Alternative(addr);
+		if s.device != "/dev/null" {
+			match address {
+				Some(addr) => {
+					s.addr = SlaveAddr::Alternative(addr);
+				}
+				None => {
+					s.addr = SlaveAddr::Default;
+				}
 			}
-			None => {
-				s.addr = SlaveAddr::Default;
+
+			match s.init() {
+				Ok(_) => {
+					return Ok(s);
+				}
+				Err(error) => {
+					return Err(error);
+				}
 			}
 		}
-
-		match s.init() {
-			Ok(_) => Ok(s),
-			Err(error) => Err(error),
-		}
+		Ok(s)
 	}
 
 	fn init(&mut self) -> Result<(), Error<LinuxI2CError>> {
-		match Mlx9061x::new_mlx90614(I2cdev::new(self.device.as_str()).unwrap(), self.addr, 5) {
+		match Mlx9061x::new_mlx90614(I2cdev::new(&self.device).unwrap(), self.addr, 5) {
 			Ok(mlx_sensor) => {
 				self.mlx = Some(mlx_sensor);
 				()
