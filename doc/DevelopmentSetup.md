@@ -25,6 +25,25 @@ kdb set user:/sw/libelektra/opensesame/#0/current/nextcloud/pass "<password>"
 
 The chat-token can be extracted from the chat-url, e.g. `https://nextcloud.my-server.com/nextcloud/index.php/call/<token>`
 
-## 5. If you have troubles see [this doc](Troubleshooting.md) 
+## 5. Simulating `/dev/ttyACM0` for testing environment implementation
+First, you should create a script that generates sensor data similar to what is transmitted by the device.
+The script below demonstrates how to send the same data stream every 60 seconds.
+```bash
+#!/bin/bash
+
+while true; do
+    data="12 23 45 66 554 34 23 54 12 32 32 43"
+    echo "$data"
+    sleep 60
+done
+```
+Next, you'll need to execute the following command:
+```bash
+socat -d -d pty,raw,echo=0,link=/dev/ttyACM0 exec:./generate_data.sh
+```
+This command establishes a connection between two pseudo-terminals (PTYs), linking the output of the `generate_data.sh` script to a virtual serial port located at `/dev/ttyACM0`. 
+This setup simulates the transmission of data similar to the Arduino's behavior.
+
+## 6. If you have troubles see [this doc](Troubleshooting.md) 
 
 

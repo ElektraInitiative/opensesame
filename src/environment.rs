@@ -156,11 +156,18 @@ impl Environment {
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
 			};
-			s.board5a
+			//if sending SW_RESET failes it disables ccs811
+			match s
+				.board5a
 				.as_mut()
 				.unwrap()
 				.smbus_write_i2c_block_data(SW_RESET, &[0x11, 0xE5, 0x72, 0x8A])
-				.expect("I2C Communication to ModEnv does not work");
+			{
+				Ok(_) => (),
+				Err(_) => {
+					s.board5a = None;
+				}
+			}
 			s.bme280.as_mut().unwrap().init().unwrap();
 			s
 		}
@@ -250,7 +257,24 @@ impl Environment {
 	/// to be periodically called every 10 ms
 	pub fn handle(&mut self) -> bool {
 		match self.board5a.as_mut() {
-			None => false,
+			None => match self.bme280.as_mut() {
+				None => false,
+				Some(bme280) => {
+					self.read_counter += 1;
+					if self.read_counter == self.data_interval {
+						self.read_counter = 0;
+
+						let measurement = bme280.measure().unwrap();
+
+						self.temperature = measurement.temperature;
+						self.humidity = measurement.humidity;
+						self.pressure = measurement.pressure;
+
+						return true;
+					}
+					return false;
+				}
+			},
 			Some(board5a) => {
 				self.read_counter += 1;
 

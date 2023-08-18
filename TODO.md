@@ -1,22 +1,25 @@
+# TODO
+
+This file contains what is to be done in August.
+Before working on something, issues should be created to clarify details.
+
+The file is ordered by priority.
+After something is done, remove it from here.
+
 ## Weather station
 
-libmodbus-rs fix
+Assignee: Felix
 
-implement all error codes
-
-dump all registers
-
-note when raising `> 23°` for closing
-warn when raising `> 30°` and no wind
-warn when raising `> 35°`
-(and remove warning again if `< 20°`)
+implement all error codes & send i18n errors into Nextcloud ping chat
 
 publish to https://www.opensensemap.org
 
 
 ## Nextcloud Talk
 
-(allow to also talk to opensesame via Nextcloud)
+Assignee: Jannis
+
+create use case: allow to talk to opensesame via Nextcloud
 
 open door
 
@@ -28,6 +31,10 @@ lights on/off
 
 
 ## Env
+
+Assignee: Felix
+
+create use case: warn/alarm on in-door temperatures
 
 Implement "Alternative" Env HW with:
 
@@ -44,34 +51,38 @@ temperature alarm e.g. 50° (check max temp from sensor) and warning  e.g. 28° 
 
 ## Battery
 
-proper Bat impl https://github.com/svartalf/rust-battery/issues/96
+Assignee: Felix
 
-"on battery" and "low battery" warning (freezer would be without power then)
+use case: "on battery" and "low battery" warning via Nextcloud Chat
+
+proper Bat impl https://github.com/svartalf/rust-battery/issues/96
 
 
 ## Nextcloud Analytics
+
+Assignee: Markus
 
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
 
 
 ## Code Smell
 
+Assignee: Jannis
+
 replace thread spawning and sighandling with async calls
 
-make properly distributed , replace ssh code
+optional/to be discussed: make properly distributed, replace ssh code
 
-ping should based on time
+ping should be always on the same time
 
 also end alarm mode (instead of ogg123 invocation)
 
 better error handling
 
-avoid double loop in main.rs
-
-env1/env2 allow to always use two sensors, or only one sensor fixed
-
 
 ## PV
+
+Assignee: Markus
 
 implement all error codes
 
@@ -84,38 +95,55 @@ switching off heat pump if no sunshine (MOD-2 relay)
 
 ## Robustness
 
+Assignee: Felix
+
 Writing to SD-Card should be reduced as much as possible, read-only as much as possible
 
 close garage door on reboots (needs up to 2x 10 sec wait)
 
-
-## Elektrification
-
-cmd-line arguments
-
-make nice TOML sections in config files
-
-Umlauts in config
-
-allow generic serialization with specializations (e.g. for bool) using serde https://serde.rs/data-format.html?) (get rid of get_bool and get_hash_map_vec_u8)
-
-internal notification on state changes
-
 Buttons and Environment without hardware (i.e. mock): https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
 
 
-## Rust
+## Olimex
 
-Destructors: https://doc.rust-lang.org/stable/reference/destructors.html
+Assignee: Felix
 
-life-times in closures, lifetime within structs, ...
+Bring basic functionality running on hardware
 
-use more of https://github.com/rust-embedded/embedded-hal
+Write release/blog post about outcome of bachelor thesis
+
+
+## Elektrification Improve Spec
+
+Assignee: Florian
+
+cmd-line arguments, env variables in `files/opensesame.spec`
+
+make nice TOML sections in config files (set via spec)
+
+
+
+## Improve Elektra Binding
+
+Assignee: Jannis
+
+allow async
+
+allow generic serialization with specializations (e.g. for bool) maybe using serde https://serde.rs/data-format.html?) (get rid of get_bool and get_hash_map_vec_u8)
+
+important tasks of https://github.com/ElektraInitiative/libelektra/issues/4411 (to be prioritized)
+
+(optional, effort to be discussed:
+	better support for arrays in TOML https://github.com/ElektraInitiative/libelektra/issues/4988
+	fix hanging bug: https://github.com/ElektraInitiative/libelektra/issues/4981
+	)
 
 
 ## Ansible
 
-put .config into git
+Assignee: Max/Jannis
+
+put ~/.config into git
 
 default editor not working
 
