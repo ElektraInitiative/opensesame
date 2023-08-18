@@ -292,6 +292,11 @@ fn main() -> Result<(), Error> {
 					} else if matches!(state, IrTempStateChange::ObjectToHot) {
 						nc.send_message(gettext("IrTempStateChange::ObjectToHot"));
 					}
+					nc.send_message(gettext!(
+						"Ambient Temp: {} °C, Object Temp: {} °C",
+						ir_temp.ambient_temp,
+						ir_temp.object_temp
+					))
 				}
 				Err(error_typ) => match error_typ {
 					MlxError::I2C(error) => {
