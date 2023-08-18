@@ -12,11 +12,16 @@
 ## Scenarios
 
 - **Precondition:** 
-	- The user has set up threshold values for warnings and alarms.
+	- The user has successfully connected the environmental sensor.
+	- The warning threshold is set to 28 °C.
+	- The alarm threshold is set to 50 °C.
+	- The cancel threshold is set to 18 °C
 - **Main Success Scenario:** 
 	- Opensesame gathers temperature data from the environment sensor.
 	- If the warning threshold is exceeded, Opensesame sends a warning to Nextcloud.
 	- If the alarm threshold is exceeded, Opensesame sends an alarm to Nextcloud.
+	- If the cancel threshold is undershot, Opensesame removes the warning/alarm.
+	- Implementing hysteresis prevents rapid switching between warning and alarm states when the temperature is between 28°C and 50°C.
 - **Error scenario:**
 	- Unable to establish a connection to Nextcloud; 
 	- Unable to read temperature data from the environment sensor; retries reading data; sends an error message to Nextcloud
