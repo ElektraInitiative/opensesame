@@ -1,123 +1,109 @@
 - name: Configure opensesame for all hosts (generic parts)
-  hosts: opensesame localhost
+  hosts: opensesame
   collections:
    - elektra_initiative.libelektra
   tasks:
-   - name: set keys for opensesame
-     elektra:
-      mountpoint: user:/sw/libelektra/opensesame/#0/current
-      keys:
-       debug:
-         backtrace: full
-         ping:
-          enable: 1
-          timeout: 24
-       audio:
-         bell: '/dev/null'
-         alarm: '/dev/null'
-       location:
-         latitude: 48.210033
-         longitude: 16.363449
-       nextcloud:
-         url: "https://example.com/nextcloud"
-         user: "test"
-         pass: "<password here>"
-         format:
-           time: "%H:%M:%S"
-           datetime: "%d.%m.%Y %H:%M:%S"
-         chat:
-           value: "1254c44a"
-           licht: "xwy332ou"
-           ping: "v112y1vk"
-       watchdog:
-         enable: 0
-       environment:
-         name: ""
-         device: "/dev/i2c-2"
-         data:
-           interval: 6000
-       garage:
-         enable: 0
-       pwr:
-         enable: 0
-       light:
-         timeout: 60
-       validator:
-         'test': "[14, 15, 13, 15, 11, 15, 7, 15]"
-- name: Configure opensesame specific to schreibtisch
-  hosts: schreibtisch
+    # As the other tasks are running with user privileges, they can not change session recording state
+    # So we run this task as root user first to disable recording, as we do not want to 
+    # record changes made during the execution of this playbook
+    - name: Disable session recording
+      become: yes
+      elektra:
+        record:
+          enable: no
+
+    - name: Set keys for Opensesame
+      elektra:
+        record:
+          # Skip anything to do with session recording, as the user executing 
+          # this task lacks the privileges to activate or deactive recording
+          skip: yes
+        keys:
+          - user:/sw/libelektra/opensesame/#0/current:
+              debug:
+                backtrace: full
+                ping:
+                  enable: 1
+                  timeout: 24
+              audio:
+                bell: "{{ os_audio_bell | default('/dev/null', true) }}"
+                alarm: "{{ os_audio_alarm | default('/dev/null', true) }}"
+              location:
+                latitude: 48.210033
+                longitude: 16.363449
+              nextcloud:
+                url: "https://example.com/nextcloud"
+                user: "{{ os_nc_user }}"
+                pass: "{{ os_nc_pass }}"
+                format:
+                  time: "%H:%M:%S"
+                  datetime: "%d.%m.%Y %H:%M:%S"
+                chat:
+                  value: "1254c44a"
+                  licht: "xwy332ou"
+                  ping: "v112y1vk"
+              environment:
+                name: "{{ os_environment_name }}"
+                device: "{{ os_environment_device | default('/dev/i2c-2', true) }}"
+                data:
+                  interval: "{{ os_environment_data_interval | default('6000', true) }}"
+              garage:
+                enable: "{{ os_garage_enable | default('0', true) }}"
+              pwr:
+                enable: "{{ os_pwr_enable | default('0', true) }}"
+              watchdog:
+                enable: "{{ os_watchdog_enable | default('0', true) }}"
+              bell:
+                enable: "{{ os_bell_enable | default('0', true) }}"
+              light:
+                timeout: 60
+              validator:
+                'test': "[14, 15, 13, 15, 11, 15, 7, 15]"            
+ 
+- name: Add sensor configuration
+  hosts: sensors
   collections:
    - elektra_initiative.libelektra
   tasks:
-   - name: set keys for opensesame
+   - name: add keys for opensesame
      elektra:
-      mountpoint: user:/sw/libelektra/opensesame/#0/current
-      keys:
-       sensors:
-         '#0':
-           loc: "Schlafzimmer"
-           quality: "++"
-           bell: 250
-           alarm: 314
-           min:  54
-           avg: 158
-           max: 387
-           pin: "A0 gruen; GND braun; +5V gelb"
-         '#1':
-           loc: "Wohnzimmer"
-           quality: "~"
-           bell: 280
-           alarm: 322
-           min: 160
-           avg: 216
-           max: 466
-           pin: "A1 weiss; +5V orange; GND blau"
-       garage:
-         enable: 1
-       environment:
-         name: "Yvo 2"
-         device: "/dev/i2c-2"
-         data:
-           interval: 1
-- name: Configure opensesame specific to garage
-  hosts: garage
+        record:
+          skip: yes
+        keys:
+          - user:/sw/libelektra/opensesame/#0/current:
+              sensors:
+                - meta:
+                    array: "#1"
+                    tomltype: tablearray
+                - keys:
+                    '#0':
+                      loc: "Schlafzimmer"
+                      quality: "++"
+                      bell: 250
+                      alarm: 314
+                      min:  54
+                      avg: 158
+                      max: 387
+                      pin: "A0 gruen; GND braun; +5V gelb"
+                    '#1':
+                      loc: "Wohnzimmer"
+                      quality: "~"
+                      bell: 280
+                      alarm: 322
+                      min: 160
+                      avg: 216
+                      max: 466
+                      pin: "A1 weiss; +5V orange; GND blau"
+
+- name: Reenable recording on all hosts
+  hosts: opensesame
   collections:
    - elektra_initiative.libelektra
   tasks:
-   - name: set keys for opensesame
-     elektra:
-      mountpoint: user:/sw/libelektra/opensesame/#0/current
-      keys:
-       nextcloud:
-         user: "garagentor"
-         pass: "<<other pass>>"
-       audio:
-         bell: '/usr/share/sounds/opensesame/bell.ogg'
-         alarm: '/usr/share/sounds/opensesame/alarm.ogg'
-       garage:
-         enable: 1
-       watchdog:
-         enable: 1
-       environment:
-         name: "bei Garagentor"
-         device: "/dev/i2c-1"
-- name: Configure opensesame specific to haustuere
-  hosts: haustuer
-  collections:
-   - elektra_initiative.libelektra
-  tasks:
-   - name: set keys for opensesame
-     elektra:
-      mountpoint: user:/sw/libelektra/opensesame/#0/current
-      keys:
-       nextcloud:
-         user: "haustuer"
-           pass: "<<other pass>>"
-       environment:
-         name: "im Wohnzimmer"
-       bell:
-         enable: 1
-       watchdog:
-         enable: 1
-       pwr:
-         enable: 1
+    # As the other tasks are running with user privileges, they can not change session recording state
+    # So we run this task root user to enable recording
+    - name: Enable session recording
+      become: yes
+      elektra:
+        record:
+          enable: yes
