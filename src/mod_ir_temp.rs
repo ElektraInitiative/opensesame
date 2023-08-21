@@ -1,5 +1,5 @@
-use i2cdev::linux::LinuxI2CError;
 /// This module implements the functions of the [MOD-IR-TEMP](https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware)
+use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::I2cdev;
 use mlx9061x::ic::Mlx90614;
 use mlx9061x::{Error, Mlx9061x, SlaveAddr};
