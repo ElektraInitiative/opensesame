@@ -227,8 +227,24 @@ fn main() -> Result<(), Error> {
 			}
 		}
 
-		let mut ir_temp = ModIrTemps::new(config.get::<String>("ir_temp/device"), None)
-			.expect("Failed to init MOD-IR-TEMP");
+		let mut ir_temp = ModIrTemps::new_default();
+		
+		match ModIrTemps::new(config.get::<String>("ir_temp/device"), None){
+			Ok(modirtemps_obj) =>{
+				ir_temp = modirtemps_obj;
+			},
+			Err(error_typ) => match error_typ {
+					MlxError::I2C(error) => {
+						nc.ping(gettext!("Failed to init MOD-IR-TEMP: {}", error));
+					}
+					MlxError::ChecksumMismatch => {
+						nc.ping(gettext("Failed to init MOD-IR-TEMP: ChecksumMismatch"));
+					}
+					MlxError::InvalidInputData => {
+						nc.ping(gettext("Failed to init MOD-IR-TEMP: InvalidInputData"));
+					}
+				}
+		}
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -287,16 +303,21 @@ fn main() -> Result<(), Error> {
 			}
 			match ir_temp.handle() {
 				Ok(state) => {
-					if matches!(state, IrTempStateChange::AmbientToHot) {
-						nc.send_message(gettext("IrTempStateChange::AmbientToHot"));
-					} else if matches!(state, IrTempStateChange::ObjectToHot) {
-						nc.send_message(gettext("IrTempStateChange::ObjectToHot"));
+					match state {
+						IrTempStateChange::None => (),
+						IrTempStateChange::ChanedToBothToHot => {
+							nc.send_message(gettext!("MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}",ir_temp.ambient_temp, ir_temp.object_temp));
+						},
+						IrTempStateChange::ChangedToAmbientToHot => {
+							nc.send_message(gettext!("MOD-IR-TEMP ambient sensors too hot! Ambient: {}",ir_temp.ambient_temp));
+						},
+						IrTempStateChange::ChangedToObjectToHot =>{
+							nc.send_message(gettext!("MOD-IR-TEMP object sensors too hot! Object: {}",ir_temp.object_temp));
+						},
+						IrTempStateChange::ChangedToCancelled => {
+							nc.send_message(gettext!("MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}",ir_temp.ambient_temp, ir_temp.object_temp));
+						}
 					}
-					nc.send_message(gettext!(
-						"Ambient Temp: {} °C, Object Temp: {} °C",
-						ir_temp.ambient_temp,
-						ir_temp.object_temp
-					))
 				}
 				Err(error_typ) => match error_typ {
 					MlxError::I2C(error) => {
