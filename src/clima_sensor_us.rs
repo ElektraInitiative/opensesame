@@ -196,6 +196,24 @@ pub struct ClimaSensorUS {
 }
 
 impl ClimaSensorUS {
+	// Temperature
+	pub const CANCLE_TEMP: f32 = 20.0;
+	pub const CLOSE_WINDOW_TEMP: f32 = 22.0;
+	pub const NO_WIND_TEMP: f32 = 30.0;
+	pub const NO_WIND_SPEED: f32 = 0.3;
+	pub const WARNING_TEMP: f32 = 35.0;
+
+	// This function is for assign a default value of the ClimaSensorUS module
+	pub fn new_default() -> Self {
+		Self {
+			ctx: None,
+			opensensebox_id: "0".to_string(),
+			opensense_access_token: "0".to_string(),
+			warning_active: TempWarning::None,
+			opensensemap_counter: 0,
+		}
+	}
+
 	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
 		let mut s = Self {
 			ctx: None,
@@ -298,14 +316,14 @@ impl ClimaSensorUS {
 		let new_warning: TempWarning;
 		let mut result: TempWarningStateChange = TempWarningStateChange::None;
 
-		if temp > 35.0 {
+		if temp > ClimaSensorUS::WARNING_TEMP {
 			new_warning = TempWarning::WarningTemp;
-		} else if temp > 30.0
-			&& wind < 0.3
+		} else if temp > ClimaSensorUS::NO_WIND_TEMP
+			&& wind < ClimaSensorUS::NO_WIND_SPEED
 			&& !matches!(self.warning_active, TempWarning::WarningTemp)
 		{
 			new_warning = TempWarning::WarningTempNoWind;
-		} else if temp > 23.0
+		} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
 			&& !matches!(
 				self.warning_active,
 				TempWarning::WarningTemp | TempWarning::WarningTempNoWind
@@ -314,7 +332,7 @@ impl ClimaSensorUS {
 		} else if !matches!(
 			self.warning_active,
 			TempWarning::None | TempWarning::RemoveWarning
-		) && temp < 20.0
+		) && temp < ClimaSensorUS::CANCLE_TEMP
 		{
 			new_warning = TempWarning::RemoveWarning;
 		} else {

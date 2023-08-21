@@ -48,11 +48,6 @@ use watchdog::Watchdog;
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
-const TEMP_CLOSE_WINDOW: i32 = 23;
-const TEMP_WARNING_NO_WIND: i32 = 30;
-const TEMP_WARNING: i32 = 35;
-const TEMP_WARNING_REMOVE: i32 = 20;
-
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
 fn play_audio_file(file: String, arg: String) {
 	if file != "/dev/null" {
@@ -214,12 +209,20 @@ fn main() -> Result<(), Error> {
 	let mut ping_counter = 0u64;
 	let mut remember_baseline_counter = 0;
 	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
-	let enable_weather_station = config.get_bool("weatherstation/enable");
-	let mut weather_station =
-		ClimaSensorUS::new(&mut config).expect("Failed to init libmodbus connection");
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
 		let mut environment = Environment::new(&mut config);
+		let mut weather_station;
+
+		match ClimaSensorUS::new(&mut config) {
+			Ok(weath_st) => {
+				weather_station = weath_st;
+			}
+			Err(error) => {
+				weather_station = ClimaSensorUS::new_default();
+				nc.ping(gettext!("Failed to init libmodbus connection: {}", error));
+			}
+		}
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -243,36 +246,37 @@ fn main() -> Result<(), Error> {
 				handle_environment(&mut environment, &mut nc, None, &mut config);
 			}
 
-			if enable_weather_station {
-				match weather_station.handle() {
-					Ok(TempWarningStateChange::ChangeToCloseWindow) => {
-						nc.send_message(gettext!(
-							"🌡️ Temperature above {} °C, close the window",
-							TEMP_CLOSE_WINDOW
-						));
-					}
-					Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
-						nc.send_message(gettext!(
-							"🌡️ Temperature above {} °C and no Wind",
-							TEMP_WARNING_NO_WIND
-						));
-					}
-					Ok(TempWarningStateChange::ChangeToWarningTemp) => {
-						nc.send_message(gettext!("🌡️ Temperature above {} °C", TEMP_WARNING));
-					}
-					Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
-						nc.send_message(gettext!(
-							"🌡 Temperature again under {} °C, warning was removed",
-							TEMP_WARNING_REMOVE
-						));
-					}
-					Ok(TempWarningStateChange::None) => (),
-					Err(error) => {
-						nc.ping(gettext!(
-							"⚠️ Error from weather station: {}",
-							error.to_string()
-						));
-					}
+			match weather_station.handle() {
+				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C, close the window",
+						ClimaSensorUS::CLOSE_WINDOW_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C and no Wind",
+						ClimaSensorUS::NO_WIND_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToWarningTemp) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C",
+						ClimaSensorUS::WARNING_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
+					nc.send_message(gettext!(
+						"🌡 Temperature again under {} °C, warning was removed",
+						ClimaSensorUS::CANCLE_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::None) => (),
+				Err(error) => {
+					nc.ping(gettext!(
+						"⚠️ Error from weather station: {}",
+						error.to_string()
+					));
 				}
 			}
 
