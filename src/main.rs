@@ -228,22 +228,26 @@ fn main() -> Result<(), Error> {
 		}
 
 		let mut ir_temp = ModIrTemps::new_default();
-		
-		match ModIrTemps::new(config.get::<String>("ir_temp/device"), None){
-			Ok(modirtemps_obj) =>{
+
+		match ModIrTemps::new(
+			config.get::<String>("ir_temp/device"),
+			None,
+			config.get::<u16>("ir_temp/data/interval"),
+		) {
+			Ok(modirtemps_obj) => {
 				ir_temp = modirtemps_obj;
-			},
+			}
 			Err(error_typ) => match error_typ {
-					MlxError::I2C(error) => {
-						nc.ping(gettext!("Failed to init MOD-IR-TEMP: {}", error));
-					}
-					MlxError::ChecksumMismatch => {
-						nc.ping(gettext("Failed to init MOD-IR-TEMP: ChecksumMismatch"));
-					}
-					MlxError::InvalidInputData => {
-						nc.ping(gettext("Failed to init MOD-IR-TEMP: InvalidInputData"));
-					}
+				MlxError::I2C(error) => {
+					nc.ping(gettext!("⚠️ Failed to init MOD-IR-TEMP: {}", error));
 				}
+				MlxError::ChecksumMismatch => {
+					nc.ping(gettext("⚠️ Failed to init MOD-IR-TEMP: ChecksumMismatch"));
+				}
+				MlxError::InvalidInputData => {
+					nc.ping(gettext("⚠️ Failed to init MOD-IR-TEMP: InvalidInputData"));
+				}
+			},
 		}
 
 		let path = std::path::Path::new("/home/olimex/data.log");
@@ -302,32 +306,44 @@ fn main() -> Result<(), Error> {
 				}
 			}
 			match ir_temp.handle() {
-				Ok(state) => {
-					match state {
-						IrTempStateChange::None => (),
-						IrTempStateChange::ChanedToBothToHot => {
-							nc.send_message(gettext!("MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}",ir_temp.ambient_temp, ir_temp.object_temp));
-						},
-						IrTempStateChange::ChangedToAmbientToHot => {
-							nc.send_message(gettext!("MOD-IR-TEMP ambient sensors too hot! Ambient: {}",ir_temp.ambient_temp));
-						},
-						IrTempStateChange::ChangedToObjectToHot =>{
-							nc.send_message(gettext!("MOD-IR-TEMP object sensors too hot! Object: {}",ir_temp.object_temp));
-						},
-						IrTempStateChange::ChangedToCancelled => {
-							nc.send_message(gettext!("MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}",ir_temp.ambient_temp, ir_temp.object_temp));
-						}
+				Ok(state) => match state {
+					IrTempStateChange::None => (),
+					IrTempStateChange::ChanedToBothToHot => {
+						nc.send_message(gettext!(
+							"🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}",
+							ir_temp.ambient_temp,
+							ir_temp.object_temp
+						));
 					}
-				}
+					IrTempStateChange::ChangedToAmbientToHot => {
+						nc.send_message(gettext!(
+							"🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {}",
+							ir_temp.ambient_temp
+						));
+					}
+					IrTempStateChange::ChangedToObjectToHot => {
+						nc.send_message(gettext!(
+							"🌡️ MOD-IR-TEMP object sensors too hot! Object: {}",
+							ir_temp.object_temp
+						));
+					}
+					IrTempStateChange::ChangedToCancelled => {
+						nc.send_message(gettext!(
+							"🌡 MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}",
+							ir_temp.ambient_temp,
+							ir_temp.object_temp
+						));
+					}
+				},
 				Err(error_typ) => match error_typ {
 					MlxError::I2C(error) => {
-						nc.ping(gettext!("Error while handling ir_temp: {}", error));
+						nc.ping(gettext!("⚠️ Error while handling ir_temp: {}", error));
 					}
 					MlxError::ChecksumMismatch => {
-						nc.ping(gettext("Error while handling ir_temp: ChecksumMismatch"));
+						nc.ping(gettext("⚠️ Error while handling ir_temp: ChecksumMismatch"));
 					}
 					MlxError::InvalidInputData => {
-						nc.ping(gettext("Error while handling ir_temp: InvalidInputData"));
+						nc.ping(gettext("⚠️ Error while handling ir_temp: InvalidInputData"));
 					}
 				},
 			}

@@ -31,10 +31,11 @@ pub struct ModIrTemps {
 	_emissivity: f32,
 	active_ambient_state: IrTempState,
 	active_object_state: IrTempState,
+	data_interval: u16,
+	read_counter: u16,
 }
 
 impl ModIrTemps {
-
 	//Generate default instanz of struct.
 	pub fn new_default() -> Self {
 		Self {
@@ -46,10 +47,16 @@ impl ModIrTemps {
 			_emissivity: 1.0,
 			active_ambient_state: IrTempState::Normal,
 			active_object_state: IrTempState::Normal,
+			data_interval: 0,
+			read_counter: 0,
 		}
 	}
 
-	pub fn new(device_name: String, address: Option<u8>) -> Result<Self, Error<LinuxI2CError>> {
+	pub fn new(
+		device_name: String,
+		address: Option<u8>,
+		data_interval: u16,
+	) -> Result<Self, Error<LinuxI2CError>> {
 		let mut s = Self {
 			mlx: None,
 			device: device_name,
@@ -59,6 +66,8 @@ impl ModIrTemps {
 			_emissivity: 1.0,
 			active_ambient_state: IrTempState::Normal,
 			active_object_state: IrTempState::Normal,
+			data_interval: data_interval,
+			read_counter: 0,
 		};
 		if s.device != "/dev/null" {
 			match address {
@@ -124,35 +133,39 @@ impl ModIrTemps {
 	pub fn handle(&mut self) -> Result<IrTempStateChange, Error<LinuxI2CError>> {
 		match &mut self.mlx {
 			Some(mlx_sensor) => {
-				let mut ambient_state = IrTempState::Normal;
-				let mut object_state = IrTempState::Normal;
-				match mlx_sensor.ambient_temperature() {
-					Ok(amb_temp) => {
-						self.ambient_temp = amb_temp;
-						if amb_temp > THRESHOLD_AMBIENT {
-							ambient_state = IrTempState::TooHot;
+				self.read_counter += 1;
+				if self.read_counter == self.data_interval {
+					let mut ambient_state = IrTempState::Normal;
+					let mut object_state = IrTempState::Normal;
+					match mlx_sensor.ambient_temperature() {
+						Ok(amb_temp) => {
+							self.ambient_temp = amb_temp;
+							if amb_temp > THRESHOLD_AMBIENT {
+								ambient_state = IrTempState::TooHot;
+							}
+						}
+						Err(error) => {
+							return Err(error);
 						}
 					}
-					Err(error) => {
-						return Err(error);
-					}
-				}
 
-				match mlx_sensor.object1_temperature() {
-					Ok(obj_temp) => {
-						self.object_temp = obj_temp;
-						if obj_temp > THRESHOLD_OBJECT {
-							object_state = IrTempState::TooHot;
+					match mlx_sensor.object1_temperature() {
+						Ok(obj_temp) => {
+							self.object_temp = obj_temp;
+							if obj_temp > THRESHOLD_OBJECT {
+								object_state = IrTempState::TooHot;
+							}
+						}
+						Err(error) => {
+							return Err(error);
 						}
 					}
-					Err(error) => {
-						return Err(error);
-					}
+					return Ok(self.set_handle_output(ambient_state, object_state));
 				}
-				Ok(self.set_handle_output(ambient_state, object_state))
 			}
-			None => Ok(IrTempStateChange::None),
+			None => (),
 		}
+		Ok(IrTempStateChange::None)
 	}
 
 	//This function sets the emissivity for the measurement of the object temperture
@@ -193,6 +206,8 @@ mod tests {
 			_emissivity: 1.0,
 			active_ambient_state: IrTempState::Normal,
 			active_object_state: IrTempState::Normal,
+			data_interval: 0,
+			read_counter: 0,
 		};
 
 		assert!(
