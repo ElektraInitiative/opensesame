@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-22 08:56+0000\n"
+"POT-Creation-Date: 2023-08-22 09:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -95,19 +95,19 @@ msgid "⚠️ Failed to init MOD-IR-TEMP: InvalidInputData"
 msgstr ""
 
 #: src/main.rs:268
-msgid "🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}"
+msgid "🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
 #: src/main.rs:275
-msgid "🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {}"
+msgid "🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {} °C"
 msgstr ""
 
 #: src/main.rs:281
-msgid "🌡️ MOD-IR-TEMP object sensors too hot! Object: {}"
+msgid "🌡️ MOD-IR-TEMP object sensors too hot! Object: {} °C"
 msgstr ""
 
 #: src/main.rs:287
-msgid "🌡 MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}"
+msgid "🌡 MOD-IR-TEMP cancelled warning! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
 #: src/main.rs:295

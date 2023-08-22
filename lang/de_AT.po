@@ -98,20 +98,20 @@ msgid "⚠️ Failed to init MOD-IR-TEMP: InvalidInputData"
 msgstr "⚠️ Initialisierung von MOD-IR-TEMP ist fehlgeschlagen: InvalidInputData"
 
 #: src/main.rs:268
-msgid "🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}"
-msgstr "🌡️🌡️ Beide MOD-IR-TEMP Sensoren sind zu heiß! Ambient: {}, Objekt: {}"
+msgid "🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {} °C, Object: {} °C"
+msgstr "🌡️🌡️ Beide MOD-IR-TEMP Sensoren sind zu heiß! Ambient: {} °C, Objekt: {} °C"
 
 #: src/main.rs:275
-msgid "🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {}"
-msgstr "🌡️ MOD-IR-TEMP Ambient Sensor ist zu heiß! Ambient: {}"
+msgid "🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {} °C"
+msgstr "🌡️ MOD-IR-TEMP Ambient Sensor ist zu heiß! Ambient: {} °C"
 
 #: src/main.rs:281
-msgid "🌡️ MOD-IR-TEMP object sensors too hot! Object: {}"
-msgstr "🌡️ MOD-IR-TEMP Objekt Sensor ist zu heiß! Objekt: {}"
+msgid "🌡️ MOD-IR-TEMP object sensors too hot! Object: {} °C"
+msgstr "🌡️ MOD-IR-TEMP Objekt Sensor ist zu heiß! Objekt: {} °C"
 
 #: src/main.rs:287
-msgid "🌡 MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}"
-msgstr "🌡 MOD-IR-TEMP warnung wurde entfernt! Ambient: {}, Objekt: {}"
+msgid "🌡 MOD-IR-TEMP cancelled warning! Ambient: {} °C, Object: {} °C"
+msgstr "🌡 MOD-IR-TEMP warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
 
 #: src/main.rs:295
 msgid "⚠️ Error while handling ir_temp: {}"

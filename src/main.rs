@@ -310,26 +310,26 @@ fn main() -> Result<(), Error> {
 					IrTempStateChange::None => (),
 					IrTempStateChange::ChanedToBothToHot => {
 						nc.send_message(gettext!(
-							"🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {}, Object: {}",
+							"🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {} °C, Object: {} °C",
 							ir_temp.ambient_temp,
 							ir_temp.object_temp
 						));
 					}
 					IrTempStateChange::ChangedToAmbientToHot => {
 						nc.send_message(gettext!(
-							"🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {}",
+							"🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {} °C",
 							ir_temp.ambient_temp
 						));
 					}
 					IrTempStateChange::ChangedToObjectToHot => {
 						nc.send_message(gettext!(
-							"🌡️ MOD-IR-TEMP object sensors too hot! Object: {}",
+							"🌡️ MOD-IR-TEMP object sensors too hot! Object: {} °C",
 							ir_temp.object_temp
 						));
 					}
 					IrTempStateChange::ChangedToCancelled => {
 						nc.send_message(gettext!(
-							"🌡 MOD-IR-TEMP cancelled warning! Ambient: {}, Object: {}",
+							"🌡 MOD-IR-TEMP cancelled warning! Ambient: {} °C, Object: {} °C",
 							ir_temp.ambient_temp,
 							ir_temp.object_temp
 						));
