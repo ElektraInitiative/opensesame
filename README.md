@@ -21,7 +21,7 @@ For what is missing, see [TODO.md](TODO.md).
 
 Currently there is no full beginner-friendly documentation on how to setup the system.
 If you are interested, please open an issue.
-[Installation](/doc/Install.md) is easy, though.
+[Installation](/doc/Install.md) is not difficult, though.
 
 As hardware hacking is involved I cannot guarantee that anything will work for you.
 It works for me, though.
@@ -50,7 +50,7 @@ kdb set user:/sw/libelektra/opensesame/#0/current/validator/us "[14, 15, 13, 15,
 
 Deployment is done via Ansible, see [an example](/ansible/playbook.yaml).
 
-See [spec](files/opensesame.spec) for available configuration options.
+See [spec](/files/opensesame.spec) for available configuration options.
 
 To keep it more simple, the same node cannot be responsible for having the same functionality multiple times.
 

@@ -1,19 +1,10 @@
 # TODO
 
 This file contains what is to be done in August.
-Before working on something, issues should be created to clarify details.
+Before working on something, issues must be created to clarify details.
 
-The file is ordered by priority.
+This file is ordered by priority.
 After something is done, remove it from here.
-
-## Weather station
-
-Assignee: Felix
-
-implement all error codes & send i18n errors into Nextcloud ping chat
-
-publish to https://www.opensensemap.org
-
 
 ## Nextcloud Talk
 
@@ -34,8 +25,6 @@ lights on/off
 
 Assignee: Felix
 
-create use case: warn/alarm on in-door temperatures
-
 Implement "Alternative" Env HW with:
 
 MOD-BME280 and MOD-IR-TEMP
@@ -46,14 +35,14 @@ Configurable corrections on Temperature
 
 warn on fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
 
-temperature alarm e.g. 50° (check max temp from sensor) and warning  e.g. 28° (window left open)
+implement use case: warn on indoor temperatures
 
 
 ## Battery
 
 Assignee: Felix
 
-use case: "on battery" and "low battery" warning via Nextcloud Chat
+implement use case: low battery warning
 
 proper Bat impl https://github.com/svartalf/rust-battery/issues/96
 
