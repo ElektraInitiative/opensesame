@@ -1,4 +1,9 @@
-/// This module implements the functions of the [MOD-IR-TEMP](https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware)
+/// This module implements the functions "ambient temperature" and "object temperature" of the [MOD-IR-TEMP](https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware) sensor.
+/// Before using this module, you need to configure it with Elektra. The following configurations are necessary: [ir/enable], [ir/device], and [ir/data/interval].
+/// A description of these configuration parameters can be found in the file "opensesame.spec".
+/// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
+/// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientToHot' is triggered.
+use crate::config::Config;
 use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::{Delay, I2cdev};
 use mlx9061x::ic::Mlx90614;
@@ -22,7 +27,7 @@ pub enum IrTempState {
 	TooHot,
 }
 
-pub struct ModIrTemps {
+pub struct ModIR {
 	mlx: Option<Mlx9061x<I2cdev, Mlx90614>>,
 	device: String,
 	addr: SlaveAddr,
@@ -35,8 +40,8 @@ pub struct ModIrTemps {
 	read_counter: u16,
 }
 
-impl ModIrTemps {
-	//Generate default instanz of struct.
+impl ModIR {
+	/// This function is used to initialize a default instance.
 	pub fn new_default() -> Self {
 		Self {
 			mlx: None,
@@ -52,45 +57,41 @@ impl ModIrTemps {
 		}
 	}
 
-	pub fn new(
-		device_name: String,
-		address: Option<u8>,
-		data_interval: u16,
-	) -> Result<Self, Error<LinuxI2CError>> {
-		let mut s = Self {
-			mlx: None,
-			device: device_name,
-			addr: SlaveAddr::Default,
-			ambient_temp: 0.0,
-			object_temp: 0.0,
-			_emissivity: 1.0,
-			active_ambient_state: IrTempState::Normal,
-			active_object_state: IrTempState::Normal,
-			data_interval: data_interval,
-			read_counter: 0,
-		};
-		if s.device != "/dev/null" {
-			match address {
-				Some(addr) => {
-					s.addr = SlaveAddr::Alternative(addr);
-				}
-				None => {
-					s.addr = SlaveAddr::Default;
-				}
-			}
-
-			match s.init() {
-				Ok(_) => {
-					return Ok(s);
-				}
-				Err(error) => {
-					return Err(error);
+	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
+	/// In case of an error, the error code is returned.
+	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
+		let mut s: Self;
+		if config.get_bool("ir/enable") {
+			s = Self {
+				mlx: None,
+				device: config.get::<String>("ir/device"),
+				addr: SlaveAddr::Default,
+				ambient_temp: 0.0,
+				object_temp: 0.0,
+				_emissivity: 1.0,
+				active_ambient_state: IrTempState::Normal,
+				active_object_state: IrTempState::Normal,
+				data_interval: config.get::<u16>("ir/data/interval"),
+				read_counter: config.get::<u16>("ir/data/interval"),
+			};
+			if s.device != "/dev/null" {
+				match s.init() {
+					Ok(_) => {
+						return Ok(s);
+					}
+					Err(error) => {
+						return Err(error);
+					}
 				}
 			}
+		} else {
+			s = ModIR::new_default();
 		}
 		Ok(s)
 	}
 
+	/// This function initiates the I2C connection to the MOD-IR-TEMP sensor.
+	/// It returns nothing on success and returns an error message on failure.
 	fn init(&mut self) -> Result<(), Error<LinuxI2CError>> {
 		match Mlx9061x::new_mlx90614(I2cdev::new(&self.device).unwrap(), self.addr, 5) {
 			Ok(mlx_sensor) => {
@@ -104,6 +105,12 @@ impl ModIrTemps {
 		Ok(())
 	}
 
+	/// This function checks if a state change has occurred and returns the corresponding state change.
+	/// It returns 'None' if nothing has changed since the last duration.
+	/// It returns 'ChangedToBothToHot' if both thresholds have been exceeded.
+	/// It returns 'ChangedToAmbientToHot' if only the ambient threshold has been exceeded.
+	/// It returns 'ChangedToObjectToHot' if only the object threshold has been exceeded.
+	/// It returns 'ChangedToCancelled' if 'ChangedToBothToHot' or 'ChangedToAmbientToHot' or 'ChangedToObjectToHot' was set, and both ambient and object temperatures are below their respective threshold values.
 	fn set_handle_output(
 		&mut self,
 		ambient_state: IrTempState,
@@ -130,11 +137,17 @@ impl ModIrTemps {
 		return IrTempStateChange::None;
 	}
 
+	/// This function reads the ambient temperature and object temperature from the MOD-IR-TEMP sensor.
+	/// It then sets the ambient and object states to 'Normal' or 'TooHot' based on whether they are below or above the thresholds.
+	/// The function returns the ChangeState to the calling function on success, and returns an error message on failure.
+	/// The update frequency can be controlled with the configuration of [ir/data/interval], but also depends on the calling function.
+	/// For example, if this function is called every minute and the ir/data/interval is set to 5, the sensor data will be read every 5 minutes.
 	pub fn handle(&mut self) -> Result<IrTempStateChange, Error<LinuxI2CError>> {
 		match &mut self.mlx {
 			Some(mlx_sensor) => {
 				self.read_counter += 1;
-				if self.read_counter == self.data_interval {
+				// The '>=` operator is used to execute this function on the first call to initialize data.
+				if self.read_counter >= self.data_interval {
 					self.read_counter = 0;
 					let mut ambient_state = IrTempState::Normal;
 					let mut object_state = IrTempState::Normal;
@@ -169,8 +182,9 @@ impl ModIrTemps {
 		Ok(IrTempStateChange::None)
 	}
 
-	//This function sets the emissivity for the measurement of the object temperture
-	//The parameter emissivity can be choosen between 0.0 and 1.0
+	/// This function sets the emissivity for measuring the object temperature.
+	/// It is only necessary for accurate object temperature measurements.
+	/// The 'emissivity' parameter can be chosen between 0.0 and 1.0.
 	pub fn _change_emissivity(&mut self, emissivity: f32) -> Result<bool, Error<LinuxI2CError>> {
 		if emissivity >= 0.0 && emissivity <= 1.0 {
 			match &mut self.mlx {
@@ -198,7 +212,7 @@ mod tests {
 
 	#[test]
 	fn test_set_handle_output() {
-		let mut s = ModIrTemps {
+		let mut s = ModIR {
 			mlx: None,
 			device: "/dev/null".to_string(),
 			addr: SlaveAddr::Default,

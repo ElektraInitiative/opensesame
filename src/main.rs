@@ -38,7 +38,7 @@ use environment::AirQualityChange;
 use environment::Environment;
 use garage::Garage;
 use garage::GarageChange;
-use mod_ir_temp::{IrTempStateChange, ModIrTemps};
+use mod_ir_temp::{IrTempStateChange, ModIR};
 use nextcloud::Nextcloud;
 use pwr::Pwr;
 use sensors::Sensors;
@@ -227,28 +227,23 @@ fn main() -> Result<(), Error> {
 			}
 		}
 
-		let mut ir_temp = ModIrTemps::new_default();
-
-		match ModIrTemps::new(
-			config.get::<String>("ir_temp/device"),
-			None,
-			config.get::<u16>("ir_temp/data/interval"),
-		) {
-			Ok(modirtemps_obj) => {
-				ir_temp = modirtemps_obj;
+		let mut ir_temp = match ModIR::new(&mut config) {
+			Ok(sensor) => sensor,
+			Err(error_typ) => {
+				match error_typ {
+					MlxError::I2C(error) => {
+						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", error));
+					}
+					MlxError::ChecksumMismatch => {
+						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", "ChecksumMismatch"));
+					}
+					MlxError::InvalidInputData => {
+						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", "InvalidInputData"));
+					}
+				};
+				ModIR::new_default()
 			}
-			Err(error_typ) => match error_typ {
-				MlxError::I2C(error) => {
-					nc.ping(gettext!("⚠️ Failed to init MOD-IR-TEMP: {}", error));
-				}
-				MlxError::ChecksumMismatch => {
-					nc.ping(gettext("⚠️ Failed to init MOD-IR-TEMP: ChecksumMismatch"));
-				}
-				MlxError::InvalidInputData => {
-					nc.ping(gettext("⚠️ Failed to init MOD-IR-TEMP: InvalidInputData"));
-				}
-			},
-		}
+		};
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -337,13 +332,19 @@ fn main() -> Result<(), Error> {
 				},
 				Err(error_typ) => match error_typ {
 					MlxError::I2C(error) => {
-						nc.ping(gettext!("⚠️ Error while handling ir_temp: {}", error));
+						nc.ping(gettext!("⚠️ Error while handling ModIR: {}", error));
 					}
 					MlxError::ChecksumMismatch => {
-						nc.ping(gettext("⚠️ Error while handling ir_temp: ChecksumMismatch"));
+						nc.ping(gettext!(
+							"⚠️ Error while handling ModIR: {}",
+							"ChecksumMismatch"
+						));
 					}
 					MlxError::InvalidInputData => {
-						nc.ping(gettext("⚠️ Error while handling ir_temp: InvalidInputData"));
+						nc.ping(gettext!(
+							"⚠️ Error while handling ModIR: {}",
+							"InvalidInputData"
+						));
 					}
 				},
 			}

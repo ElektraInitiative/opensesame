@@ -173,3 +173,17 @@ description = Which Opensensemap senseBoxes should be connected to the weather s
 
 [weatherstation/opensensemap/token]
 description = Access-Token for Opensensemap senseBoxes, see doc/Opensensemap.md
+[ir/enable]
+description=enables/disables MOD-IR-TEMP sensor
+example=1
+default=0
+
+[ir/device]
+description=Which device to use for the MOD-IR-TEMP sensor. /dev/null means that no MOD-IR-TEMP sensor is connected.
+example = "/dev/i2c-2"
+default = "/dev/null"
+
+[ir/data/interval]
+description=How often to get new data, depends on how often handle() is called
+default=60
+type = unsigned_short
