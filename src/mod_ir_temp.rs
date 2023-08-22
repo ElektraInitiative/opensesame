@@ -135,6 +135,7 @@ impl ModIrTemps {
 			Some(mlx_sensor) => {
 				self.read_counter += 1;
 				if self.read_counter == self.data_interval {
+					self.read_counter = 0;
 					let mut ambient_state = IrTempState::Normal;
 					let mut object_state = IrTempState::Normal;
 					match mlx_sensor.ambient_temperature() {
