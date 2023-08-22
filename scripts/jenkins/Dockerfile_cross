@@ -48,7 +48,8 @@ RUN apt install -y --no-install-recommends \
     libc6-dev-armhf-cross \
     gcc-arm-linux-gnueabihf \
     binutils-arm-linux-gnueabihf \
-    linux-libc-dev:armhf
+    linux-libc-dev:armhf \
+    libmodbus-dev:armhf
 
 # Install deps
 RUN cargo install cargo-deb
