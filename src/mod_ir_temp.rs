@@ -183,7 +183,8 @@ impl ModIR {
 	}
 
 	/// This function sets the emissivity for measuring the object temperature.
-	/// It is only necessary for accurate object temperature measurements.
+	/// Default the emissivity for the MOD-IR-TEMP is set to `1`.
+	/// However, the emissivity only needs to be adjusted if we are using a specific object for measurement, as indicated [here](https://en.wikipedia.org/wiki/Emissivity).
 	/// The 'emissivity' parameter can be chosen between 0.0 and 1.0.
 	pub fn _change_emissivity(&mut self, emissivity: f32) -> Result<bool, Error<LinuxI2CError>> {
 		if emissivity >= 0.0 && emissivity <= 1.0 {
