@@ -429,7 +429,7 @@ with 0.047 µF 100Ω Snubber between NO und COM
 
 ### 4
 
-with 220nF 100Ω betwen NO und COM
+with 220nF 100Ω between NO und COM
 -> immediately blinking (lower freq)
 
 ### 5

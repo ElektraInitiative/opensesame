@@ -1,6 +1,6 @@
 [package]
 name = "opensesame"
-version = "0.7.8"
+version = "0.7.9"
 authors = ["Opensesame Contributors"]
 edition = "2018"
 readme = "README.md"
@@ -42,7 +42,7 @@ gpio-cdev = { version = "0.5.1", features = ["async-tokio"]}
 
 i2cdev = "0.5.1"
 
-elektra = { version = "0.9.10", features = ["pkg-config"] }
+elektra = { version = "0.11.0", features = ["pkg-config"] }
 
 reqwest = "0.9.24"
 
@@ -66,7 +66,7 @@ serial_test = "0.4.0" # TODO, remove when issues.libelektra.org/4466 is fixed
 
 sunrise = "1.0.0"
 
-libmodbus = {git = "https://github.com/ElektraInitiative/libmodbus-rs.git", branch="test_lower_bindgen_version"} 
+libmodbus = {git = "https://github.com/ElektraInitiative/libmodbus-rs.git"} 
 
 [[bin]]
 name = "weatherstation_dump"

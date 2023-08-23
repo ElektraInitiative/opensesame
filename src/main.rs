@@ -2,6 +2,7 @@
 
 mod bat;
 mod buttons;
+mod clima_sensor_us;
 mod config;
 mod environment;
 mod garage;
@@ -29,6 +30,7 @@ use systemstat::{Platform, System};
 use bat::Bat;
 use buttons::Buttons;
 use buttons::StateChange;
+use clima_sensor_us::{ClimaSensorUS, TempWarningStateChange};
 use config::Config;
 use environment::AirQualityChange;
 use environment::Environment;
@@ -205,12 +207,22 @@ fn main() -> Result<(), Error> {
 	let wait_for_ping_timeout = 300000 * config.get::<u32>("debug/ping/timeout");
 	let mut wait_for_ping = 0;
 	let mut ping_counter = 0u64;
-
 	let mut remember_baseline_counter = 0;
 	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
 		let mut environment = Environment::new(&mut config);
+		let mut weather_station;
+
+		match ClimaSensorUS::new(&mut config) {
+			Ok(weath_st) => {
+				weather_station = weath_st;
+			}
+			Err(error) => {
+				weather_station = ClimaSensorUS::new_default();
+				nc.ping(gettext!("Failed to init libmodbus connection: {}", error));
+			}
+		}
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -232,6 +244,40 @@ fn main() -> Result<(), Error> {
 		for l in reader.lines() {
 			if environment.handle() {
 				handle_environment(&mut environment, &mut nc, None, &mut config);
+			}
+
+			match weather_station.handle() {
+				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C, close the window",
+						ClimaSensorUS::CLOSE_WINDOW_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C and no Wind",
+						ClimaSensorUS::NO_WIND_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToWarningTemp) => {
+					nc.send_message(gettext!(
+						"🌡️ Temperature above {} °C",
+						ClimaSensorUS::WARNING_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
+					nc.send_message(gettext!(
+						"🌡 Temperature again under {} °C, warning was removed",
+						ClimaSensorUS::CANCLE_TEMP
+					));
+				}
+				Ok(TempWarningStateChange::None) => (),
+				Err(error) => {
+					nc.ping(gettext!(
+						"⚠️ Error from weather station: {}",
+						error.to_string()
+					));
+				}
 			}
 
 			let line = l.unwrap();
