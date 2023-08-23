@@ -161,6 +161,13 @@ type = unsigned_short
 description = maximum value measured during calibration
 type = unsigned_short
 
+[sensors/device]
+description = path of the sensor device
+default = "/dev/ttyACM0"
+
+[sensors/log]
+description = logging sensor data to file
+default = "/home/olimex/data.log"
 
 [weatherstation/enable]
 description = enables/disables weatherstation

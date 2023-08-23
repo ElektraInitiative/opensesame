@@ -19,6 +19,7 @@ use std::fs::File;
 use std::io::{prelude::*, BufReader, Error};
 use std::ops::Deref;
 use std::panic;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{env, thread, time};
@@ -52,7 +53,7 @@ const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-fn play_audio_file(file: String, arg: String) {
+fn play_audio_file(file: String, arg: String) -> Result<(), Error> {
 	if file != "/dev/null" {
 		thread::Builder::new()
 			.name("ogg123".to_string())
@@ -63,22 +64,22 @@ fn play_audio_file(file: String, arg: String) {
 					.arg(file)
 					.status()
 					.expect(&gettext("failed to execute process"));
-			})
-			.unwrap();
+			})?;
 	}
+	Ok(())
 }
 
-fn do_reset(watchdog: &mut Watchdog, nc: &mut Nextcloud, pwr: &mut Pwr) {
+fn do_reset(watchdog: &mut Watchdog, nextcloud: &mut Nextcloud, pwr: &mut Pwr) {
 	if pwr.enabled() {
 		watchdog.trigger();
 		pwr.switch(false);
-		nc.ping(gettext("👋 Turned PWR_SWITCH off"));
+		nextcloud.ping(gettext("👋 Turned PWR_SWITCH off"));
 		watchdog.trigger();
 		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
 		watchdog.trigger();
 		pwr.switch(true);
-		nc.ping(gettext("👋 Turned PWR_SWITCH on"));
+		nextcloud.ping(gettext("👋 Turned PWR_SWITCH on"));
 		watchdog.trigger();
 		thread::sleep(time::Duration::from_millis(watchdog::SAFE_TIMEOUT));
 
@@ -88,13 +89,13 @@ fn do_reset(watchdog: &mut Watchdog, nc: &mut Nextcloud, pwr: &mut Pwr) {
 
 fn handle_environment(
 	environment: &mut Environment,
-	nc: &mut Nextcloud,
+	nextcloud: &mut Nextcloud,
 	buttons: Option<&mut Buttons>,
 	config: &mut Config,
-) -> bool {
-	nc.set_info_environment(format!("💨 {:?}", environment.air_quality));
+) -> Result<bool, Error> {
+	nextcloud.set_info_environment(format!("💨 {:?}", environment.air_quality));
 	match environment.air_quality {
-		AirQualityChange::Error => nc.send_message(gettext!(
+		AirQualityChange::Error => nextcloud.send_message(gettext!(
 			"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
 			environment.error,
 			environment.status,
@@ -102,22 +103,22 @@ fn handle_environment(
 		)),
 
 		AirQualityChange::Ok => {
-			nc.send_message(gettext!("💨 Airquality is ok. {}", environment.to_string()))
+			nextcloud.send_message(gettext!("💨 Airquality is ok. {}", environment.to_string()))
 		}
-		AirQualityChange::Moderate => nc.send_message(gettext!(
+		AirQualityChange::Moderate => nextcloud.send_message(gettext!(
 			"💩 Airquality is moderate. {}",
 			environment.to_string()
 		)),
-		AirQualityChange::Bad => nc.send_message(gettext!(
+		AirQualityChange::Bad => nextcloud.send_message(gettext!(
 			"💩 Airquality is bad! {}",
 			environment.to_string()
 		)),
 
 		AirQualityChange::FireAlarm => {
-			return true;
+			return Ok(true);
 		}
 		AirQualityChange::FireBell => {
-			nc.send_message(gettext!(
+			nextcloud.send_message(gettext!(
 				"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
 				environment.to_string()
 			));
@@ -125,27 +126,407 @@ fn handle_environment(
 				buttons.ring_bell(20, 0);
 			}
 			if config.get_bool("garage/enable") {
-				play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string());
+				play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
 				thread::Builder::new()
 					.name("killall to ring bell".to_string())
 					.spawn(move || {
 						exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-					})
-					.unwrap();
+					})?;
 			}
 		}
-		AirQualityChange::FireChat => nc.send_message(gettext!(
+		AirQualityChange::FireChat => nextcloud.send_message(gettext!(
 			"🚨 Possible fire alarm! (don't ring yet). {}",
 			environment.to_string()
 		)),
 	}
-	return false;
+	return Ok(false);
+}
+
+fn sensor_mode(
+	mut config: Config,
+	mut state: Config,
+	mut nextcloud: Nextcloud,
+	mut environment: Environment,
+	date_time_format: &str,
+	startup_time: &str,
+	sighup: Arc<AtomicBool>,
+	term: Arc<AtomicBool>,
+) -> Result<(), Error> {
+	let log_path_config = config.get::<String>("sensors/log");
+	let log_path = Path::new(&log_path_config);
+	let mut outfile = if log_path.exists() {
+		std::fs::OpenOptions::new()
+			.write(true)
+			.append(true)
+			.open(log_path)?
+	} else {
+		File::create(log_path)?
+	};
+
+	let device_path = config.get::<String>("sensors/device");
+	let device_file = File::open(device_path)?;
+	let reader = BufReader::new(device_file);
+
+	let mut sensors = Sensors::new(&mut config);
+
+	for l in reader.lines() {
+		if environment.handle() {
+			handle_environment(&mut environment, &mut nextcloud, None, &mut config)?;
+		}
+
+		let line = l?;
+
+		eprint!("Sensor line: {}\n", line);
+
+		// record data
+		writeln!(
+			&mut outfile,
+			"{}	{}	Env:	{}	{}	{}	{}	{}	{}",
+			Local::now().format(&date_time_format).to_string(),
+			line.to_string(),
+			environment.co2,
+			environment.voc,
+			environment.temperature,
+			environment.humidity,
+			environment.pressure,
+			environment.baseline,
+		)?;
+
+		match sensors.update(line) {
+			SensorsChange::None => (),
+			SensorsChange::Alarm(w) => {
+				nextcloud.send_message(gettext!("Fire Alarm {}", w));
+				/*
+				state.set("alarm/fire", &w.to_string());
+				sighup.store(true, Ordering::Relaxed);
+				exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w));
+				*/
+			}
+			SensorsChange::Chat(w) => {
+				nextcloud.send_message(gettext!("Fire Chat {}", w));
+			}
+		}
+
+		if term.load(Ordering::Relaxed) {
+			environment.remember_baseline(&mut state);
+			return Ok(());
+		}
+
+		if sighup.load(Ordering::Relaxed) {
+			sighup.store(false, Ordering::Relaxed);
+			config.sync();
+			state.sync();
+			environment.restore_baseline(&mut state);
+			nextcloud.ping(gettext!(
+				"👋 reloaded config&state in sensor mode for opensesame {} {}",
+				env!("CARGO_PKG_VERSION"),
+				startup_time
+			));
+		}
+	}
+	Ok(())
+}
+
+fn normal_mode(
+	mut config: Config,
+	mut state: Config,
+	mut nextcloud: Nextcloud,
+	mut environment: Environment,
+	date_time_format: &str,
+	startup_time: &str,
+	sigalrm: Arc<AtomicBool>,
+	sigusr1: Arc<AtomicBool>,
+	sigusr2: Arc<AtomicBool>,
+	sighup: Arc<AtomicBool>,
+	term: Arc<AtomicBool>,
+) -> Result<(), Error> {
+	let mut watchdog = Watchdog::new(&mut config);
+
+	let mut pwr = Pwr::new(&mut config);
+	do_reset(&mut watchdog, &mut nextcloud, &mut pwr);
+	let mut validator = Validator::new(&mut config);
+	let mut buttons = Buttons::new(&mut config);
+	let mut garage = Garage::new(&mut config);
+	let bat = Bat::new();
+	let mut alarm_not_active = true;
+	let mut remember_baseline_counter = 0;
+	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
+	let mut started_message_timeout = 10000;
+	let enable_ping = config.get_bool("debug/ping/enable");
+	let wait_for_ping_timeout = 300000 * config.get::<u32>("debug/ping/timeout");
+	let mut wait_for_ping = 0;
+	let mut ping_counter = 0u64;
+	let time_format = config.get::<String>("nextcloud/format/time");
+
+	nextcloud.set_info_online(gettext!("🪫 ON {}", bat));
+
+	while !term.load(Ordering::Relaxed) {
+		watchdog.trigger();
+
+		if sigalrm.load(Ordering::Relaxed) {
+			sigalrm.store(false, Ordering::Relaxed);
+			buttons.ring_bell_alarm(20);
+			play_audio_file(config.get::<String>("audio/alarm"), "--repeat".to_string())?;
+			nextcloud.send_message(gettext("🚨 Received alarm"));
+		}
+
+		if sigusr1.load(Ordering::Relaxed) {
+			sigusr1.store(false, Ordering::Relaxed);
+			wait_for_ping = wait_for_ping_timeout + 1;
+		}
+
+		if sigusr2.load(Ordering::Relaxed) {
+			sigusr2.store(false, Ordering::Relaxed);
+			buttons.ring_bell(20, 0);
+			nextcloud.send_message(gettext("🔔 Received bell"));
+			play_audio_file(config.get::<String>("audio/bell"), "--quiet".to_string())?;
+		}
+
+		if sighup.load(Ordering::Relaxed) {
+			nextcloud.ping(gettext!(
+				"👋reloading config&state for opensesame {} {}",
+				env!("CARGO_PKG_VERSION"),
+				startup_time
+			));
+			sighup.store(false, Ordering::Relaxed);
+			config.sync();
+			state.sync();
+			environment.restore_baseline(&mut state);
+			if let Some(alarm) = state.get_option::<String>("alarm/fire") {
+				if alarm_not_active {
+					nextcloud.send_message(gettext!(
+						"🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}",
+						alarm
+					));
+					buttons.ring_bell_alarm(10);
+					if config.get_bool("garage/enable") {
+						play_audio_file(
+							config.get::<String>("audio/alarm"),
+							"--repeat".to_string(),
+						)?;
+						thread::Builder::new().name("killall to ring ALARM".to_string()).spawn(move || {
+							exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", alarm));
+						})?;
+					};
+					alarm_not_active = false;
+				}
+			} else {
+				// config option removed, go out of alarm mode
+				alarm_not_active = true;
+			}
+		}
+
+		if started_message_timeout > 1 {
+			started_message_timeout -= 1;
+		} else if started_message_timeout == 1 {
+			nextcloud.ping(gettext!(
+				"👋 opensesame {} started {}",
+				env!("CARGO_PKG_VERSION"),
+				startup_time
+			));
+			started_message_timeout = 0; // job done, disable
+			nextcloud.set_info_online(gettext!("🔋 ON {}", bat));
+		}
+
+		if environment.handle() {
+			if handle_environment(
+				&mut environment,
+				&mut nextcloud,
+				Some(&mut buttons),
+				&mut config,
+			)? {
+				state.set("alarm/fire", &environment.name);
+				sighup.store(true, Ordering::Relaxed);
+			}
+		}
+
+		if enable_ping {
+			wait_for_ping += 1;
+		}
+		if wait_for_ping > wait_for_ping_timeout {
+			let sys = System::new();
+			let loadavg = sys.load_average()?;
+			nextcloud.ping (format!("{} Ping! Version {}, Watchdog {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}", ping_counter, env!("CARGO_PKG_VERSION"), watchdog.wait_for_watchdog_trigger, environment.to_string(), environment.status, environment.error, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory()?.total, sys.swap()?.total, sys.cpu_temp()?, startup_time, bat));
+			ping_counter += 1;
+			wait_for_ping = 0; // restart
+		}
+
+		match garage.handle() {
+			GarageChange::None => (),
+			GarageChange::PressedTasterEingangOben => {
+				nextcloud.licht(gettext!(
+					"💡 Pressed at entrance top switch. Switch lights in garage. {}",
+					buttons.switch_lights(true, false)
+				));
+			}
+			GarageChange::PressedTasterTorOben => {
+				nextcloud.licht(gettext!(
+					"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
+					buttons.switch_lights(true, true)
+				));
+			}
+			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
+				buttons.open_door();
+			}
+
+			GarageChange::ReachedTorEndposition => {
+				nextcloud.set_info_door(gettext("🔒 Open"));
+				nextcloud.send_message(gettext!(
+					"🔒 Garage door closed. {}",
+					environment.to_string()
+				));
+			}
+			GarageChange::LeftTorEndposition => {
+				nextcloud.set_info_door(gettext("🔓 Closed"));
+				nextcloud
+					.send_message(gettext!("🔓 Garage door open. {}", environment.to_string()));
+			}
+		}
+
+		let changes = buttons.handle();
+		match changes {
+			StateChange::Pressed(button) => {
+				match button {
+					buttons::BUTTON_BELL => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							buttons.ring_bell(2, 5);
+							if config.get_bool("garage/enable") {
+								play_audio_file(
+									config.get::<String>("audio/bell"),
+									"--quiet".to_string(),
+								)?;
+								thread::Builder::new()
+									.name("killall to ring bell".to_string())
+									.spawn(move || {
+										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
+									})
+									.unwrap();
+							}
+							nextcloud.send_message(gettext!(
+								"🔔 Pressed button bell. {}",
+								environment.to_string()
+							));
+						} else {
+							buttons.show_wrong_input();
+							nextcloud.send_message(gettext!("🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}", now.format(&time_format), environment.to_string()));
+						}
+					}
+					buttons::TASTER_INNEN => {
+						nextcloud.licht(gettext!(
+							"💡 Pressed switch inside. {}. {}",
+							buttons.switch_lights(true, true),
+							environment.to_string()
+						));
+					}
+					buttons::TASTER_AUSSEN => {
+						nextcloud.licht(gettext!(
+							"💡 Pressed switch outside or light button. {}. {}",
+							buttons.switch_lights(false, true),
+							environment.to_string()
+						));
+					}
+					buttons::TASTER_GLOCKE => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							buttons.ring_bell(5, 5);
+							nextcloud.send_message(gettext!(
+								"🔔 Pressed switch bell. {}",
+								environment.to_string()
+							));
+						} else {
+							buttons.show_wrong_input();
+							nextcloud.send_message(gettext!("🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}", now.format(&time_format), environment.to_string()));
+						}
+					}
+					_ => panic!("🔘 Pressed {}, {}", button, environment.to_string()),
+				}
+			}
+			StateChange::Released(_button) => (),
+			StateChange::LightsOff => nextcloud.licht(gettext!(
+				"🕶️ Light was turned off. {}",
+				environment.to_string()
+			)),
+			StateChange::None => (),
+			StateChange::Err(board) => {
+				let sys = System::new();
+				let loadavg = sys.load_average().unwrap();
+				nextcloud.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
+				do_reset(&mut watchdog, &mut nextcloud, &mut pwr);
+			}
+		}
+
+		let sequence = buttons.sequence.to_vec();
+		match validator.validate(&mut buttons.sequence) {
+			Validation::Validated(user) => {
+				buttons.open_door();
+				nextcloud.send_message(gettext!("🤗 Opened for {}", user));
+				let now = Local::now();
+				let (sunrise, sunset) = sunrise_sunset(
+					config.get::<f64>("location/latitude"),
+					config.get::<f64>("location/longitude"),
+					now.year(),
+					now.month(),
+					now.day(),
+				);
+				if now.timestamp() < sunrise || now.timestamp() > sunset {
+					nextcloud.licht(gettext!(
+						"💡 Switch lights in and out. {}",
+						buttons.switch_lights(true, true)
+					));
+				} else {
+					nextcloud.licht(gettext!(
+						"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
+						now.timestamp(),
+						sunrise,
+						sunset
+					));
+				}
+			}
+			Validation::Timeout => {
+				if sequence != vec![0, 15] {
+					buttons.show_wrong_input();
+					buttons.ring_bell(20, 0);
+					nextcloud.send_message(gettext!(
+						"⌛ Timeout with sequence {}",
+						format!("{:?}", sequence)
+					));
+				}
+			}
+			Validation::SequenceTooLong => {
+				buttons.show_wrong_input();
+				buttons.ring_bell(20, 0);
+				nextcloud.send_message(gettext!(
+					"⌛ Sequence {} too long",
+					format!("{:?}", sequence)
+				));
+			}
+			Validation::None => (),
+		}
+
+		remember_baseline_counter += 1;
+		if remember_baseline_counter == wait_for_remember_baseline {
+			environment.remember_baseline(&mut state);
+			remember_baseline_counter = 0;
+		}
+
+		thread::sleep(time::Duration::from_millis(10));
+	}
+
+	environment.remember_baseline(&mut state);
+	nextcloud.set_info_online(gettext("📴 OFF"));
+	nextcloud.ping(gettext!(
+		"👋 opensesame {} bye-bye {}",
+		env!("CARGO_PKG_VERSION"),
+		Local::now().format(&date_time_format).to_string()
+	));
+	Ok(())
 }
 
 fn main() -> Result<(), Error> {
 	let mut config: Config = Config::new(CONFIG_PARENT);
 	env::set_var("RUST_BACKTRACE", config.get::<String>("debug/backtrace"));
-	let mut watchdog = Watchdog::new(&mut config);
+	let environment = Environment::new(&mut config);
 
 	let term = Arc::new(AtomicBool::new(false));
 	for signal in signal_hook::consts::TERM_SIGNALS {
@@ -183,488 +564,51 @@ fn main() -> Result<(), Error> {
 				.unwrap_or("<cause unknown>")
 		});
 		let mut config: Config = Config::new(CONFIG_PARENT);
-		let nc: Nextcloud = Nextcloud::new(&mut config);
+		let nextcloud = Nextcloud::new(&mut config);
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-		nc.ping(text.clone());
+		nextcloud.ping(text.clone());
 		eprintln!("{}", text);
 	}));
 
-	let mut nc: Nextcloud = Nextcloud::new(&mut config);
+	let nextcloud = Nextcloud::new(&mut config);
 
-	let time_format = config.get::<String>("nextcloud/format/time");
-	let date_time_format = config.get::<String>("nextcloud/format/datetime");
-	let startup_time = Local::now().format(&date_time_format);
+	let date_time_format = &config.get::<String>("nextcloud/format/datetime");
+	let startup_time = &format!("{}", Local::now().format(date_time_format));
 
 	TextDomain::new("opensesame").init().unwrap();
 
-	nc.ping(gettext!(
+	nextcloud.ping(gettext!(
 		"👋 opensesame {} init {}",
 		env!("CARGO_PKG_VERSION"),
 		startup_time
 	));
 
-	let mut state: Config = Config::new(STATE_PARENT);
-
-	let mut started_message_timeout = 10000;
-	let enable_ping = config.get_bool("debug/ping/enable");
-	let wait_for_ping_timeout = 300000 * config.get::<u32>("debug/ping/timeout");
-	let mut wait_for_ping = 0;
-	let mut ping_counter = 0u64;
-	let mut remember_baseline_counter = 0;
-	let wait_for_remember_baseline = 300000 * 24 * 7; // 7 days
+	let state: Config = Config::new(STATE_PARENT);
 
 	if config.get_option::<String>("sensors/#0/loc").is_some() {
-		let mut environment = Environment::new(&mut config);
-		let mut weather_station;
-
-		match ClimaSensorUS::new(&mut config) {
-			Ok(weath_st) => {
-				weather_station = weath_st;
-			}
-			Err(error) => {
-				weather_station = ClimaSensorUS::new_default();
-				nc.ping(gettext!("⚠️ Failed to init libmodbus connection: {}", error));
-			}
-		}
-
-		let mut ir_temp = match ModIR::new(&mut config) {
-			Ok(sensor) => sensor,
-			Err(error_typ) => {
-				match error_typ {
-					MlxError::I2C(error) => {
-						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", error));
-					}
-					MlxError::ChecksumMismatch => {
-						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "ChecksumMismatch"));
-					}
-					MlxError::InvalidInputData => {
-						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "InvalidInputData"));
-					}
-				};
-				ModIR::new_default()
-			}
-		};
-
-		let path = std::path::Path::new("/home/olimex/data.log");
-		let mut outfile;
-		if path.exists() {
-			outfile = std::fs::OpenOptions::new()
-				.write(true)
-				.append(true)
-				.open(path)
-				.unwrap();
-		} else {
-			outfile = File::create(path).unwrap();
-		}
-
-		let file = File::open("/dev/ttyACM0").unwrap();
-		let reader = BufReader::new(file);
-
-		let mut sensors = Sensors::new(&mut config);
-
-		for l in reader.lines() {
-			if environment.handle() {
-				handle_environment(&mut environment, &mut nc, None, &mut config);
-			}
-
-			match weather_station.handle() {
-				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
-					nc.send_message(gettext!(
-						"🌡️ Temperature above {} °C, close the window",
-						ClimaSensorUS::CLOSE_WINDOW_TEMP
-					));
-				}
-				Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
-					nc.send_message(gettext!(
-						"🌡️ Temperature above {} °C and no Wind",
-						ClimaSensorUS::NO_WIND_TEMP
-					));
-				}
-				Ok(TempWarningStateChange::ChangeToWarningTemp) => {
-					nc.send_message(gettext!(
-						"🌡️ Temperature above {} °C",
-						ClimaSensorUS::WARNING_TEMP
-					));
-				}
-				Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
-					nc.send_message(gettext!(
-						"🌡 Temperature again under {} °C, warning was removed",
-						ClimaSensorUS::CANCLE_TEMP
-					));
-				}
-				Ok(TempWarningStateChange::None) => (),
-				Err(error) => {
-					nc.ping(gettext!(
-						"⚠️ Error from weather station: {}",
-						error.to_string()
-					));
-				}
-			}
-			match ir_temp.handle() {
-				Ok(state) => match state {
-					IrTempStateChange::None => (),
-					IrTempStateChange::ChanedToBothToHot => {
-						nc.send_message(gettext!(
-							"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
-							ir_temp.ambient_temp,
-							ir_temp.object_temp
-						));
-					}
-					IrTempStateChange::ChangedToAmbientToHot => {
-						nc.send_message(gettext!(
-							"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
-							ir_temp.ambient_temp
-						));
-					}
-					IrTempStateChange::ChangedToObjectToHot => {
-						nc.send_message(gettext!(
-							"🌡️ ModIR object sensors too hot! Object: {} °C",
-							ir_temp.object_temp
-						));
-					}
-					IrTempStateChange::ChangedToCancelled => {
-						nc.send_message(gettext!(
-							"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
-							ir_temp.ambient_temp,
-							ir_temp.object_temp
-						));
-					}
-				},
-				Err(error_typ) => match error_typ {
-					MlxError::I2C(error) => {
-						nc.ping(gettext!("⚠️ Error while handling ModIR: {}", error));
-					}
-					MlxError::ChecksumMismatch => {
-						nc.ping(gettext!(
-							"⚠️ Error while handling ModIR: {}",
-							"ChecksumMismatch"
-						));
-					}
-					MlxError::InvalidInputData => {
-						nc.ping(gettext!(
-							"⚠️ Error while handling ModIR: {}",
-							"InvalidInputData"
-						));
-					}
-				},
-			}
-
-			let line = l.unwrap();
-
-			// record data
-			writeln!(
-				&mut outfile,
-				"{}	{}	Env:	{}	{}	{}	{}	{}	{}",
-				Local::now().format(&date_time_format).to_string(),
-				line.to_string(),
-				environment.co2,
-				environment.voc,
-				environment.temperature,
-				environment.humidity,
-				environment.pressure,
-				environment.baseline,
-			)
-			.unwrap();
-
-			match sensors.update(line) {
-				SensorsChange::None => (),
-				SensorsChange::Alarm(w) => {
-					nc.send_message(gettext!("Fire Alarm {}", w));
-					/*
-					state.set("alarm/fire", &w.to_string());
-					sighup.store(true, Ordering::Relaxed);
-					exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w));
-					*/
-				}
-				SensorsChange::Chat(w) => {
-					nc.send_message(gettext!("Fire Chat {}", w));
-				}
-			}
-
-			if term.load(Ordering::Relaxed) {
-				environment.remember_baseline(&mut state);
-				return Ok(());
-			}
-
-			if sighup.load(Ordering::Relaxed) {
-				sighup.store(false, Ordering::Relaxed);
-				config.sync();
-				state.sync();
-				environment.restore_baseline(&mut state);
-				nc.ping(gettext!(
-					"👋 reloaded config&state in sensor mode for opensesame {} {}",
-					env!("CARGO_PKG_VERSION"),
-					startup_time
-				));
-			}
-		}
+		sensor_mode(
+			config,
+			state,
+			nextcloud,
+			environment,
+			date_time_format,
+			startup_time,
+			sighup,
+			term,
+		)
+	} else {
+		normal_mode(
+			config,
+			state,
+			nextcloud,
+			environment,
+			date_time_format,
+			startup_time,
+			sigalrm,
+			sigusr1,
+			sigusr2,
+			sighup,
+			term,
+		)
 	}
-
-	let mut pwr = Pwr::new(&mut config);
-	do_reset(&mut watchdog, &mut nc, &mut pwr);
-	let mut validator = Validator::new(&mut config);
-	let mut buttons = Buttons::new(&mut config);
-	let mut environment = Environment::new(&mut config);
-	let mut garage = Garage::new(&mut config);
-	let bat = Bat::new();
-	let mut alarm_not_active = true;
-
-	nc.set_info_online(gettext!("🪫 ON {}", bat));
-
-	while !term.load(Ordering::Relaxed) {
-		watchdog.trigger();
-
-		if sigalrm.load(Ordering::Relaxed) {
-			sigalrm.store(false, Ordering::Relaxed);
-			buttons.ring_bell_alarm(20);
-			play_audio_file(config.get::<String>("audio/alarm"), "--repeat".to_string());
-			nc.send_message(gettext("🚨 Received alarm"));
-		}
-
-		if sigusr1.load(Ordering::Relaxed) {
-			sigusr1.store(false, Ordering::Relaxed);
-			wait_for_ping = wait_for_ping_timeout + 1;
-		}
-
-		if sigusr2.load(Ordering::Relaxed) {
-			sigusr2.store(false, Ordering::Relaxed);
-			buttons.ring_bell(20, 0);
-			nc.send_message(gettext("🔔 Received bell"));
-			play_audio_file(config.get::<String>("audio/bell"), "--quiet".to_string());
-		}
-
-		if sighup.load(Ordering::Relaxed) {
-			nc.ping(gettext!(
-				"👋reloading config&state for opensesame {} {}",
-				env!("CARGO_PKG_VERSION"),
-				startup_time
-			));
-			sighup.store(false, Ordering::Relaxed);
-			config.sync();
-			state.sync();
-			environment.restore_baseline(&mut state);
-			if let Some(alarm) = state.get_option::<String>("alarm/fire") {
-				if alarm_not_active {
-					nc.send_message(gettext!(
-						"🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}",
-						alarm
-					));
-					buttons.ring_bell_alarm(10);
-					if config.get_bool("garage/enable") {
-						play_audio_file(
-							config.get::<String>("audio/alarm"),
-							"--repeat".to_string(),
-						);
-						thread::Builder::new().name("killall to ring ALARM".to_string()).spawn(move || {
-							exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", alarm));
-						}).unwrap();
-					};
-					alarm_not_active = false;
-				}
-			} else {
-				// config option removed, go out of alarm mode
-				alarm_not_active = true;
-			}
-		}
-
-		if started_message_timeout > 1 {
-			started_message_timeout -= 1;
-		} else if started_message_timeout == 1 {
-			nc.ping(gettext!(
-				"👋 opensesame {} started {}",
-				env!("CARGO_PKG_VERSION"),
-				startup_time
-			));
-			started_message_timeout = 0; // job done, disable
-			nc.set_info_online(gettext!("🔋 ON {}", bat));
-		}
-
-		if environment.handle() {
-			if handle_environment(&mut environment, &mut nc, Some(&mut buttons), &mut config) {
-				state.set("alarm/fire", &environment.name);
-				sighup.store(true, Ordering::Relaxed);
-			}
-		}
-
-		if enable_ping {
-			wait_for_ping += 1;
-		}
-		if wait_for_ping > wait_for_ping_timeout {
-			let sys = System::new();
-			let loadavg = sys.load_average().unwrap();
-			nc.ping (format!("{} Ping! Version {}, Watchdog {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}", ping_counter, env!("CARGO_PKG_VERSION"), watchdog.wait_for_watchdog_trigger, environment.to_string(), environment.status, environment.error, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), startup_time, bat));
-			ping_counter += 1;
-			wait_for_ping = 0; // restart
-		}
-
-		match garage.handle() {
-			GarageChange::None => (),
-			GarageChange::PressedTasterEingangOben => {
-				nc.licht(gettext!(
-					"💡 Pressed at entrance top switch. Switch lights in garage. {}",
-					buttons.switch_lights(true, false)
-				));
-			}
-			GarageChange::PressedTasterTorOben => {
-				nc.licht(gettext!(
-					"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
-					buttons.switch_lights(true, true)
-				));
-			}
-			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
-				buttons.open_door();
-			}
-
-			GarageChange::ReachedTorEndposition => {
-				nc.set_info_door(gettext("🔒 Open"));
-				nc.send_message(gettext!(
-					"🔒 Garage door closed. {}",
-					environment.to_string()
-				));
-			}
-			GarageChange::LeftTorEndposition => {
-				nc.set_info_door(gettext("🔓 Closed"));
-				nc.send_message(gettext!("🔓 Garage door open. {}", environment.to_string()));
-			}
-		}
-
-		let changes = buttons.handle();
-		match changes {
-			StateChange::Pressed(button) => {
-				match button {
-					buttons::BUTTON_BELL => {
-						let now = Local::now();
-						if now.hour() >= 7 && now.hour() <= 21 {
-							buttons.ring_bell(2, 5);
-							if config.get_bool("garage/enable") {
-								play_audio_file(
-									config.get::<String>("audio/bell"),
-									"--quiet".to_string(),
-								);
-								thread::Builder::new()
-									.name("killall to ring bell".to_string())
-									.spawn(move || {
-										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-									})
-									.unwrap();
-							}
-							nc.send_message(gettext!(
-								"🔔 Pressed button bell. {}",
-								environment.to_string()
-							));
-						} else {
-							buttons.show_wrong_input();
-							nc.send_message(gettext!("🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}", now.format(&time_format), environment.to_string()));
-						}
-					}
-					buttons::TASTER_INNEN => {
-						nc.licht(gettext!(
-							"💡 Pressed switch inside. {}. {}",
-							buttons.switch_lights(true, true),
-							environment.to_string()
-						));
-					}
-					buttons::TASTER_AUSSEN => {
-						nc.licht(gettext!(
-							"💡 Pressed switch outside or light button. {}. {}",
-							buttons.switch_lights(false, true),
-							environment.to_string()
-						));
-					}
-					buttons::TASTER_GLOCKE => {
-						let now = Local::now();
-						if now.hour() >= 7 && now.hour() <= 21 {
-							buttons.ring_bell(5, 5);
-							nc.send_message(gettext!(
-								"🔔 Pressed switch bell. {}",
-								environment.to_string()
-							));
-						} else {
-							buttons.show_wrong_input();
-							nc.send_message(gettext!("🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}", now.format(&time_format), environment.to_string()));
-						}
-					}
-					_ => panic!("🔘 Pressed {}, {}", button, environment.to_string()),
-				}
-			}
-			StateChange::Released(_button) => (),
-			StateChange::LightsOff => nc.licht(gettext!(
-				"🕶️ Light was turned off. {}",
-				environment.to_string()
-			)),
-			StateChange::None => (),
-			StateChange::Err(board) => {
-				let sys = System::new();
-				let loadavg = sys.load_average().unwrap();
-				nc.ping(gettext!("⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}", board, environment.to_string(), loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap(), bat));
-				do_reset(&mut watchdog, &mut nc, &mut pwr);
-			}
-		}
-
-		let sequence = buttons.sequence.to_vec();
-		match validator.validate(&mut buttons.sequence) {
-			Validation::Validated(user) => {
-				buttons.open_door();
-				nc.send_message(gettext!("🤗 Opened for {}", user));
-				let now = Local::now();
-				let (sunrise, sunset) = sunrise_sunset(
-					config.get::<f64>("location/latitude"),
-					config.get::<f64>("location/longitude"),
-					now.year(),
-					now.month(),
-					now.day(),
-				);
-				if now.timestamp() < sunrise || now.timestamp() > sunset {
-					nc.licht(gettext!(
-						"💡 Switch lights in and out. {}",
-						buttons.switch_lights(true, true)
-					));
-				} else {
-					nc.licht(gettext!(
-						"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
-						now.timestamp(),
-						sunrise,
-						sunset
-					));
-				}
-			}
-			Validation::Timeout => {
-				if sequence != vec![0, 15] {
-					buttons.show_wrong_input();
-					buttons.ring_bell(20, 0);
-					nc.send_message(gettext!(
-						"⌛ Timeout with sequence {}",
-						format!("{:?}", sequence)
-					));
-				}
-			}
-			Validation::SequenceTooLong => {
-				buttons.show_wrong_input();
-				buttons.ring_bell(20, 0);
-				nc.send_message(gettext!(
-					"⌛ Sequence {} too long",
-					format!("{:?}", sequence)
-				));
-			}
-			Validation::None => (),
-		}
-
-		remember_baseline_counter += 1;
-		if remember_baseline_counter == wait_for_remember_baseline {
-			environment.remember_baseline(&mut state);
-			remember_baseline_counter = 0;
-		}
-
-		thread::sleep(time::Duration::from_millis(10));
-	}
-
-	environment.remember_baseline(&mut state);
-	nc.set_info_online(gettext("📴 OFF"));
-	nc.ping(gettext!(
-		"👋 opensesame {} bye-bye {}",
-		env!("CARGO_PKG_VERSION"),
-		Local::now().format(&date_time_format).to_string()
-	));
-
-	Ok(())
 }
