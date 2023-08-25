@@ -223,7 +223,7 @@ fn main() -> Result<(), Error> {
 			}
 			Err(error) => {
 				weather_station = ClimaSensorUS::new_default();
-				nc.ping(gettext!("Failed to init libmodbus connection: {}", error));
+				nc.ping(gettext!("⚠️ Failed to init libmodbus connection: {}", error));
 			}
 		}
 
@@ -232,13 +232,13 @@ fn main() -> Result<(), Error> {
 			Err(error_typ) => {
 				match error_typ {
 					MlxError::I2C(error) => {
-						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", error));
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", error));
 					}
 					MlxError::ChecksumMismatch => {
-						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", "ChecksumMismatch"));
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "ChecksumMismatch"));
 					}
 					MlxError::InvalidInputData => {
-						nc.ping(gettext!("⚠️ Failed to init MOD-IR: {}", "InvalidInputData"));
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "InvalidInputData"));
 					}
 				};
 				ModIR::new_default()
@@ -305,26 +305,26 @@ fn main() -> Result<(), Error> {
 					IrTempStateChange::None => (),
 					IrTempStateChange::ChanedToBothToHot => {
 						nc.send_message(gettext!(
-							"🌡️🌡️ MOD-IR-TEMP both sensors too hot! Ambient: {} °C, Object: {} °C",
+							"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
 							ir_temp.ambient_temp,
 							ir_temp.object_temp
 						));
 					}
 					IrTempStateChange::ChangedToAmbientToHot => {
 						nc.send_message(gettext!(
-							"🌡️ MOD-IR-TEMP ambient sensors too hot! Ambient: {} °C",
+							"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
 							ir_temp.ambient_temp
 						));
 					}
 					IrTempStateChange::ChangedToObjectToHot => {
 						nc.send_message(gettext!(
-							"🌡️ MOD-IR-TEMP object sensors too hot! Object: {} °C",
+							"🌡️ ModIR object sensors too hot! Object: {} °C",
 							ir_temp.object_temp
 						));
 					}
 					IrTempStateChange::ChangedToCancelled => {
 						nc.send_message(gettext!(
-							"🌡 MOD-IR-TEMP cancelled warning! Ambient: {} °C, Object: {} °C",
+							"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
 							ir_temp.ambient_temp,
 							ir_temp.object_temp
 						));
