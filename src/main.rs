@@ -146,12 +146,43 @@ fn sensor_mode(
 	mut config: Config,
 	mut state: Config,
 	mut nextcloud: Nextcloud,
-	mut environment: Environment,
 	date_time_format: &str,
 	startup_time: &str,
 	sighup: Arc<AtomicBool>,
 	term: Arc<AtomicBool>,
 ) -> Result<(), Error> {
+	let mut environment = Environment::new(&mut config);
+		let mut weather_station;
+
+	match ClimaSensorUS::new(&mut config) {
+		Ok(weath_st) => {
+			weather_station = weath_st;
+		}
+		Err(error) => {
+			weather_station = ClimaSensorUS::new_default();
+			nextcloud.ping(gettext!("⚠️ Failed to init libmodbus connection: {}", error));
+		}
+	}
+
+	let mut ir_temp = match ModIR::new(&mut config) {
+		Ok(sensor) => sensor,
+		Err(error_typ) => {
+			match error_typ {
+				MlxError::I2C(error) => {
+					nextcloud.ping(gettext!("⚠️ Failed to init ModIR: {}", error));
+				}
+				MlxError::ChecksumMismatch => {
+					nextcloud.ping(gettext!("⚠️ Failed to init ModIR: {}", "ChecksumMismatch"));
+				}
+				MlxError::InvalidInputData => {
+					nextcloud.ping(gettext!("⚠️ Failed to init ModIR: {}", "InvalidInputData"));
+				}
+			};
+			ModIR::new_default()
+		}
+	};
+
+
 	let log_path_config = config.get::<String>("sensors/log");
 	let log_path = Path::new(&log_path_config);
 	let mut outfile = if log_path.exists() {
@@ -172,6 +203,88 @@ fn sensor_mode(
 	for l in reader.lines() {
 		if environment.handle() {
 			handle_environment(&mut environment, &mut nextcloud, None, &mut config)?;
+		}
+
+		match weather_station.handle() {
+			Ok(TempWarningStateChange::ChangeToCloseWindow) => {
+				nextcloud.send_message(gettext!(
+					"🌡️ Temperature above {} °C, close the window",
+					ClimaSensorUS::CLOSE_WINDOW_TEMP
+				));
+			}
+			Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
+				nextcloud.send_message(gettext!(
+					"🌡️ Temperature above {} °C and no Wind",
+					ClimaSensorUS::NO_WIND_TEMP
+				));
+			}
+			Ok(TempWarningStateChange::ChangeToWarningTemp) => {
+				nextcloud.send_message(gettext!(
+					"🌡️ Temperature above {} °C",
+					ClimaSensorUS::WARNING_TEMP
+				));
+			}
+			Ok(TempWarningStateChange::ChangeToRemoveWarning) => {
+				nextcloud.send_message(gettext!(
+					"🌡 Temperature again under {} °C, warning was removed",
+					ClimaSensorUS::CANCLE_TEMP
+				));
+			}
+			Ok(TempWarningStateChange::None) => (),
+			Err(error) => {
+				nextcloud.ping(gettext!(
+					"⚠️ Error from weather station: {}",
+					error.to_string()
+				));
+			}
+		}
+		match ir_temp.handle() {
+			Ok(state) => match state {
+				IrTempStateChange::None => (),
+				IrTempStateChange::ChanedToBothToHot => {
+					nextcloud.send_message(gettext!(
+						"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
+						ir_temp.ambient_temp,
+						ir_temp.object_temp
+					));
+				}
+				IrTempStateChange::ChangedToAmbientToHot => {
+					nextcloud.send_message(gettext!(
+						"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
+						ir_temp.ambient_temp
+					));
+				}
+				IrTempStateChange::ChangedToObjectToHot => {
+					nextcloud.send_message(gettext!(
+						"🌡️ ModIR object sensors too hot! Object: {} °C",
+						ir_temp.object_temp
+					));
+				}
+				IrTempStateChange::ChangedToCancelled => {
+					nextcloud.send_message(gettext!(
+						"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
+						ir_temp.ambient_temp,
+						ir_temp.object_temp
+					));
+				}
+			},
+			Err(error_typ) => match error_typ {
+				MlxError::I2C(error) => {
+					nextcloud.ping(gettext!("⚠️ Error while handling ModIR: {}", error));
+				}
+				MlxError::ChecksumMismatch => {
+					nextcloud.ping(gettext!(
+						"⚠️ Error while handling ModIR: {}",
+						"ChecksumMismatch"
+					));
+				}
+				MlxError::InvalidInputData => {
+					nextcloud.ping(gettext!(
+						"⚠️ Error while handling ModIR: {}",
+						"InvalidInputData"
+					));
+				}
+			},
 		}
 
 		let line = l?;
@@ -590,7 +703,6 @@ fn main() -> Result<(), Error> {
 			config,
 			state,
 			nextcloud,
-			environment,
 			date_time_format,
 			startup_time,
 			sighup,
