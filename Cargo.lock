@@ -442,6 +442,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-crc-macros"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f1c75747a43b086df1a87fb2a889590bc0725e0abf54bba6d0c4bf7bd9e762c"
+
+[[package]]
 name = "embedded-hal"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1203,6 +1209,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mlx9061x"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e2eb17199cbc70015ef9eecdb2bf087c44c3a2082d15605b47bc5292d034604"
+dependencies = [
+ "embedded-hal",
+ "smbus-pec",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1374,6 +1390,7 @@ dependencies = [
  "i2cdev",
  "libmodbus",
  "linux-embedded-hal",
+ "mlx9061x",
  "reqwest",
  "serial_test",
  "signal-hook",
@@ -2059,6 +2076,15 @@ name = "smallvec"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
+
+[[package]]
+name = "smbus-pec"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca0763a680cd5d72b28f7bfc8a054c117d8841380a6ad4f72f05bd2a34217d3e"
+dependencies = [
+ "embedded-crc-macros",
+]
 
 [[package]]
 name = "spidev"

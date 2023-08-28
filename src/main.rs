@@ -6,6 +6,7 @@ mod clima_sensor_us;
 mod config;
 mod environment;
 mod garage;
+mod mod_ir_temp;
 mod nextcloud;
 mod pwr;
 mod sensors;
@@ -13,6 +14,7 @@ mod ssh;
 mod validator;
 mod watchdog;
 
+use mlx9061x::Error as MlxError;
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Error};
 use std::ops::Deref;
@@ -36,6 +38,7 @@ use environment::AirQualityChange;
 use environment::Environment;
 use garage::Garage;
 use garage::GarageChange;
+use mod_ir_temp::{IrTempStateChange, ModIR};
 use nextcloud::Nextcloud;
 use pwr::Pwr;
 use sensors::Sensors;
@@ -220,9 +223,27 @@ fn main() -> Result<(), Error> {
 			}
 			Err(error) => {
 				weather_station = ClimaSensorUS::new_default();
-				nc.ping(gettext!("Failed to init libmodbus connection: {}", error));
+				nc.ping(gettext!("⚠️ Failed to init libmodbus connection: {}", error));
 			}
 		}
+
+		let mut ir_temp = match ModIR::new(&mut config) {
+			Ok(sensor) => sensor,
+			Err(error_typ) => {
+				match error_typ {
+					MlxError::I2C(error) => {
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", error));
+					}
+					MlxError::ChecksumMismatch => {
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "ChecksumMismatch"));
+					}
+					MlxError::InvalidInputData => {
+						nc.ping(gettext!("⚠️ Failed to init ModIR: {}", "InvalidInputData"));
+					}
+				};
+				ModIR::new_default()
+			}
+		};
 
 		let path = std::path::Path::new("/home/olimex/data.log");
 		let mut outfile;
@@ -278,6 +299,54 @@ fn main() -> Result<(), Error> {
 						error.to_string()
 					));
 				}
+			}
+			match ir_temp.handle() {
+				Ok(state) => match state {
+					IrTempStateChange::None => (),
+					IrTempStateChange::ChanedToBothToHot => {
+						nc.send_message(gettext!(
+							"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
+							ir_temp.ambient_temp,
+							ir_temp.object_temp
+						));
+					}
+					IrTempStateChange::ChangedToAmbientToHot => {
+						nc.send_message(gettext!(
+							"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
+							ir_temp.ambient_temp
+						));
+					}
+					IrTempStateChange::ChangedToObjectToHot => {
+						nc.send_message(gettext!(
+							"🌡️ ModIR object sensors too hot! Object: {} °C",
+							ir_temp.object_temp
+						));
+					}
+					IrTempStateChange::ChangedToCancelled => {
+						nc.send_message(gettext!(
+							"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
+							ir_temp.ambient_temp,
+							ir_temp.object_temp
+						));
+					}
+				},
+				Err(error_typ) => match error_typ {
+					MlxError::I2C(error) => {
+						nc.ping(gettext!("⚠️ Error while handling ModIR: {}", error));
+					}
+					MlxError::ChecksumMismatch => {
+						nc.ping(gettext!(
+							"⚠️ Error while handling ModIR: {}",
+							"ChecksumMismatch"
+						));
+					}
+					MlxError::InvalidInputData => {
+						nc.ping(gettext!(
+							"⚠️ Error while handling ModIR: {}",
+							"InvalidInputData"
+						));
+					}
+				},
 			}
 
 			let line = l.unwrap();
