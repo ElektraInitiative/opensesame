@@ -2,7 +2,7 @@
 /// Before using this module, you need to configure it with Elektra. The following configurations are necessary: [ir/enable], [ir/device], and [ir/data/interval].
 /// A description of these configuration parameters can be found in the file "opensesame.spec".
 /// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
-/// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientToHot' is triggered.
+/// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 use crate::config::Config;
 use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::{Delay, I2cdev};
@@ -107,10 +107,10 @@ impl ModIR {
 
 	/// This function checks if a state change has occurred and returns the corresponding state change.
 	/// It returns 'None' if nothing has changed since the last duration.
-	/// It returns 'ChangedToBothToHot' if both thresholds have been exceeded.
-	/// It returns 'ChangedToAmbientToHot' if only the ambient threshold has been exceeded.
-	/// It returns 'ChangedToObjectToHot' if only the object threshold has been exceeded.
-	/// It returns 'ChangedToCancelled' if 'ChangedToBothToHot' or 'ChangedToAmbientToHot' or 'ChangedToObjectToHot' was set, and both ambient and object temperatures are below their respective threshold values.
+	/// It returns 'ChangedTooBothToHot' if both thresholds have been exceeded.
+	/// It returns 'ChangedTooAmbientToHot' if only the ambient threshold has been exceeded.
+	/// It returns 'ChangedTooObjectToHot' if only the object threshold has been exceeded.
+	/// It returns 'ChangedTooCancelled' if 'ChangedToBothTooHot' or 'ChangedToAmbientTooHot' or 'ChangedToObjectTooHot' was set, and both ambient and object temperatures are below their respective threshold values.
 	fn set_handle_output(
 		&mut self,
 		ambient_state: IrTempState,
