@@ -152,7 +152,7 @@ fn sensor_mode(
 	term: Arc<AtomicBool>,
 ) -> Result<(), Error> {
 	let mut environment = Environment::new(&mut config);
-		let mut weather_station;
+	let mut weather_station;
 
 	match ClimaSensorUS::new(&mut config) {
 		Ok(weath_st) => {
@@ -181,7 +181,6 @@ fn sensor_mode(
 			ModIR::new_default()
 		}
 	};
-
 
 	let log_path_config = config.get::<String>("sensors/log");
 	let log_path = Path::new(&log_path_config);
