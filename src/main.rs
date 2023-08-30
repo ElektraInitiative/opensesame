@@ -339,18 +339,14 @@ fn sensor_mode(
 	Ok(())
 }
 
-fn normal_mode(
+struct 
+
+async fn button_loop(
 	mut config: Config,
 	mut state: Config,
-	mut nextcloud: Nextcloud,
-	mut environment: Environment,
+	mut receiver: Receiver<String>,
 	date_time_format: &str,
-	startup_time: &str,
-	sigalrm: Arc<AtomicBool>,
-	sigusr1: Arc<AtomicBool>,
-	sigusr2: Arc<AtomicBool>,
-	sighup: Arc<AtomicBool>,
-	term: Arc<AtomicBool>,
+	startup_time: &str
 ) -> Result<(), Error> {
 	let mut watchdog = Watchdog::new(&mut config);
 
@@ -439,7 +435,7 @@ fn normal_mode(
 			started_message_timeout = 0; // job done, disable
 			nextcloud.set_info_online(gettext!("🔋 ON {}", bat));
 		}
-
+		/// envrionment start
 		if environment.handle() {
 			if handle_environment(
 				&mut environment,
@@ -451,7 +447,9 @@ fn normal_mode(
 				sighup.store(true, Ordering::Relaxed);
 			}
 		}
+		/// environment end
 
+		/// Was macht dieser Abschnitt??? Sendet kontinuierlich daten an nc ping chat?
 		if enable_ping {
 			wait_for_ping += 1;
 		}
@@ -462,7 +460,7 @@ fn normal_mode(
 			ping_counter += 1;
 			wait_for_ping = 0; // restart
 		}
-
+		/// Garage start
 		match garage.handle() {
 			GarageChange::None => (),
 			GarageChange::PressedTasterEingangOben => {
@@ -494,7 +492,10 @@ fn normal_mode(
 					.send_message(gettext!("🔓 Garage door open. {}", environment.to_string()));
 			}
 		}
+		/// Garage end
 
+		/// Buttons abhängig von environment, aber nicht nötig für buttons, infos über environment kann extra an nc senden
+		/// Button start
 		let changes = buttons.handle();
 		match changes {
 			StateChange::Pressed(button) => {
@@ -538,7 +539,7 @@ fn normal_mode(
 							environment.to_string()
 						));
 					}
-					buttons::TASTER_GLOCKE => {
+				buttons::TASTER_GLOCKE => {
 						let now = Local::now();
 						if now.hour() >= 7 && now.hour() <= 21 {
 							buttons.ring_bell(5, 5);
@@ -567,7 +568,10 @@ fn normal_mode(
 				do_reset(&mut watchdog, &mut nextcloud, &mut pwr);
 			}
 		}
+		/// Button end
 
+		/// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
+		/// Validation start
 		let sequence = buttons.sequence.to_vec();
 		match validator.validate(&mut buttons.sequence) {
 			Validation::Validated(user) => {
@@ -615,6 +619,7 @@ fn normal_mode(
 			}
 			Validation::None => (),
 		}
+		/// Validation end
 
 		remember_baseline_counter += 1;
 		if remember_baseline_counter == wait_for_remember_baseline {
@@ -635,6 +640,17 @@ fn normal_mode(
 	Ok(())
 }
 
+#[tokio::main]
+async fn main() -> io::Result<()> {
+	let mut buttons: ...();
+	let mut config: Config = Config::new(CONFIG_PARENT);
+	if config.get_bool("buttons/enable") {
+		tokio::spawn(button_loop);
+	}
+}
+
+#[tokio::main]
+async fn main() -> io::Result<()> {
 fn main() -> Result<(), Error> {
 	let mut config: Config = Config::new(CONFIG_PARENT);
 	env::set_var("RUST_BACKTRACE", config.get::<String>("debug/backtrace"));

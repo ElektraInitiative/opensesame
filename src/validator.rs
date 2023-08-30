@@ -43,7 +43,7 @@ impl Validator {
 			self.timeout = 0;
 			return Validation::Validated(ret);
 		}
-		return Validation::None;
+		Validation::None
 	}
 }
 
