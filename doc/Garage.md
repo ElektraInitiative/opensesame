@@ -9,11 +9,11 @@
 
 Layout Platine
 
-- Taster Eingang Oben             -> Pin40 GPIO234 EINT10
-- Taster Eingang Unten            -> Pin38 GPIO235 EINT11
-- Taster Tor Oben                 -> Pin36 GPIO236 EINT12
-- Taster Tor Unten                -> Pin32 GPIO237 EINT13
-- Schalter Garagentor Endposition -> Pin26 GPIO238 EINT14
+- Taster Eingang Oben             -> (Pin40 of LIME2-SHIELD) (Pin13 of GPIO-3) GPIO234 EINT10
+- Taster Eingang Unten            -> (Pin38 of LIME2-SHIELD) (Pin15 of GPIO-3) GPIO235 EINT11
+- Taster Tor Oben                 -> (Pin36 of LIME2-SHIELD) (Pin17 of GPIO-3) GPIO236 EINT12
+- Taster Tor Unten                -> (Pin32 of LIME2-SHIELD) (Pin19 of GPIO-3) GPIO237 EINT13
+- Schalter Garagentor Endposition -> (Pin26 of LIME2-SHIELD) (Pin21 of GPIO-3) GPIO238 EINT14
 
 
 # LEDS
