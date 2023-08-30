@@ -23,9 +23,9 @@ impl Nextcloud {
 			chat_licht: config.get::<String>("nextcloud/chat/licht"),
 			user: config.get::<String>("nextcloud/user"),
 			pass: Some(config.get::<String>("nextcloud/pass")),
-			info_door: "".to_string(),
-			info_environment: "".to_string(),
-			info_online: "".to_string(),
+			info_door: String::new(),
+			info_environment: String::new(),
+			info_online: String::new(),
 		}
 	}
 

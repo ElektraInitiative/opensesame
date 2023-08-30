@@ -1,0 +1,31 @@
+button module
+
+alle 10ms: schauen ob ein button gedrückt wurde
+
+BUTTON                       VALIDATER
+   + --------------------------->
+     ("Pressed A",  1653423244)
+     ("Released A", 1653423245)
+	<---------------------------+
+			open.door()
+
+
+1) Button kennt keine sequenz, schickt alle events an validater, dieser baut sequenzen
+
+2) Button baut sequenzen auf, und handelt auch das timeout
+
+1111
+1101
+1001
+
+last_button_change: time
+sequence: 
+
+[1, 4, 3, 2, 5, 2, 0, 15]
+
+
+
+
+
+
+

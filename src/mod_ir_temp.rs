@@ -45,7 +45,7 @@ impl ModIR {
 	pub fn new_default() -> Self {
 		Self {
 			mlx: None,
-			device: "/dev/null".to_string(),
+			device: String::from("/dev/null"),
 			addr: SlaveAddr::Default,
 			ambient_temp: 0.0,
 			object_temp: 0.0,

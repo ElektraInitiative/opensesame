@@ -126,6 +126,11 @@ description=How often to get new data (default: every 60 seconds, which is the h
 default = 6000
 type = unsigned_short
 
+[sensors/enable]
+description = If the sensors module is enabled
+type = boolean
+default = 0
+
 [sensors]
 description = a list of up to 12 MQ135 sensors
 
