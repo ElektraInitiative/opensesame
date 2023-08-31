@@ -23,11 +23,10 @@ pub struct Environment {
 	pub app_version: u16,
 
 	data: Vec<u8>,
-	read_counter: u16,
-	board5a: Option<LinuxI2CDevice>,
+	pub board5a: Option<LinuxI2CDevice>,
 	bme280: Option<BME280<I2cdev, Delay>>,
 	first_time: bool,
-	data_interval: u16,
+	pub data_interval: u16,
 	pub baseline: u16,
 	pub name: String,
 }
@@ -121,7 +120,6 @@ impl Environment {
 				error: 0,
 				air_quality: AirQualityChange::Ok,
 				data: Vec::new(),
-				read_counter: 0,
 				app_version: 0,
 				boot_version: 0,
 				board5a: None,
@@ -143,7 +141,6 @@ impl Environment {
 				error: 0,
 				air_quality: AirQualityChange::Ok,
 				data: Vec::new(),
-				read_counter: 0,
 				app_version: 0,
 				boot_version: 0,
 				board5a: Some(
@@ -170,6 +167,29 @@ impl Environment {
 			}
 			s.bme280.as_mut().unwrap().init().unwrap();
 			s
+		}
+	}
+
+	/// This function need to be called a few seconds after the creation of the object
+	/// It inits the connection to the ccS811 sensor
+	#[allow(non_snake_case)]
+	pub fn init_ccs811(&mut self) -> bool {
+		match self.board5a.as_mut() {
+			Some(board5a) => {
+				board5a.smbus_write_byte(APP_START).unwrap();
+				board5a
+					.smbus_write_byte_data(MEAS_MODE, MEAS_MODE_DATA)
+					.unwrap();
+
+				self.boot_version = board5a.smbus_read_word_data(FW_BOOT_VERSION).unwrap();
+				self.app_version = board5a.smbus_read_word_data(FW_APP_VERSION).unwrap();
+
+				self.status = board5a.smbus_read_byte_data(STATUS).unwrap();
+				self.error = board5a.smbus_read_byte_data(ERROR_ID).unwrap();
+				self.first_time = false;
+				true
+			}
+			None => false,
 		}
 	}
 
@@ -255,33 +275,24 @@ impl Environment {
 	}
 
 	/// to be periodically called every 10 ms
+	/// Return value indicates if data has been changed
 	pub fn handle(&mut self) -> bool {
 		match self.board5a.as_mut() {
 			None => match self.bme280.as_mut() {
 				None => false,
 				Some(bme280) => {
-					self.read_counter += 1;
-					if self.read_counter == self.data_interval {
-						self.read_counter = 0;
+					let measurement = bme280.measure().unwrap();
 
-						let measurement = bme280.measure().unwrap();
+					self.temperature = measurement.temperature;
+					self.humidity = measurement.humidity;
+					self.pressure = measurement.pressure;
 
-						self.temperature = measurement.temperature;
-						self.humidity = measurement.humidity;
-						self.pressure = measurement.pressure;
-
-						return true;
-					}
-					return false;
+					return true;
 				}
 			},
 			Some(board5a) => {
-				self.read_counter += 1;
-
 				// check if we get new data
-				if !self.first_time && self.read_counter == self.data_interval {
-					self.read_counter = 0;
-
+				if !self.first_time {
 					let measurement = self.bme280.as_mut().unwrap().measure().unwrap();
 					set_env_data_ccs811(board5a, measurement.temperature, measurement.humidity);
 					self.temperature = measurement.temperature;
@@ -312,23 +323,6 @@ impl Environment {
 					self.data = data;
 					return self.calculate_air_quality();
 				}
-
-				if self.read_counter == RESET_INTERVAL && self.first_time {
-					board5a.smbus_write_byte(APP_START).unwrap();
-					board5a
-						.smbus_write_byte_data(MEAS_MODE, MEAS_MODE_DATA)
-						.unwrap();
-
-					self.boot_version = board5a.smbus_read_word_data(FW_BOOT_VERSION).unwrap();
-					self.app_version = board5a.smbus_read_word_data(FW_APP_VERSION).unwrap();
-
-					self.status = board5a.smbus_read_byte_data(STATUS).unwrap();
-					self.error = board5a.smbus_read_byte_data(ERROR_ID).unwrap();
-					self.first_time = false;
-					self.read_counter = 0;
-					return false;
-				}
-
 				return false;
 			}
 		}
