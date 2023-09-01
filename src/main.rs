@@ -364,14 +364,14 @@ async fn nextcloud_loop(
 ) {
 	let mut config = Config::new(CONFIG_PARENT);
 	let mut nextcloud = Nextcloud::new(&mut config);
-	while let Some(message) = nextcloud_receiver.recv().await {
-		match message {
-			NextcloudEvent::Chat(message) => nextcloud.send_message(message),
-			NextcloudEvent::Ping(message) => nextcloud.ping(message),
-			NextcloudEvent::Licht(message) => nextcloud.licht(message),
-			NextcloudEvent::SetStatusOnline(message) => nextcloud.set_info_online(message),
-			NextcloudEvent::SetStatusEnv(message) => nextcloud.set_info_environment(message),
-			NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message),
+	while let Some(event) = nextcloud_receiver.recv().await {
+		match event {
+			NextcloudEvent::Chat(message) => nextcloud.send_message(&message).await,
+			NextcloudEvent::Ping(message) => nextcloud.ping(&message).await,
+			NextcloudEvent::Licht(message) => nextcloud.licht(&message).await,
+			NextcloudEvent::SetStatusOnline(message) => nextcloud.set_info_online(message).await,
+			NextcloudEvent::SetStatusEnv(message) => nextcloud.set_info_environment(message).await,
+			NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message).await,
 		}
 	}
 
