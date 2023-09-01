@@ -103,7 +103,7 @@ const RELAY_LICHT_INNEN: u8 = 0x01 << 1;
 const PINS2_INIT: u8 = 0b01100000;
 
 impl Buttons {
-	pub fn new(config: &mut Config) -> Self {
+	pub fn new(config: &Config) -> Self {
 		let mut s = Self {
 			sequence: vec![],
 
@@ -268,34 +268,34 @@ impl Buttons {
 	}
 
 	/// to be periodically called, e.g. every 10 ms
-	pub fn handle(&mut self) -> StateChange {
+	pub fn handle(&mut self) -> Result<StateChange, LinuxI2CError> {
 		// wait for recover
 		if self.failed_counter > 1 {
 			self.failed_counter -= 1;
-			return StateChange::None;
+			return Ok(StateChange::None);
 		// try to recover
 		} else if self.failed_counter == 1 {
 			self.pins1 = PINS1_INIT;
 			self.pins2 = PINS2_INIT;
 			self.init();
 			self.failed_counter = 0;
-			return StateChange::None;
+			return Ok(StateChange::None);
 		}
 
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
-		if epins1.is_err() {
+		if let Err(error) = epins1 {
 			self.failed_counter = FAILED_COUNTER;
 			self.led1 = true;
 			self.led2 = true;
-			return StateChange::Err(20);
+			return Err(error);
 		}
 
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
-		if epins2.is_err() {
+		if let Err(error) = epins2 {
 			self.failed_counter = FAILED_COUNTER;
 			self.led1 = true;
 			self.led3 = true;
-			return StateChange::Err(21);
+			return Err(error);
 		}
 
 		let mut pins1 = epins1.unwrap() & ALL_BUTTONS;
@@ -361,7 +361,7 @@ impl Buttons {
 				.unwrap();
 			self.pins2 = pins2;
 		}
-		return ret;
+		return Ok(ret);
 	}
 
 	/// opensesame!

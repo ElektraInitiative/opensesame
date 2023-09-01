@@ -1,11 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
+use crate::config::Config;
 
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},
 	Client,
 };
-
-use crate::config::Config;
 
 pub struct Nextcloud {
 	base_url: String,
@@ -22,7 +21,7 @@ pub struct Nextcloud {
 }
 
 impl Nextcloud {
-	pub fn new(config: &mut Config) -> Self {
+	pub fn new(config: &Config) -> Self {
 		let mut headers = HeaderMap::new();
 		headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
 		headers.insert(ACCEPT, "application/json".parse().unwrap());
@@ -66,8 +65,8 @@ impl Nextcloud {
 		response.error_for_status()
 	}
 
-	pub async fn licht(&self, message: &str) {
-		let result = self.send_message_once(message, &self.chat_licht).await;
+	pub async fn licht(&self, message: String) {
+		let result = self.send_message_once(&message, &self.chat_licht).await;
 
 		match result {
 			Ok(..) => (),
@@ -77,8 +76,8 @@ impl Nextcloud {
 		};
 	}
 
-	pub async fn ping(&self, message: &str) {
-		let result = self.send_message_once(message, &self.chat_ping).await;
+	pub async fn ping(&self, message: String) {
+		let result = self.send_message_once(&message, &self.chat_ping).await;
 
 		match result {
 			Ok(..) => (),
@@ -89,8 +88,8 @@ impl Nextcloud {
 	}
 
 	// logs and sends message, retries once, if it fails twice it logs the error
-	pub async fn send_message(&self, message: &str) {
-		let result = self.send_message_once(message, &self.chat).await;
+	pub async fn send_message(&self, message: String) {
+		let result = self.send_message_once(&message, &self.chat).await;
 
 		match result {
 			Ok(..) => (),

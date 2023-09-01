@@ -101,7 +101,7 @@ impl Config<'_> {
 		None
 	}
 
-	pub fn get<T: FromStr>(&mut self, name: &str) -> T {
+	pub fn get<T: FromStr>(&self, name: &str) -> T {
 		let mut lookup_key = self.parent_key.duplicate(CopyOption::KEY_CP_NAME);
 		lookup_key
 			.add_name(name)

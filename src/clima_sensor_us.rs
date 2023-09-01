@@ -258,7 +258,7 @@ impl ClimaSensorUS {
 	/// (Input Register - 0x04) wind-reg address 0x7533; typ U32; real_result = response_wind/10
 	/// The return value is bool on success, true if alarm is active and false is alarm is not active
 	/// If no ctx is configured the this function returns always false, so no warning is triggered
-	pub fn handle(&mut self) -> Result<TempWarningStateChange, std::io::Error> {
+	pub async fn handle(&mut self) -> Result<TempWarningStateChange, std::io::Error> {
 		match &self.ctx {
 			Some(conn) => {
 				let mut response_temp = vec![0u16; 2];
@@ -289,7 +289,7 @@ impl ClimaSensorUS {
 					temp, wind
 				);
 				//check if new data should be published to opensensemap.org
-				match self.publish_to_opensensemap() {
+				match self.publish_to_opensensemap().await {
 					Ok(_) => {}
 					Err(error) => return Err(error),
 				}
@@ -413,7 +413,7 @@ impl ClimaSensorUS {
 	/// All information needed are stored in a const array of tuples. The tuples contain the opensensemap-sensor-id, register-address, factor and datatype.
 	/// The return value indicates if the api request was successfully or not.
 	/// Information about the reading of registers can be accessed through the json_payload  
-	pub fn publish_to_opensensemap(&mut self) -> Result<(), std::io::Error> {
+	pub async fn publish_to_opensensemap(&mut self) -> Result<(), std::io::Error> {
 		match self.create_json() {
 			Ok(json) => {
 				//Send JSON to https://api.opensensemap.org
@@ -430,7 +430,7 @@ impl ClimaSensorUS {
 					))
 					.headers(headers)
 					.body(json)
-					.send();
+					.send().await;
 				match result {
 					Ok(response) => match response.error_for_status() {
 						Ok(_response) => Ok(()),
@@ -457,21 +457,22 @@ impl ClimaSensorUS {
 mod tests {
 	use super::*;
 
-	#[test]
+	#[tokio::test]
 	#[ignore]
-	fn test_handle() {
+	async fn test_handle() {
 		let mut config: Config = Config::new("/sw/libelektra/opensesame/#0/current");
 		let mut weatherstation =
 			ClimaSensorUS::new(&mut config).expect("Failed to init libmodbus connection");
 
-		match weatherstation.handle().unwrap() {
-			TempWarningStateChange::ChangeToCloseWindow => println!("ChangeToCloseWindow"),
-			TempWarningStateChange::ChangeToWarningTempNoWind => {
+		match weatherstation.handle().await {
+			Ok(TempWarningStateChange::ChangeToCloseWindow) => println!("ChangeToCloseWindow"),
+			Ok(TempWarningStateChange::ChangeToWarningTempNoWind) => {
 				println!("ChangeToWarningTempNoWind")
 			}
-			TempWarningStateChange::ChangeToWarningTemp => println!("ChangeToWarningTemp"),
-			TempWarningStateChange::ChangeToRemoveWarning => println!("ChangeToRemoveWarning"),
-			TempWarningStateChange::None => println!("None"),
+			Ok(TempWarningStateChange::ChangeToWarningTemp) => println!("ChangeToWarningTemp"),
+			Ok(TempWarningStateChange::ChangeToRemoveWarning) => println!("ChangeToRemoveWarning"),
+			Ok(TempWarningStateChange::None) => println!("None"),
+			Err(error) => println!("Error"),
 		}
 	}
 
