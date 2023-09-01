@@ -60,9 +60,6 @@ const REG_GLOBAL_RADIATION: u16 = 0x8913;
 const REG_PITCH_MAGNETIC_COMPASS_NS: u16 = 0x8915;
 const REG_ROLL_MAGNETIC_COMPASS_EW: u16 = 0x8917;
 
-//OpenSenseMap
-const UPDATE_FREQUENCY: u32 = 0; // 1min
-
 //Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
 const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
 	("64cb602193c69500072a5813", REG_MEAN_WIND_SPEED, 10.0, 'u'),
@@ -192,7 +189,6 @@ pub struct ClimaSensorUS {
 	opensensebox_id: String,
 	opensense_access_token: String,
 	warning_active: TempWarning,
-	opensensemap_counter: u32,
 }
 
 impl ClimaSensorUS {
@@ -210,7 +206,6 @@ impl ClimaSensorUS {
 			opensensebox_id: "0".to_string(),
 			opensense_access_token: "0".to_string(),
 			warning_active: TempWarning::None,
-			opensensemap_counter: 0,
 		}
 	}
 
@@ -220,7 +215,6 @@ impl ClimaSensorUS {
 			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
 			opensense_access_token: config.get::<String>("weatherstation/opensensemap/token"),
 			warning_active: TempWarning::None,
-			opensensemap_counter: 0,
 		};
 		if config.get_bool("weatherstation/enable") {
 			if let Err(error) = s.init() {
@@ -295,14 +289,9 @@ impl ClimaSensorUS {
 					temp, wind
 				);
 				//check if new data should be published to opensensemap.org
-				if self.opensensemap_counter == UPDATE_FREQUENCY {
-					self.opensensemap_counter = 0;
-					match self.publish_to_opensensemap() {
-						Ok(_) => {}
-						Err(error) => return Err(error),
-					}
-				} else {
-					self.opensensemap_counter += 1;
+				match self.publish_to_opensensemap() {
+					Ok(_) => {}
+					Err(error) => return Err(error),
 				}
 
 				Ok(self.set_warning_active(temp, wind))
@@ -493,7 +482,6 @@ mod tests {
 			opensensebox_id: "null".to_string(),
 			opensense_access_token: "null".to_string(),
 			warning_active: TempWarning::None,
-			opensensemap_counter: 0,
 		};
 
 		assert!(clima_sens.set_warning_active(15.0, 0.1) == TempWarningStateChange::None);

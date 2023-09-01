@@ -29,6 +29,7 @@ use systemstat::{Platform, System};
 use bat::Bat;
 use buttons::Buttons;
 use buttons::StateChange;
+use sensors::{Sensors, SensorsChange};
 use clima_sensor_us::{ClimaSensorUS, TempWarningStateChange};
 use config::Config;
 use environment::AirQualityChange;
@@ -45,6 +46,9 @@ use watchdog::Watchdog;
 
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio::time::{interval, sleep};
+
+use std::fs::File;
+use std::io::BufReader;
 
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
@@ -379,7 +383,8 @@ async fn nextcloud_loop(
 	// Or should we use a seperate long running thread
 	// to receive commands?
 }
-
+/// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
+/// So we dont need to run it all few seconds.
 async fn garage_loop(
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
@@ -389,19 +394,24 @@ async fn garage_loop(
 	match garage.handle() {
 		GarageChange::None => (),
 		GarageChange::PressedTasterEingangOben => {
-			nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+			// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
+
+			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
 				"💡 Pressed at entrance top switch. Switch lights in garage. {}",
 				buttons.switch_lights(true, false)
-			)));
+			)));*/
+			command_sender.send(CommandToButtons::SwitchLights(true, false));
 		}
 		GarageChange::PressedTasterTorOben => {
-			nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
 				"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
 				buttons.switch_lights(true, true)
-			)));
+			)));*/
+			command_sender.send(CommandToButtons::SwitchLights(true, true));
 		}
 		GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
-			buttons.open_door();
+			//buttons.open_door();
+			command_sender.send(CommandToButtons::OpenDoor);
 		}
 
 		GarageChange::ReachedTorEndposition => {
@@ -415,14 +425,39 @@ async fn garage_loop(
 	}
 }
 
-async fn sensors_loop(nextcloud_sender: Sender<NextcloudEvent>) {}
+async fn sensors_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<(), Error>{
+	let mut config = Config::new(CONFIG_PARENT);
+	let mut sensors = Sensors::new(config);
+	let device_path = config.get::<String>("sensors/device");
+	let device_file = File::open(device_path)?;
+	let reader = BufReader::new(device_file);
+
+	for l in reader.lines() {
+		match sensors.update(line) {
+			SensorsChange::None => (),
+			SensorsChange::Alarm(w) => {
+				nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)));
+				/*
+				state.set("alarm/fire", &w.to_string());
+				sighup.store(true, Ordering::Relaxed);
+				exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w));
+				*/
+			}
+			SensorsChange::Chat(w) => {
+				nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Fire Chat {}", w)));
+			}
+		}
+	}
+	Ok(())
+}
 
 async fn modir_loop(nextcloud_sender: Sender<NextcloudEvent>) {
 	let mut config = Config::new(CONFIG_PARENT);
-	let mut interval = interval(Duration::from_secs(1));
+	let mut interval = interval(Duration::from_secs(config.get::<u64>("ir/data/interval")));
 
-	match ModIR::new(&mut config) {
-		Ok(ir_temp) => loop {
+	match ModIR::new(&mut config).as_mut() {
+		Ok(ir_temp) => 
+		loop {
 			match ir_temp.handle() {
 				Ok(state) => match state {
 					IrTempStateChange::None => (),
@@ -507,7 +542,7 @@ async fn env_loop(
 	command_sender: Sender<CommandToButtons>,
 ) -> Result<(), Error> {
 	let mut config = Config::new(CONFIG_PARENT);
-	let mut interval = interval(Duration::from_secs(60));
+	let mut interval = interval(Duration::from_secs(config.get::<u64>("environment/data/interval")));
 	let mut enabled = true;
 
 	let mut environment = Environment::new(&mut config);
@@ -613,9 +648,9 @@ async fn env_loop(
 
 async fn weatherstation_loop(nextcloud_sender: Sender<NextcloudEvent>) {
 	let mut config = Config::new(CONFIG_PARENT);
-	let mut interval = interval(Duration::from_secs(1));
+	let mut interval = interval(Duration::from_secs(config.get::<u64>("weatherstation/data/interval")));
 
-	match ClimaSensorUS::new(&mut config) {
+	match ClimaSensorUS::new(&mut config).as_mut() {
 		Ok(weath_st) => loop {
 			match weath_st.handle() {
 				Ok(TempWarningStateChange::ChangeToCloseWindow) => {
@@ -915,7 +950,8 @@ async fn button_loop(
 enum CommandToButtons {
 	OpenDoor,
 	TurnOnLight,
-	RingBell(u16, u16), // maybe implement it with interval
+	RingBell(u16, u16),// maybe implement it with interval
+	SwitchLights(bool, bool) // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 	                    // TODO Add more
 }
 
