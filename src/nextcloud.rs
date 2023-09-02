@@ -1,5 +1,5 @@
-use std::{collections::HashMap, sync::Arc};
 use crate::config::Config;
+use std::collections::HashMap;
 
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},

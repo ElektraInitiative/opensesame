@@ -74,7 +74,7 @@ impl Config<'_> {
 }
 
 impl Sensors {
-	pub fn new(config: &mut Config) -> Self {
+	pub fn new(config: &Config) -> Self {
 		Self {
 			init: false,
 			sensors: [

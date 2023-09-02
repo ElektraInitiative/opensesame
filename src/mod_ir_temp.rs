@@ -55,7 +55,7 @@ impl ModIR {
 
 	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
 	/// In case of an error, the error code is returned.
-	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
+	pub fn new(config: &Config) -> Result<Self, Error<LinuxI2CError>> {
 		let mut s: Self;
 		if config.get_bool("ir/enable") {
 			s = Self {
@@ -165,7 +165,6 @@ impl ModIR {
 					}
 				}
 				return Ok(self.set_handle_output(ambient_state, object_state));
-				
 			}
 			None => (),
 		}
