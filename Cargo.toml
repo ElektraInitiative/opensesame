@@ -2,7 +2,7 @@
 name = "opensesame"
 version = "0.7.9"
 authors = ["Opensesame Contributors"]
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 license = "BSD"
 description  = "Awesome home automation"
@@ -52,13 +52,13 @@ linux-embedded-hal = { version = "0.3", features = ["gpio_cdev"] }
 
 systemstat = "0.1.11"
 
-ssh2 = "0.9.3"
 chrono = "0.4.19"
 
 signal-hook = "0.3.14"
 signal-hook-tokio = "0.3.1"
 
 tokio = { version = "1.15.0", features = ["full"] }
+async-ssh2-tokio = "0.7.1"
 futures = "0.3.19"
 gettext-rs = "0.7.0"
 
