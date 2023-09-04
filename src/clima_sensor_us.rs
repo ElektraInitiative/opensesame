@@ -207,7 +207,7 @@ impl ClimaSensorUS {
 		}
 	}
 
-	pub fn new(config: &Config) -> Result<Self, libmodbus::Error> {
+	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
 		let mut s = Self {
 			ctx: None,
 			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),

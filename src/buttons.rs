@@ -103,7 +103,7 @@ const RELAY_LICHT_INNEN: u8 = 0x01 << 1;
 const PINS2_INIT: u8 = 0b01100000;
 
 impl Buttons {
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		let mut s = Self {
 			sequence: vec![],
 

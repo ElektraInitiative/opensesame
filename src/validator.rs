@@ -16,7 +16,7 @@ pub enum Validation {
 }
 
 impl Validator {
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		Self {
 			users: config.get_hash_map_vec_u8("validator"),
 			timeout: 0,

@@ -107,7 +107,7 @@ fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity:
 }
 
 impl Environment {
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		let dev_name = config.get::<String>("environment/device");
 		if dev_name == "/dev/null" {
 			Self {

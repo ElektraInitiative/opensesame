@@ -41,7 +41,7 @@ pub struct Garage {
 }
 
 impl Garage {
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		Self {
 			line_handles: if config.get_bool("garage/enable") {
 				let mut chip = Chip::new("/dev/gpiochip0").unwrap();

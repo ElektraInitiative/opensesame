@@ -21,7 +21,7 @@ pub struct Nextcloud {
 }
 
 impl Nextcloud {
-	pub fn new(config: &Config) -> Self {
+	pub fn new(config: &mut Config) -> Self {
 		let mut headers = HeaderMap::new();
 		headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
 		headers.insert(ACCEPT, "application/json".parse().unwrap());

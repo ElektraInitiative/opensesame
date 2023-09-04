@@ -52,7 +52,7 @@ const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-fn play_audio_file(file: &str, arg: &str) -> Result<(), Error> {
+fn play_audio_file(file: String, arg: String) -> Result<(), Error> {
 	if file != "/dev/null" {
 		thread::Builder::new()
 			.name(String::from("ogg123"))
@@ -169,7 +169,7 @@ async fn garage_loop(
 
 async fn sensors_loop(
 	mut sensors: Sensors,
-	device_path: &str,
+	device_path: String,
 	nextcloud_sender: Sender<NextcloudEvent>,
 ) -> Result<(), Error> {
 	let device_file = File::open(device_path).await?;
@@ -439,12 +439,12 @@ async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) {}
 async fn button_loop(
 	mut buttons: Buttons,
 	mut validator: Validator,
-	time_format: &str,
-	startup_time: &str,
+	time_format: String,
+	startup_time: String,
 	command_receiver: Receiver<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	garage_enabled: bool,
-	audio_bell: &str,
+	audio_bell: String,
 	location_latitude: f64,
 	location_longitude: f64,
 ) -> Result<(), Error> {
@@ -457,7 +457,7 @@ async fn button_loop(
 					if now.hour() >= 7 && now.hour() <= 21 {
 						buttons.ring_bell(2, 5);
 						if garage_enabled {
-							play_audio_file(audio_bell, "--quiet")?;
+							play_audio_file(audio_bell.clone(), "--quiet".to_string().clone())?;
 							thread::Builder::new()
 								.name(String::from("killall to ring bell"))
 								.spawn(move || {
@@ -520,6 +520,7 @@ async fn button_loop(
 					.await;
 			}
 			Ok(StateChange::None) => (),
+			Ok(StateChange::Err(_)) => (),
 			Err(error) => {
 				return Err(Error::new(ErrorKind::ConnectionRefused, error));
 			}
@@ -621,7 +622,7 @@ enum CommandToButtons {
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-	let config = Config::new(CONFIG_PARENT);
+	let mut config = Config::new(CONFIG_PARENT);
 	let state = Config::new(STATE_PARENT);
 
 	let date_time_format = &config.get::<String>("nextcloud/format/datetime");
@@ -641,7 +642,7 @@ async fn main() -> io::Result<()> {
 	let bat_enabled = config.get_bool("bat/enable");
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 
-	let mut nextcloud = Nextcloud::new(&config);
+	let nextcloud = Nextcloud::new(&mut config);
 	tokio::spawn(nextcloud_loop(
 		nextcloud,
 		command_sender.clone(),
@@ -652,7 +653,7 @@ async fn main() -> io::Result<()> {
 		if !buttons_enabled {
 			panic!("Garage depends on buttons!");
 		}
-		let garage = Garage::new(&config);
+		let garage = Garage::new(&mut config);
 		tokio::spawn(garage_loop(
 			garage,
 			command_sender.clone(),
@@ -663,37 +664,37 @@ async fn main() -> io::Result<()> {
 	if buttons_enabled {
 		let time_format = config.get::<String>("nextcloud/format/time");
 		let garage_enabled = config.get_bool("garage/enable");
-		let audio_bell = &config.get::<String>("audio/bell");
-		let location_latitude = config.get::<f64>("location/latitude"),
-		let location_longitude = config.get::<f64>("location/longitude"),
-		let mut buttons = Buttons::new(&config);
-		let mut validator = Validator::new(&config);
+		let audio_bell = config.get::<String>("audio/bell");
+		let location_latitude = config.get::<f64>("location/latitude");
+		let location_longitude = config.get::<f64>("location/longitude");
+		let mut buttons = Buttons::new(&mut config);
+		let mut validator = Validator::new(&mut config);
 		tokio::spawn(button_loop(
 			buttons,
 			validator,
-			&time_format,
-			&startup_time,
+			time_format.to_string(),
+			startup_time.to_string(),
 			command_receiver,
 			nextcloud_sender.clone(),
 			garage_enabled,
-			audio_bell,
+			audio_bell.to_string(),
 			location_latitude,
 			location_longitude
 		));
 	}
 
 	if sensors_enabled {
-		let mut sensors = Sensors::new(&config);
+		let mut sensors = Sensors::new(&mut config);
 		let device_path = config.get::<String>("sensors/device");
 		tokio::spawn(sensors_loop(
 			sensors,
-			&device_path,
+			device_path.to_string(),
 			nextcloud_sender.clone(),
 		));
 	}
 
 	if modir_enabled {
-		let mod_ir_result = ModIR::new(&config);
+		let mod_ir_result = ModIR::new(&mut config);
 		match mod_ir_result {
 			Ok(mod_ir) => {
 				let mut interval =
@@ -722,11 +723,11 @@ async fn main() -> io::Result<()> {
 		let mut interval = interval(Duration::from_secs(
 			config.get::<u64>("environment/data/interval"),
 		));
-		let mut environment = Environment::new(&config);
+		let mut environment = Environment::new(&mut config);
 		tokio::spawn(env_loop(environment, interval, nextcloud_sender.clone(), command_sender.clone()));
 	}
 
-	if weatherstation_enabled {
+	/*if weatherstation_enabled {
 		let clima_sensor_result = ClimaSensorUS::new(&config);
 		let interval = interval(Duration::from_secs(config.get::<u64>("weatherstation/data/interval")));
 		match clima_sensor_result {
@@ -743,7 +744,7 @@ async fn main() -> io::Result<()> {
 			}
 		}
 
-	}
+	}*/
 
 	if bat_enabled {
 		tokio::spawn(bat_loop(nextcloud_sender.clone()));
