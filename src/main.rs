@@ -14,7 +14,9 @@ mod ssh;
 mod validator;
 mod watchdog;
 
+use futures::future::join_all;
 use mlx9061x::Error as MlxError;
+use reqwest::Url;
 use std::io::{Error, ErrorKind};
 use std::panic;
 use std::sync::Arc;
@@ -95,11 +97,14 @@ enum NextcloudEvent {
 	SetStatusDoor(String),
 }
 
-async fn nextcloud_loop(
+async fn nextcloud_chat_loop(
 	mut nextcloud: Nextcloud,
 	command_sender: Sender<CommandToButtons>,
 	mut nextcloud_receiver: Receiver<NextcloudEvent>,
-) {
+) -> Result<(), Error> {
+	nextcloud
+		.send_message(String::from("Nextcloud stated..."))
+		.await;
 	while let Some(event) = nextcloud_receiver.recv().await {
 		match event {
 			NextcloudEvent::Chat(message) => nextcloud.send_message(message).await,
@@ -110,9 +115,26 @@ async fn nextcloud_loop(
 			NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message).await,
 		}
 	}
+	Ok(())
 	// TODO: use try_recv and listen to chat commands
 	// Or should we use a seperate long running thread
 	// to receive commands?
+}
+
+async fn nextcloud_commands_loop() -> Result<(), Error> {
+	let url =
+		Url::parse("wss://your-nextcloud-instance.com/ocs/v2.php/apps/spreed/api/v1/chat/user");
+	// while let Some(event) = nextcloud_receiver.recv().await {
+	// 	match event {
+	// 		NextcloudEvent::Chat(message) => nextcloud.send_message(message).await,
+	// 		NextcloudEvent::Ping(message) => nextcloud.ping(message).await,
+	// 		NextcloudEvent::Licht(message) => nextcloud.licht(message).await,
+	// 		NextcloudEvent::SetStatusOnline(message) => nextcloud.set_info_online(message).await,
+	// 		NextcloudEvent::SetStatusEnv(message) => nextcloud.set_info_environment(message).await,
+	// 		NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message).await,
+	// 	}
+	// }
+	Ok(())
 }
 /// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
 /// So we dont need to run it all few seconds.
@@ -120,7 +142,7 @@ async fn garage_loop(
 	mut garage: Garage,
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) {
+) -> Result<(), Error> {
 	match garage.handle() {
 		GarageChange::None => (),
 		GarageChange::PressedTasterEingangOben => {
@@ -165,6 +187,7 @@ async fn garage_loop(
 				.await;
 		}
 	}
+	Ok(())
 }
 
 async fn sensors_loop(
@@ -203,7 +226,7 @@ async fn modir_loop(
 	mut ir_temp: ModIR,
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) {
+) -> Result<(), Error> {
 	loop {
 		match ir_temp.handle() {
 			Ok(state) => match state {
@@ -272,6 +295,7 @@ async fn modir_loop(
 		}
 		interval.tick().await;
 	}
+	Ok(())
 }
 
 // morgen nochmal überarbeiten; felx
@@ -395,7 +419,11 @@ async fn env_loop(
 	return Ok(());
 }
 
-async fn weatherstation_loop(mut clima_sensor: ClimaSensorUS, mut interval: Interval, nextcloud_sender: Sender<NextcloudEvent>) {
+async fn weatherstation_loop(
+	mut clima_sensor: ClimaSensorUS,
+	mut interval: Interval,
+	nextcloud_sender: Sender<NextcloudEvent>,
+) -> Result<(), Error> {
 	loop {
 		let f = clima_sensor.handle();
 		match f.await {
@@ -409,17 +437,16 @@ async fn weatherstation_loop(mut clima_sensor: ClimaSensorUS, mut interval: Inte
 						"🌡️ Temperature above {} °C and no Wind",
 						ClimaSensorUS::NO_WIND_TEMP
 					),
-					TempWarningStateChange::ChangeToWarningTemp => gettext!(
-						"🌡️ Temperature above {} °C",
-						ClimaSensorUS::WARNING_TEMP
-					),
+					TempWarningStateChange::ChangeToWarningTemp => {
+						gettext!("🌡️ Temperature above {} °C", ClimaSensorUS::WARNING_TEMP)
+					}
 					TempWarningStateChange::ChangeToRemoveWarning => gettext!(
 						"🌡 Temperature again under {} °C, warning was removed",
 						ClimaSensorUS::CANCLE_TEMP
 					),
 				};
 				nextcloud_sender.send(NextcloudEvent::Chat(message)).await;
-			},
+			}
 			Ok(None) => (),
 			Err(error) => {
 				nextcloud_sender
@@ -434,7 +461,9 @@ async fn weatherstation_loop(mut clima_sensor: ClimaSensorUS, mut interval: Inte
 	}
 }
 
-async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) {}
+async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<(), Error> {
+	Ok(())
+}
 
 async fn button_loop(
 	mut buttons: Buttons,
@@ -643,22 +672,25 @@ async fn main() -> io::Result<()> {
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 
 	let nextcloud = Nextcloud::new(&mut config);
-	tokio::spawn(nextcloud_loop(
+
+	let mut tasks = vec![];
+
+	tasks.push(tokio::spawn(nextcloud_chat_loop(
 		nextcloud,
 		command_sender.clone(),
 		nextcloud_receiver,
-	));
+	)));
 
 	if garage_enabled {
 		if !buttons_enabled {
 			panic!("Garage depends on buttons!");
 		}
 		let garage = Garage::new(&mut config);
-		tokio::spawn(garage_loop(
+		tasks.push(tokio::spawn(garage_loop(
 			garage,
 			command_sender.clone(),
 			nextcloud_sender.clone(),
-		));
+		)));
 	}
 
 	if buttons_enabled {
@@ -669,7 +701,7 @@ async fn main() -> io::Result<()> {
 		let location_longitude = config.get::<f64>("location/longitude");
 		let mut buttons = Buttons::new(&mut config);
 		let mut validator = Validator::new(&mut config);
-		tokio::spawn(button_loop(
+		tasks.push(tokio::spawn(button_loop(
 			buttons,
 			validator,
 			time_format.to_string(),
@@ -679,18 +711,18 @@ async fn main() -> io::Result<()> {
 			garage_enabled,
 			audio_bell.to_string(),
 			location_latitude,
-			location_longitude
-		));
+			location_longitude,
+		)));
 	}
 
 	if sensors_enabled {
 		let mut sensors = Sensors::new(&mut config);
 		let device_path = config.get::<String>("sensors/device");
-		tokio::spawn(sensors_loop(
+		tasks.push(tokio::spawn(sensors_loop(
 			sensors,
 			device_path.to_string(),
 			nextcloud_sender.clone(),
-		));
+		)));
 	}
 
 	if modir_enabled {
@@ -699,7 +731,11 @@ async fn main() -> io::Result<()> {
 			Ok(mod_ir) => {
 				let mut interval =
 					interval(Duration::from_secs(config.get::<u64>("ir/data/interval")));
-				tokio::spawn(modir_loop(mod_ir, interval, nextcloud_sender.clone()));
+				tasks.push(tokio::spawn(modir_loop(
+					mod_ir,
+					interval,
+					nextcloud_sender.clone(),
+				)));
 			}
 			// TODO: Streamline consistent error handling!
 			Err(error_typ) => {
@@ -724,7 +760,12 @@ async fn main() -> io::Result<()> {
 			config.get::<u64>("environment/data/interval"),
 		));
 		let mut environment = Environment::new(&mut config);
-		tokio::spawn(env_loop(environment, interval, nextcloud_sender.clone(), command_sender.clone()));
+		tasks.push(tokio::spawn(env_loop(
+			environment,
+			interval,
+			nextcloud_sender.clone(),
+			command_sender.clone(),
+		)));
 	}
 
 	/*if weatherstation_enabled {
@@ -732,7 +773,7 @@ async fn main() -> io::Result<()> {
 		let interval = interval(Duration::from_secs(config.get::<u64>("weatherstation/data/interval")));
 		match clima_sensor_result {
 			Ok(clima_sensor) => {
-				tokio::spawn(weatherstation_loop(clima_sensor, interval, nextcloud_sender.clone()));
+				tasks.push(tokio::spawn(weatherstation_loop(clima_sensor, interval, nextcloud_sender.clone()));
 			},
 			Err(error) => {
 				nextcloud_sender
@@ -747,7 +788,9 @@ async fn main() -> io::Result<()> {
 	}*/
 
 	if bat_enabled {
-		tokio::spawn(bat_loop(nextcloud_sender.clone()));
+		tasks.push(tokio::spawn(bat_loop(nextcloud_sender.clone())));
 	}
+
+	join_all(tasks).await;
 	Ok(())
 }
