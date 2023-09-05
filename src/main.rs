@@ -140,48 +140,51 @@ async fn garage_loop(
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
 ) -> Result<(), OpensesameError> {
-	match garage.handle() {
-		GarageChange::None => (),
-		GarageChange::PressedTasterEingangOben => {
-			// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
+	let mut interval = interval(Duration::from_millis(10));
+	loop {
+		match garage.handle() {
+			GarageChange::None => (),
+			GarageChange::PressedTasterEingangOben => {
+				// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
 
-			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-				"💡 Pressed at entrance top switch. Switch lights in garage. {}",
-				buttons.switch_lights(true, false)
-			)));*/
-			command_sender
-				.send(CommandToButtons::SwitchLights(true, false))
-				.await?;
-		}
-		GarageChange::PressedTasterTorOben => {
-			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-				"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
-				buttons.switch_lights(true, true)
-			)));*/
-			command_sender
-				.send(CommandToButtons::SwitchLights(true, true))
-				.await?;
-		}
-		GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
-			//buttons.open_door();
-			command_sender.send(CommandToButtons::OpenDoor).await?;
-		}
+				/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+					"💡 Pressed at entrance top switch. Switch lights in garage. {}",
+					buttons.switch_lights(true, false)
+				)));*/
+				command_sender
+					.send(CommandToButtons::SwitchLights(true, false, "💡 Pressed at entrance top switch. Switch lights in garage".to_string()))
+					.await?;
+			}
+			GarageChange::PressedTasterTorOben => {
+				/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+					"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
+					buttons.switch_lights(true, true)
+				)));*/
+				command_sender
+					.send(CommandToButtons::SwitchLights(true, true, "💡 Pressed top switch at garage door. Switch lights in and out garage".to_string()))
+					.await?;
+			}
+			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
+				//buttons.open_door();
+				command_sender.send(CommandToButtons::OpenDoor).await?;
+			}
 
-		GarageChange::ReachedTorEndposition => {
-			nextcloud_sender
-				.send(NextcloudEvent::SetStatusDoor(String::from("🔒 Open")))
-				.await?;
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(String::from("🔒 Garage door closed.")))
-				.await?;
-		}
-		GarageChange::LeftTorEndposition => {
-			nextcloud_sender
-				.send(NextcloudEvent::SetStatusDoor(String::from("🔓 Closed")))
-				.await?;
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(String::from("🔓 Garage door open")))
-				.await?;
+			GarageChange::ReachedTorEndposition => {
+				nextcloud_sender
+					.send(NextcloudEvent::SetStatusDoor(String::from("🔒 Open")))
+					.await?;
+				nextcloud_sender
+					.send(NextcloudEvent::Chat(String::from("🔒 Garage door closed.")))
+					.await?;
+			}
+			GarageChange::LeftTorEndposition => {
+				nextcloud_sender
+					.send(NextcloudEvent::SetStatusDoor(String::from("🔓 Closed")))
+					.await?;
+				nextcloud_sender
+					.send(NextcloudEvent::Chat(String::from("🔓 Garage door open")))
+					.await?;
+			}
 		}
 		interval.tick().await;
 	}
@@ -305,7 +308,7 @@ async fn env_loop(
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	command_sender: Sender<CommandToButtons>,
-) -> Result<(), Error> {
+) -> Result<(), OpensesameError> {
 	let mut old_airquality = AirQualityChange::Error;
 	if environment.board5a.is_some() {
 		sleep(Duration::from_secs(1)).await;
@@ -326,7 +329,6 @@ async fn env_loop(
 			}
 		}*/
 		if environment.handle() {
-			println!("Testing air quality new: {:?} - old: {:?}",environment.air_quality, old_airquality);
 			if environment.air_quality != old_airquality {
 				old_airquality = environment.air_quality;
 				nextcloud_sender.send(NextcloudEvent::SetStatusEnv(format!("💨 {:?}",environment.air_quality))).await;
@@ -340,7 +342,7 @@ async fn env_loop(
 								environment.status,
 								environment
 							)))
-							.await;
+							.await?;
 						break;
 					}
 					AirQualityChange::Ok => {
@@ -349,7 +351,7 @@ async fn env_loop(
 								"💨 Airquality is ok. {}",
 								environment
 							)))
-							.await;
+							.await?;
 					}
 					AirQualityChange::Moderate => {
 						nextcloud_sender
@@ -357,7 +359,7 @@ async fn env_loop(
 								"💩 Airquality is moderate. {}",
 								environment
 							)))
-							.await;
+							.await?;
 					}
 					AirQualityChange::Bad => {
 						nextcloud_sender
@@ -365,7 +367,7 @@ async fn env_loop(
 								"💩 Airquality is bad! {}",
 								environment
 							)))
-							.await;
+							.await?;
 					}
 
 					AirQualityChange::FireAlarm => {
@@ -377,7 +379,7 @@ async fn env_loop(
 								"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
 								environment
 							)))
-							.await;
+							.await?;
 
 						// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
 						command_sender.send(CommandToButtons::RingBell(20, 0)).await;
@@ -411,12 +413,12 @@ async fn env_loop(
 								"🚨 Possible fire alarm! (don't ring yet). {}",
 								environment.to_string()
 							)))
-							.await;
+							.await?;
 					}
 				};
 			}
 		}
-		interval.tick().await;
+		interval.tick().await?;
 	}
 	return Ok(());
 }
