@@ -77,7 +77,7 @@ const ALG_RESULT_LENGTH: u8 = 5;
 
 // const BOARD77: u16 = 0x77;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum AirQualityChange {
 	Error,
 
