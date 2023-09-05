@@ -143,49 +143,53 @@ async fn garage_loop(
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
 ) -> Result<(), Error> {
-	match garage.handle() {
-		GarageChange::None => (),
-		GarageChange::PressedTasterEingangOben => {
-			// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
+	let mut interval = interval(Duration::from_millis(10));
+	loop {
+		match garage.handle() {
+			GarageChange::None => (),
+			GarageChange::PressedTasterEingangOben => {
+				// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
 
-			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-				"💡 Pressed at entrance top switch. Switch lights in garage. {}",
-				buttons.switch_lights(true, false)
-			)));*/
-			command_sender
-				.send(CommandToButtons::SwitchLights(true, false))
-				.await;
-		}
-		GarageChange::PressedTasterTorOben => {
-			/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-				"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
-				buttons.switch_lights(true, true)
-			)));*/
-			command_sender
-				.send(CommandToButtons::SwitchLights(true, true))
-				.await;
-		}
-		GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
-			//buttons.open_door();
-			command_sender.send(CommandToButtons::OpenDoor).await;
-		}
+				/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+					"💡 Pressed at entrance top switch. Switch lights in garage. {}",
+					buttons.switch_lights(true, false)
+				)));*/
+				command_sender
+					.send(CommandToButtons::SwitchLights(true, false, "💡 Pressed at entrance top switch. Switch lights in garage".to_string()))
+					.await;
+			}
+			GarageChange::PressedTasterTorOben => {
+				/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+					"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
+					buttons.switch_lights(true, true)
+				)));*/
+				command_sender
+					.send(CommandToButtons::SwitchLights(true, true, "💡 Pressed top switch at garage door. Switch lights in and out garage".to_string()))
+					.await;
+			}
+			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
+				//buttons.open_door();
+				command_sender.send(CommandToButtons::OpenDoor).await;
+			}
 
-		GarageChange::ReachedTorEndposition => {
-			nextcloud_sender
-				.send(NextcloudEvent::SetStatusDoor(String::from("🔒 Open")))
-				.await;
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(String::from("🔒 Garage door closed.")))
-				.await;
+			GarageChange::ReachedTorEndposition => {
+				nextcloud_sender
+					.send(NextcloudEvent::SetStatusDoor(String::from("🔒 Open")))
+					.await;
+				nextcloud_sender
+					.send(NextcloudEvent::Chat(String::from("🔒 Garage door closed.")))
+					.await;
+			}
+			GarageChange::LeftTorEndposition => {
+				nextcloud_sender
+					.send(NextcloudEvent::SetStatusDoor(String::from("🔓 Closed")))
+					.await;
+				nextcloud_sender
+					.send(NextcloudEvent::Chat(String::from("🔓 Garage door open")))
+					.await;
+			}
 		}
-		GarageChange::LeftTorEndposition => {
-			nextcloud_sender
-				.send(NextcloudEvent::SetStatusDoor(String::from("🔓 Closed")))
-				.await;
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(String::from("🔓 Garage door open")))
-				.await;
-		}
+		interval.tick().await;
 	}
 	Ok(())
 }
@@ -305,6 +309,7 @@ async fn env_loop(
 	nextcloud_sender: Sender<NextcloudEvent>,
 	command_sender: Sender<CommandToButtons>,
 ) -> Result<(), Error> {
+	let mut old_airquality = AirQualityChange::Error;
 	if environment.board5a.is_some() {
 		sleep(Duration::from_secs(1)).await;
 		environment.init_ccs811();
@@ -324,96 +329,96 @@ async fn env_loop(
 			}
 		}*/
 		if environment.handle() {
-			nextcloud_sender
-				.send(NextcloudEvent::SetStatusEnv(format!(
-					"💨 {:?}",
-					environment.air_quality
-				)))
-				.await;
-			match environment.air_quality {
-				AirQualityChange::Error => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
-							environment.error,
-							environment.status,
-							environment
-						)))
-						.await;
-					break;
-				}
-				AirQualityChange::Ok => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"💨 Airquality is ok. {}",
-							environment
-						)))
-						.await;
-				}
-				AirQualityChange::Moderate => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"💩 Airquality is moderate. {}",
-							environment
-						)))
-						.await;
-				}
-				AirQualityChange::Bad => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"💩 Airquality is bad! {}",
-							environment
-						)))
-						.await;
-				}
+			println!("Testing air quality new: {:?} - old: {:?}",environment.air_quality, old_airquality);
+			if environment.air_quality != old_airquality {
+				old_airquality = environment.air_quality;
+				nextcloud_sender.send(NextcloudEvent::SetStatusEnv(format!("💨 {:?}",environment.air_quality))).await;
 
-				AirQualityChange::FireAlarm => {
-					() //wofür ist dieser return value? bzw. was sollte er im alten bewirken??
-				}
-				AirQualityChange::FireBell => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
-							environment
-						)))
-						.await;
+				match environment.air_quality {
+					AirQualityChange::Error => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
+								environment.error,
+								environment.status,
+								environment
+							)))
+							.await;
+						break;
+					}
+					AirQualityChange::Ok => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"💨 Airquality is ok. {}",
+								environment
+							)))
+							.await;
+					}
+					AirQualityChange::Moderate => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"💩 Airquality is moderate. {}",
+								environment
+							)))
+							.await;
+					}
+					AirQualityChange::Bad => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"💩 Airquality is bad! {}",
+								environment
+							)))
+							.await;
+					}
 
-					// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
-					command_sender.send(CommandToButtons::RingBell(20, 0)).await;
-					/*if config.get_bool("garage/enable") {
-						let file = config.get::<String>("audio/alarm");
-						let arg = "--quiet".to_string();
-						//play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
-						if file != "/dev/null" {
+					AirQualityChange::FireAlarm => {
+						() //wofür ist dieser return value? bzw. was sollte er im alten bewirken??
+					}
+					AirQualityChange::FireBell => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
+								environment
+							)))
+							.await;
+
+						// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
+						command_sender.send(CommandToButtons::RingBell(20, 0)).await;
+						/*if config.get_bool("garage/enable") {
+							let file = config.get::<String>("audio/alarm");
+							let arg = "--quiet".to_string();
+							//play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
+							if file != "/dev/null" {
+								thread::Builder::new()
+									.name("ogg123".to_string())
+									.spawn(move || {
+										std::process::Command::new("ogg123")
+											.arg("--quiet")
+											.arg(arg)
+											.arg(file)
+											.status()
+											.expect(&gettext("failed to execute process"));
+									})?;
+							}
+							// build thread in other thread ??? maybe ssh in external thread/task?
 							thread::Builder::new()
-								.name("ogg123".to_string())
+								.name("killall to ring bell".to_string())
 								.spawn(move || {
-									std::process::Command::new("ogg123")
-										.arg("--quiet")
-										.arg(arg)
-										.arg(file)
-										.status()
-										.expect(&gettext("failed to execute process"));
+									exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
 								})?;
-						}
-						// build thread in other thread ??? maybe ssh in external thread/task?
-						thread::Builder::new()
-							.name("killall to ring bell".to_string())
-							.spawn(move || {
-								exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-							})?;
-					}*/
-				}
-				AirQualityChange::FireChat => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🚨 Possible fire alarm! (don't ring yet). {}",
-							environment.to_string()
-						)))
-						.await;
-				}
+						}*/
+					}
+					AirQualityChange::FireChat => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🚨 Possible fire alarm! (don't ring yet). {}",
+								environment.to_string()
+							)))
+							.await;
+					}
+				};
 			}
-		};
+		}
 		interval.tick().await;
 	}
 	return Ok(());
@@ -470,7 +475,7 @@ async fn button_loop(
 	mut validator: Validator,
 	time_format: String,
 	startup_time: String,
-	command_receiver: Receiver<CommandToButtons>,
+	mut command_receiver: Receiver<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	garage_enabled: bool,
 	audio_bell: String,
@@ -479,6 +484,25 @@ async fn button_loop(
 ) -> Result<(), Error> {
 	let mut interval = interval(Duration::from_millis(10));
 	loop {
+		if let Ok(command) = command_receiver.try_recv() {
+			match command {
+				CommandToButtons::OpenDoor => {
+					buttons.open_door();
+				},
+				CommandToButtons::RingBell(period,counter) =>{
+					buttons.ring_bell(period, counter);
+				},
+				CommandToButtons::SwitchLights(inside, outside, text) => {
+					nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+						"{}. {}",
+						text,
+						buttons.switch_lights(inside, outside)
+					))).await;
+				},
+				CommandToButtons::TurnOnLight => (),
+			}
+		}
+
 		match buttons.handle() {
 			Ok(StateChange::Pressed(button)) => match button {
 				buttons::BUTTON_BELL => {
@@ -644,8 +668,8 @@ async fn button_loop(
 enum CommandToButtons {
 	OpenDoor,
 	TurnOnLight,
-	RingBell(u16, u16), // maybe implement it with interval
-	SwitchLights(bool, bool), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
+	RingBell(u32, u32), // maybe implement it with interval
+	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 	                          // TODO Add more
 }
 
