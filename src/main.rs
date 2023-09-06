@@ -42,7 +42,7 @@ use nextcloud::{Nextcloud, NextcloudEvent};
 use pwr::Pwr;
 use sensors::{Sensors, SensorsChange};
 use ssh::exec_ssh_command;
-use types::OpensesameError;
+use types::ModuleError;
 use validator::Validation;
 use validator::Validator;
 use watchdog::Watchdog;
@@ -57,7 +57,7 @@ const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, arg: String) -> Result<(), OpensesameError> {
+async fn play_audio_file(file: String, arg: String) -> Result<(), ModuleError> {
 	if file != "/dev/null" {
 		Command::new("ogg123")
 			.arg("--quiet")
@@ -94,7 +94,7 @@ async fn garage_loop(
 	mut garage: Garage,
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<Never, OpensesameError> {
+) -> Result<Never, ModuleError> {
 	let mut interval = interval(Duration::from_millis(10));
 	loop {
 		match garage.handle() {
@@ -158,7 +158,7 @@ async fn sensors_loop(
 	mut sensors: Sensors,
 	device_path: String,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<Never, OpensesameError> {
+) -> Result<Never, ModuleError> {
 	let device_file = File::open(device_path).await.expect("error here");
 	let reader = BufReader::new(device_file);
 	println!("In sensor loop");
@@ -189,14 +189,14 @@ async fn sensors_loop(
 			}
 		}
 	}
-	Err(OpensesameError::new(String::from("sensors_loop exited")))
+	Err(ModuleError::new(String::from("sensors_loop exited")))
 }
 
 async fn modir_loop(
 	mut ir_temp: ModIR,
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<Never, OpensesameError> {
+) -> Result<Never, ModuleError> {
 	loop {
 		match ir_temp.handle() {
 			Ok(state) => match state {
@@ -273,7 +273,7 @@ async fn env_loop(
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	command_sender: Sender<CommandToButtons>,
-) -> Result<Never, OpensesameError> {
+) -> Result<Never, ModuleError> {
 	let mut old_airquality = AirQualityChange::Error;
 	if environment.board5a.is_some() {
 		sleep(Duration::from_secs(1)).await;
@@ -314,7 +314,7 @@ async fn env_loop(
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(error.clone()))
 							.await?;
-						return Err(OpensesameError::new(error));
+						return Err(ModuleError::new(error));
 					}
 					AirQualityChange::Ok => {
 						nextcloud_sender
@@ -399,7 +399,7 @@ async fn weatherstation_loop(
 	mut clima_sensor: ClimaSensorUS,
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<(), OpensesameError> {
+) -> Result<(), ModuleError> {
 	loop {
 		let f = clima_sensor.handle();
 		match f.await {
@@ -437,10 +437,8 @@ async fn weatherstation_loop(
 	}
 }
 
-async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<Never, OpensesameError> {
-	Err(OpensesameError::new(String::from(
-		"bat_loop not implemented",
-	)))
+async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<Never, ModuleError> {
+	Err(ModuleError::new(String::from("bat_loop not implemented")))
 }
 
 async fn button_loop(
@@ -454,7 +452,7 @@ async fn button_loop(
 	audio_bell: String,
 	location_latitude: f64,
 	location_longitude: f64,
-) -> Result<Never, OpensesameError> {
+) -> Result<Never, ModuleError> {
 	let mut interval = interval(Duration::from_millis(10));
 	let mut bell_task = Option::None;
 	loop {
@@ -647,7 +645,7 @@ pub enum CommandToButtons {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), OpensesameError> {
+async fn main() -> Result<(), ModuleError> {
 	let mut config = Config::new(CONFIG_PARENT);
 	let state = Config::new(STATE_PARENT);
 

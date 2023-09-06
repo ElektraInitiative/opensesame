@@ -1,4 +1,4 @@
-use crate::{config::Config, types::OpensesameError, CommandToButtons};
+use crate::{config::Config, types::ModuleError, CommandToButtons};
 use std::{collections::HashMap, future::Pending};
 
 use futures::{join, never::Never, try_join};
@@ -212,12 +212,12 @@ impl Nextcloud {
 		nextcloud_receiver: Receiver<NextcloudEvent>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
-	) -> Result<Never, OpensesameError> {
+	) -> Result<Never, ModuleError> {
 		try_join!(
 			self.clone().message_sender_loop(nextcloud_receiver),
 			self.command_loop(nextcloud_sender, command_sender)
 		)?;
-		Err(OpensesameError::new(String::from(
+		Err(ModuleError::new(String::from(
 			"Exit get_background_task loop!",
 		)))
 	}
@@ -225,7 +225,7 @@ impl Nextcloud {
 	async fn message_sender_loop(
 		mut self,
 		mut nextcloud_receiver: Receiver<NextcloudEvent>,
-	) -> Result<Never, OpensesameError> {
+	) -> Result<Never, ModuleError> {
 		self.send_message(String::from("Nextcloud stated...")).await;
 		while let Some(event) = nextcloud_receiver.recv().await {
 			match event {
@@ -238,7 +238,7 @@ impl Nextcloud {
 				NextcloudEvent::SetStatusDoor(message) => self.set_info_door(message).await,
 			}
 		}
-		Err(OpensesameError::new(String::from(
+		Err(ModuleError::new(String::from(
 			"Exit Nextcloud messagesender loop!",
 		)))
 	}
@@ -247,7 +247,7 @@ impl Nextcloud {
 		self,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
-	) -> Result<Never, OpensesameError> {
+	) -> Result<Never, ModuleError> {
 		let a = self
 			.send_message_once(
 				"Command chat started <explain command system>",

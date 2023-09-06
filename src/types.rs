@@ -3,45 +3,45 @@ use std::{error::Error, fmt};
 use tokio::sync::mpsc::error::SendError;
 
 #[derive(Debug, Clone)]
-pub struct OpensesameError {
+pub struct ModuleError {
 	reason: String,
 }
 
-impl OpensesameError {
+impl ModuleError {
 	pub fn new(reason: String) -> Self {
 		Self { reason }
 	}
 }
 
-impl Error for OpensesameError {}
+impl Error for ModuleError {}
 
-impl fmt::Display for OpensesameError {
+impl fmt::Display for ModuleError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "OpensesameErrorr: reason: {}", self.reason)
+		write!(f, "ModuleErrorr: reason: {}", self.reason)
 	}
 }
 
 // TODO: These are hacks for now:
 
-impl<T> From<SendError<T>> for OpensesameError {
+impl<T> From<SendError<T>> for ModuleError {
 	fn from(error: SendError<T>) -> Self {
-		OpensesameError {
+		ModuleError {
 			reason: format!("SendError: {}", error),
 		}
 	}
 }
 
-impl From<std::io::Error> for OpensesameError {
+impl From<std::io::Error> for ModuleError {
 	fn from(error: std::io::Error) -> Self {
-		OpensesameError {
+		ModuleError {
 			reason: format!("std::io::Error: {} {}", error.kind(), error),
 		}
 	}
 }
 
-impl From<LinuxI2CError> for OpensesameError {
+impl From<LinuxI2CError> for ModuleError {
 	fn from(error: LinuxI2CError) -> Self {
-		OpensesameError {
+		ModuleError {
 			reason: format!("LinuxI2CError: {}", error),
 		}
 	}
