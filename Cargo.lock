@@ -1416,6 +1416,7 @@ dependencies = [
  "linux-embedded-hal",
  "mlx9061x",
  "reqwest",
+ "serde_json",
  "serial_test",
  "signal-hook",
  "signal-hook-tokio",

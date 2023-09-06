@@ -62,6 +62,8 @@ async-ssh2-tokio = "0.7.1"
 futures = "0.3.19"
 gettext-rs = "0.7.0"
 
+serde_json = "1.0.105"
+
 serial_test = "0.4.0" # TODO, remove when issues.libelektra.org/4466 is fixed
 
 sunrise = "1.0.0"
