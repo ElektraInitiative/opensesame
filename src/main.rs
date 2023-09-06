@@ -16,6 +16,7 @@ mod validator;
 mod watchdog;
 
 use futures::future::join_all;
+use futures::never::Never;
 use mlx9061x::Error as MlxError;
 use reqwest::Url;
 use std::io::{Error, ErrorKind};
@@ -37,20 +38,20 @@ use environment::Environment;
 use garage::Garage;
 use garage::GarageChange;
 use mod_ir_temp::{IrTempStateChange, ModIR};
-use nextcloud::Nextcloud;
+use nextcloud::{Nextcloud, NextcloudEvent};
 use pwr::Pwr;
 use sensors::{Sensors, SensorsChange};
 use ssh::exec_ssh_command;
+use types::OpensesameError;
 use validator::Validation;
 use validator::Validator;
 use watchdog::Watchdog;
-use types::OpensesameError;
 
 use tokio::fs::File;
 use tokio::io::{self, AsyncBufReadExt, BufReader};
+use tokio::process::Command;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio::time::{interval, sleep, Interval};
-use tokio::process::Command;
 
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
@@ -62,7 +63,9 @@ async fn play_audio_file(file: String, arg: String) -> Result<(), OpensesameErro
 			.arg("--quiet")
 			.arg(arg)
 			.arg(file)
-			.status().await.unwrap();
+			.status()
+			.await
+			.unwrap();
 	}
 	Ok(())
 }
@@ -85,61 +88,13 @@ fn do_reset(watchdog: &mut Watchdog, nextcloud_sender: Sender<NextcloudEvent>, p
 	}
 }
 
-enum NextcloudEvent {
-	Ping(String),
-	Licht(String),
-	Chat(String),
-	SetStatusOnline(String),
-	SetStatusEnv(String),
-	SetStatusDoor(String),
-}
-
-async fn nextcloud_chat_loop(
-	mut nextcloud: Nextcloud,
-	command_sender: Sender<CommandToButtons>,
-	mut nextcloud_receiver: Receiver<NextcloudEvent>,
-) -> Result<(), OpensesameError> {
-	nextcloud
-		.send_message(String::from("Nextcloud stated..."))
-		.await;
-	while let Some(event) = nextcloud_receiver.recv().await {
-		match event {
-			NextcloudEvent::Chat(message) => nextcloud.send_message(message).await,
-			NextcloudEvent::Ping(message) => nextcloud.ping(message).await,
-			NextcloudEvent::Licht(message) => nextcloud.licht(message).await,
-			NextcloudEvent::SetStatusOnline(message) => nextcloud.set_info_online(message).await,
-			NextcloudEvent::SetStatusEnv(message) => nextcloud.set_info_environment(message).await,
-			NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message).await,
-		}
-	}
-	Ok(())
-	// TODO: use try_recv and listen to chat commands
-	// Or should we use a seperate long running thread
-	// to receive commands?
-}
-
-async fn nextcloud_commands_loop() -> Result<(), OpensesameError> {
-	let url =
-		Url::parse("wss://your-nextcloud-instance.com/ocs/v2.php/apps/spreed/api/v1/chat/user");
-	// while let Some(event) = nextcloud_receiver.recv().await {
-	// 	match event {
-	// 		NextcloudEvent::Chat(message) => nextcloud.send_message(message).await,
-	// 		NextcloudEvent::Ping(message) => nextcloud.ping(message).await,
-	// 		NextcloudEvent::Licht(message) => nextcloud.licht(message).await,
-	// 		NextcloudEvent::SetStatusOnline(message) => nextcloud.set_info_online(message).await,
-	// 		NextcloudEvent::SetStatusEnv(message) => nextcloud.set_info_environment(message).await,
-	// 		NextcloudEvent::SetStatusDoor(message) => nextcloud.set_info_door(message).await,
-	// 	}
-	// }
-	Ok(())
-}
 /// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
 /// So we dont need to run it all few seconds.
 async fn garage_loop(
 	mut garage: Garage,
 	command_sender: Sender<CommandToButtons>,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<(), OpensesameError> {
+) -> Result<Never, OpensesameError> {
 	let mut interval = interval(Duration::from_millis(10));
 	loop {
 		match garage.handle() {
@@ -152,7 +107,11 @@ async fn garage_loop(
 					buttons.switch_lights(true, false)
 				)));*/
 				command_sender
-					.send(CommandToButtons::SwitchLights(true, false, "💡 Pressed at entrance top switch. Switch lights in garage".to_string()))
+					.send(CommandToButtons::SwitchLights(
+						true,
+						false,
+						"💡 Pressed at entrance top switch. Switch lights in garage".to_string(),
+					))
 					.await?;
 			}
 			GarageChange::PressedTasterTorOben => {
@@ -161,7 +120,12 @@ async fn garage_loop(
 					buttons.switch_lights(true, true)
 				)));*/
 				command_sender
-					.send(CommandToButtons::SwitchLights(true, true, "💡 Pressed top switch at garage door. Switch lights in and out garage".to_string()))
+					.send(CommandToButtons::SwitchLights(
+						true,
+						true,
+						"💡 Pressed top switch at garage door. Switch lights in and out garage"
+							.to_string(),
+					))
 					.await?;
 			}
 			GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
@@ -188,14 +152,13 @@ async fn garage_loop(
 		}
 		interval.tick().await;
 	}
-	Ok(())
 }
 
 async fn sensors_loop(
 	mut sensors: Sensors,
 	device_path: String,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<(), OpensesameError> {
+) -> Result<Never, OpensesameError> {
 	let device_file = File::open(device_path).await.expect("error here");
 	let reader = BufReader::new(device_file);
 	println!("In sensor loop");
@@ -203,7 +166,10 @@ async fn sensors_loop(
 	let mut lines = reader.lines();
 	while let Some(line) = lines.next_line().await? {
 		match sensors.update(line.clone()) {
-			SensorsChange::None => {println!("None - Sensors - {}", line);()},
+			SensorsChange::None => {
+				println!("None - Sensors - {}", line);
+				()
+			}
 			SensorsChange::Alarm(w) => {
 				nextcloud_sender
 					.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)))
@@ -223,14 +189,14 @@ async fn sensors_loop(
 			}
 		}
 	}
-	Ok(())
+	Err(OpensesameError::new(String::from("sensors_loop exited")))
 }
 
 async fn modir_loop(
 	mut ir_temp: ModIR,
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<(), OpensesameError> {
+) -> Result<Never, OpensesameError> {
 	loop {
 		match ir_temp.handle() {
 			Ok(state) => match state {
@@ -299,7 +265,6 @@ async fn modir_loop(
 		}
 		interval.tick().await;
 	}
-	Ok(())
 }
 
 // morgen nochmal überarbeiten; felx
@@ -308,7 +273,7 @@ async fn env_loop(
 	mut interval: Interval,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	command_sender: Sender<CommandToButtons>,
-) -> Result<(), OpensesameError> {
+) -> Result<Never, OpensesameError> {
 	let mut old_airquality = AirQualityChange::Error;
 	if environment.board5a.is_some() {
 		sleep(Duration::from_secs(1)).await;
@@ -331,19 +296,25 @@ async fn env_loop(
 		if environment.handle() {
 			if environment.air_quality != old_airquality {
 				old_airquality = environment.air_quality;
-				nextcloud_sender.send(NextcloudEvent::SetStatusEnv(format!("💨 {:?}",environment.air_quality))).await;
+				nextcloud_sender
+					.send(NextcloudEvent::SetStatusEnv(format!(
+						"💨 {:?}",
+						environment.air_quality
+					)))
+					.await?;
 
 				match environment.air_quality {
 					AirQualityChange::Error => {
+						let error = gettext!(
+							"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
+							environment.error,
+							environment.status,
+							environment
+						);
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
-								"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
-								environment.error,
-								environment.status,
-								environment
-							)))
+							.send(NextcloudEvent::Chat(error.clone()))
 							.await?;
-						break;
+						return Err(OpensesameError::new(error));
 					}
 					AirQualityChange::Ok => {
 						nextcloud_sender
@@ -382,7 +353,9 @@ async fn env_loop(
 							.await?;
 
 						// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
-						command_sender.send(CommandToButtons::RingBell(20, 0)).await;
+						command_sender
+							.send(CommandToButtons::RingBell(20, 0))
+							.await?;
 						/*if config.get_bool("garage/enable") {
 							let file = config.get::<String>("audio/alarm");
 							let arg = "--quiet".to_string();
@@ -418,9 +391,8 @@ async fn env_loop(
 				};
 			}
 		}
-		interval.tick().await?;
+		interval.tick().await;
 	}
-	return Ok(());
 }
 
 async fn weatherstation_loop(
@@ -465,9 +437,10 @@ async fn weatherstation_loop(
 	}
 }
 
-
-async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<(), OpensesameError> {
-	Ok(())
+async fn bat_loop(nextcloud_sender: Sender<NextcloudEvent>) -> Result<Never, OpensesameError> {
+	Err(OpensesameError::new(String::from(
+		"bat_loop not implemented",
+	)))
 }
 
 async fn button_loop(
@@ -481,7 +454,7 @@ async fn button_loop(
 	audio_bell: String,
 	location_latitude: f64,
 	location_longitude: f64,
-) -> Result<(), OpensesameError> {
+) -> Result<Never, OpensesameError> {
 	let mut interval = interval(Duration::from_millis(10));
 	let mut bell_task = Option::None;
 	loop {
@@ -489,29 +462,34 @@ async fn button_loop(
 			match command {
 				CommandToButtons::OpenDoor => {
 					buttons.open_door();
-				},
-				CommandToButtons::RingBell(period,counter) =>{
+				}
+				CommandToButtons::RingBell(period, counter) => {
 					buttons.ring_bell(period, counter);
-				},
+				}
 				CommandToButtons::SwitchLights(inside, outside, text) => {
-					nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-						"{}. {}",
-						text,
-						buttons.switch_lights(inside, outside)
-					))).await;
-				},
+					nextcloud_sender
+						.send(NextcloudEvent::Licht(gettext!(
+							"{}. {}",
+							text,
+							buttons.switch_lights(inside, outside)
+						)))
+						.await;
+				}
 				CommandToButtons::TurnOnLight => (),
 			}
 		}
 
-		match buttons.handle() {
-			Ok(StateChange::Pressed(button)) => match button {
+		match buttons.handle()? {
+			StateChange::Pressed(button) => match button {
 				buttons::BUTTON_BELL => {
 					let now = Local::now();
 					if now.hour() >= 7 && now.hour() <= 21 {
 						buttons.ring_bell(2, 5);
 						if garage_enabled {
-							bell_task = Some(play_audio_file(audio_bell.clone(), "--quiet".to_string().clone()));
+							bell_task = Some(play_audio_file(
+								audio_bell.clone(),
+								"--quiet".to_string().clone(),
+							));
 							thread::Builder::new()
 								.name(String::from("killall to ring bell"))
 								.spawn(move || {
@@ -567,17 +545,14 @@ async fn button_loop(
 				}
 				_ => panic!("🔘 Pressed {}", button),
 			},
-			Ok(StateChange::Released(_button)) => (),
-			Ok(StateChange::LightsOff) => {
+			StateChange::Released(_button) => (),
+			StateChange::LightsOff => {
 				nextcloud_sender
 					.send(NextcloudEvent::Licht(gettext("🕶️ Light was turned off.")))
 					.await?;
 			}
-			Ok(StateChange::None) => (),
-			Ok(StateChange::Err(_)) => (),
-			Err(error) => {
-				return Err(Error::new(ErrorKind::ConnectionRefused, error));
-			}
+			StateChange::None => (),
+			StateChange::Err(_) => (),
 		}
 		// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
 		// Validation start
@@ -640,7 +615,6 @@ async fn button_loop(
 		}
 		interval.tick().await;
 	}
-	Ok(())
 
 	/*Validation end
 
@@ -664,12 +638,12 @@ async fn button_loop(
 	Ok(())
 }*/
 
-enum CommandToButtons {
+pub enum CommandToButtons {
 	OpenDoor,
 	TurnOnLight,
 	RingBell(u32, u32), // maybe implement it with interval
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
-	                          // TODO Add more
+	                                  // TODO Add more
 }
 
 #[tokio::main]
@@ -694,14 +668,14 @@ async fn main() -> Result<(), OpensesameError> {
 	let bat_enabled = config.get_bool("bat/enable");
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 
-	let nextcloud = Nextcloud::new(&mut config);
-
 	let mut tasks = vec![];
 
-	tasks.push(tokio::spawn(nextcloud_chat_loop(
+	let nextcloud = Nextcloud::new(&mut config);
+	tasks.push(tokio::spawn(Nextcloud::get_background_task(
 		nextcloud,
-		command_sender.clone(),
 		nextcloud_receiver,
+		nextcloud_sender.clone(),
+		command_sender.clone(),
 	)));
 
 	if garage_enabled {
@@ -815,6 +789,6 @@ async fn main() -> Result<(), OpensesameError> {
 		tasks.push(tokio::spawn(bat_loop(nextcloud_sender.clone())));
 	}
 
-	join_all(tasks).await.unwrap();
+	join_all(tasks).await;
 	Ok(())
 }
