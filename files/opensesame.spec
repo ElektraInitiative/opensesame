@@ -54,6 +54,11 @@ description = which chat to use for sending ping messages. Note: this chat will 
 required =
 check/length/max = 8
 
+[nextcloud/chat/commands]
+description = which chat is used to send commands to Opensesame.
+required =
+check/length/max = 8
+
 [nextcloud/format/time]
 description=Format to be used for formatting time within Nextcloud messages, e.g. when entry gets prohibited because of time. By default ISO 8601 (Hour-minute-second format). Example is locales time.
 see/#0 = nextcloud/format/date
