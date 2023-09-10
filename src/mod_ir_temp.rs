@@ -4,10 +4,17 @@
 /// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
 /// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 use crate::config::Config;
+use crate::nextcloud::NextcloudEvent;
+use crate::types::ModuleError;
+use futures::never::Never;
+use gettextrs::gettext;
 use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::{Delay, I2cdev};
 use mlx9061x::ic::Mlx90614;
+use mlx9061x::Error as MlxError;
 use mlx9061x::{Error, Mlx9061x, SlaveAddr};
+use tokio::sync::mpsc::Sender;
+use tokio::time::Interval;
 
 const THRESHOLD_AMBIENT: f32 = 22.0;
 const THRESHOLD_OBJECT: f32 = 44.0;
@@ -193,6 +200,81 @@ impl ModIR {
 			}
 		}
 		return Ok(false);
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		mut interval: Interval,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		loop {
+			match self.handle() {
+				Ok(state) => match state {
+					IrTempStateChange::None => (),
+					IrTempStateChange::ChanedToBothToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
+								self.ambient_temp,
+								self.object_temp
+							)))
+							.await?;
+					}
+					IrTempStateChange::ChangedToAmbientToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
+								self.ambient_temp
+							)))
+							.await?;
+					}
+					IrTempStateChange::ChangedToObjectToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🌡️ ModIR object sensors too hot! Object: {} °C",
+								self.object_temp
+							)))
+							.await?;
+					}
+					IrTempStateChange::ChangedToCancelled => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
+								self.ambient_temp,
+								self.object_temp
+							)))
+							.await?;
+					}
+				},
+				Err(error_typ) => match error_typ {
+					MlxError::I2C(error) => {
+						nextcloud_sender
+							.send(NextcloudEvent::Ping(gettext!(
+								"⚠️ Error while handling ModIR: {}",
+								error
+							)))
+							.await?;
+					}
+					MlxError::ChecksumMismatch => {
+						nextcloud_sender
+							.send(NextcloudEvent::Ping(gettext!(
+								"⚠️ Error while handling ModIR: {}",
+								"ChecksumMismatch"
+							)))
+							.await?;
+					}
+					MlxError::InvalidInputData => {
+						nextcloud_sender
+							.send(NextcloudEvent::Ping(gettext!(
+								"⚠️ Error while handling ModIR: {}",
+								"InvalidInputData"
+							)))
+							.await?;
+					}
+				},
+			}
+			interval.tick().await;
+		}
 	}
 }
 

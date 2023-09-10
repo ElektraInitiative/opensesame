@@ -1,8 +1,10 @@
 use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
 use futures::never::Never;
-use std::{str::FromStr, sync::mpsc::Sender};
+use gettextrs::gettext;
+use std::str::FromStr;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::mpsc::Sender;
 
 const ALPHA: f64 = 0.6;
 
@@ -250,17 +252,16 @@ impl Sensors {
 	}
 
 	pub async fn get_background_task(
-		mut sensors: Sensors,
+		mut self,
 		device_path: String,
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		let device_file = File::open(device_path).await.expect("error here");
 		let reader = BufReader::new(device_file);
-		println!("In sensor loop");
 
 		let mut lines = reader.lines();
 		while let Some(line) = lines.next_line().await? {
-			match sensors.update(line.clone()) {
+			match self.update(line.clone()) {
 				SensorsChange::None => {
 					println!("None - Sensors - {}", line);
 					()

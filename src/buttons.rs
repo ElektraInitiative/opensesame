@@ -1,8 +1,26 @@
+use std::thread;
+
+use chrono::Datelike;
+use chrono::Local;
+use chrono::Timelike;
+use futures::never::Never;
+use gettextrs::gettext;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
+use sunrise::sunrise_sunset;
+use systemstat::Duration;
+use tokio::process::Command;
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::Sender;
+use tokio::time::interval;
 
 use crate::config::Config;
+use crate::nextcloud::NextcloudEvent;
+use crate::ssh::exec_ssh_command;
+use crate::types::ModuleError;
+use crate::validator::Validation;
+use crate::validator::Validator;
 
 pub struct Buttons {
 	pub sequence: Vec<u8>,
@@ -47,6 +65,13 @@ pub enum StateChange {
 	Pressed(u8),
 	Released(u8),
 	LightsOff,
+}
+
+pub enum CommandToButtons {
+	OpenDoor,
+	TurnOnLight,
+	RingBell(u32, u32),               // maybe implement it with interval
+	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
 
 const FAILED_COUNTER: u8 = 20; // = 200ms how long to wait after failure before resetting (*10ms)
@@ -101,6 +126,20 @@ const RELAY_BELL: u8 = 0x01;
 const RELAY_LICHT_INNEN: u8 = 0x01 << 1;
 
 const PINS2_INIT: u8 = 0b01100000;
+
+// play audio file with argument. If you do not have an argument, simply pass --quiet again
+async fn play_audio_file(file: String, arg: String) -> Result<(), ModuleError> {
+	if file != "/dev/null" {
+		Command::new("ogg123")
+			.arg("--quiet")
+			.arg(arg)
+			.arg(file)
+			.status()
+			.await
+			.unwrap();
+	}
+	Ok(())
+}
 
 impl Buttons {
 	pub fn new(config: &mut Config) -> Self {
@@ -448,6 +487,181 @@ impl Buttons {
 				.unwrap();
 		}
 		return ret;
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		mut validator: Validator,
+		time_format: String,
+		startup_time: String,
+		mut command_receiver: Receiver<CommandToButtons>,
+		nextcloud_sender: Sender<NextcloudEvent>,
+		garage_enabled: bool,
+		audio_bell: String,
+		location_latitude: f64,
+		location_longitude: f64,
+	) -> Result<Never, ModuleError> {
+		let mut interval = interval(Duration::from_millis(10));
+		let mut bell_task = Option::None;
+		loop {
+			if let Ok(command) = command_receiver.try_recv() {
+				match command {
+					CommandToButtons::OpenDoor => {
+						self.open_door();
+					}
+					CommandToButtons::RingBell(period, counter) => {
+						self.ring_bell(period, counter);
+					}
+					CommandToButtons::SwitchLights(inside, outside, text) => {
+						nextcloud_sender
+							.send(NextcloudEvent::Licht(gettext!(
+								"{}. {}",
+								text,
+								self.switch_lights(inside, outside)
+							)))
+							.await;
+					}
+					CommandToButtons::TurnOnLight => (),
+				}
+			}
+
+			match self.handle()? {
+				StateChange::Pressed(button) => match button {
+					BUTTON_BELL => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							self.ring_bell(2, 5);
+							if garage_enabled {
+								bell_task = Some(play_audio_file(
+									audio_bell.clone(),
+									"--quiet".to_string().clone(),
+								));
+								// TODO: Make this async
+								thread::Builder::new()
+									.name(String::from("killall to ring bell"))
+									.spawn(move || {
+										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
+									})
+									.unwrap();
+							}
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(gettext("🔔 Pressed button bell.")))
+								.await?;
+						} else {
+							self.show_wrong_input();
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(gettext!(
+									"🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}",
+									now.format(&time_format)
+								)))
+								.await?;
+						}
+					}
+					TASTER_INNEN => {
+						nextcloud_sender
+							.send(NextcloudEvent::Licht(gettext!(
+								"💡 Pressed switch inside. {}.",
+								self.switch_lights(true, true)
+							)))
+							.await?;
+					}
+					TASTER_AUSSEN => {
+						nextcloud_sender
+							.send(NextcloudEvent::Licht(gettext!(
+								"💡 Pressed switch outside or light button. {}.",
+								self.switch_lights(false, true),
+							)))
+							.await?;
+					}
+					TASTER_GLOCKE => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							self.ring_bell(5, 5);
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(gettext("🔔 Pressed switch bell.")))
+								.await?;
+						} else {
+							self.show_wrong_input();
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(gettext!(
+									"🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}",
+									now.format(&time_format)
+								)))
+								.await?;
+						}
+					}
+					_ => panic!("🔘 Pressed {}", button),
+				},
+				StateChange::Released(_button) => (),
+				StateChange::LightsOff => {
+					nextcloud_sender
+						.send(NextcloudEvent::Licht(gettext("🕶️ Light was turned off.")))
+						.await?;
+				}
+				StateChange::None => (),
+				StateChange::Err(_) => (),
+			}
+			// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
+			// Validation start
+			let sequence = self.sequence.to_vec();
+			match validator.validate(&mut self.sequence) {
+				Validation::Validated(user) => {
+					self.open_door();
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(gettext!("🤗 Opened for {}", user)))
+						.await?;
+					let now = Local::now();
+					let (sunrise, sunset) = sunrise_sunset(
+						location_latitude,
+						location_longitude,
+						now.year(),
+						now.month(),
+						now.day(),
+					);
+					if now.timestamp() < sunrise || now.timestamp() > sunset {
+						nextcloud_sender
+							.send(NextcloudEvent::Licht(gettext!(
+								"💡 Switch lights in and out. {}",
+								self.switch_lights(true, true)
+							)))
+							.await?;
+					} else {
+						nextcloud_sender
+							.send(NextcloudEvent::Licht(gettext!(
+								"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
+								now.timestamp(),
+								sunrise,
+								sunset
+							)))
+							.await?;
+					}
+				}
+				Validation::Timeout => {
+					if sequence != vec![0, 15] {
+						self.show_wrong_input();
+						self.ring_bell(20, 0);
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(gettext!(
+								"⌛ Timeout with sequence {}",
+								format!("{:?}", sequence)
+							)))
+							.await?;
+					}
+				}
+				Validation::SequenceTooLong => {
+					self.show_wrong_input();
+					self.ring_bell(20, 0);
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(gettext!(
+							"⌛ Sequence {} too long",
+							format!("{:?}", sequence)
+						)))
+						.await?;
+				}
+				Validation::None => (),
+			}
+			interval.tick().await;
+		}
 	}
 }
 

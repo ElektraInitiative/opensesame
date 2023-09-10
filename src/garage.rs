@@ -3,7 +3,9 @@ use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 use systemstat::Duration;
 use tokio::{sync::mpsc::Sender, time::interval};
 
-use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError, CommandToButtons};
+use crate::{
+	buttons::CommandToButtons, config::Config, nextcloud::NextcloudEvent, types::ModuleError,
+};
 
 const TASTER_EINGANG_OBEN_LINE: u32 = 234; // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
 const TASTER_EINGANG_UNTEN_LINE: u32 = 235; // - Taster Eingang Unten            -> Pin38 GPIO235 EINT11

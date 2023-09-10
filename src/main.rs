@@ -1,69 +1,30 @@
 // opensesame
 
-mod bat;
-mod buttons;
-mod clima_sensor_us;
-mod config;
-mod environment;
-mod garage;
-mod mod_ir_temp;
-mod nextcloud;
-mod pwr;
-mod sensors;
-mod ssh;
-mod types;
-mod validator;
-mod watchdog;
-
-use bat::Bat;
+use chrono::prelude::*;
 use futures::future::join_all;
-use futures::never::Never;
+use gettextrs::*;
 use mlx9061x::Error as MlxError;
+use opensesame::bat::Bat;
+use opensesame::buttons::{Buttons, CommandToButtons};
+use opensesame::clima_sensor_us::{ClimaSensorUS, TempWarningStateChange};
+use opensesame::config::Config;
+use opensesame::environment::Environment;
+use opensesame::garage::Garage;
+use opensesame::mod_ir_temp::ModIR;
+use opensesame::nextcloud::{Nextcloud, NextcloudEvent};
+use opensesame::pwr::Pwr;
+use opensesame::sensors::Sensors;
+use opensesame::types::ModuleError;
+use opensesame::validator::Validator;
+use opensesame::watchdog::{self, Watchdog};
 use std::panic;
 use std::{thread, time};
-
-use gettextrs::*;
-
-use sunrise::sunrise_sunset;
 use systemstat::Duration;
-
-use buttons::Buttons;
-use buttons::StateChange;
-use chrono::prelude::*;
-use clima_sensor_us::{ClimaSensorUS, TempWarningStateChange};
-use config::Config;
-use environment::Environment;
-use garage::Garage;
-use mod_ir_temp::{IrTempStateChange, ModIR};
-use nextcloud::{Nextcloud, NextcloudEvent};
-use pwr::Pwr;
-use sensors::Sensors;
-use ssh::exec_ssh_command;
-use types::ModuleError;
-use validator::Validation;
-use validator::Validator;
-use watchdog::Watchdog;
-
-use tokio::process::Command;
-use tokio::sync::mpsc::{self, Receiver, Sender};
-use tokio::time::{interval, sleep, Interval};
+use tokio::sync::mpsc::{self, Sender};
+use tokio::time::interval;
 
 const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
-
-// play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, arg: String) -> Result<(), ModuleError> {
-	if file != "/dev/null" {
-		Command::new("ogg123")
-			.arg("--quiet")
-			.arg(arg)
-			.arg(file)
-			.status()
-			.await
-			.unwrap();
-	}
-	Ok(())
-}
 
 fn do_reset(watchdog: &mut Watchdog, nextcloud_sender: Sender<NextcloudEvent>, pwr: &mut Pwr) {
 	if pwr.enabled() {
@@ -81,328 +42,6 @@ fn do_reset(watchdog: &mut Watchdog, nextcloud_sender: Sender<NextcloudEvent>, p
 
 		watchdog.trigger();
 	}
-}
-
-async fn modir_loop(
-	mut ir_temp: ModIR,
-	mut interval: Interval,
-	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<Never, ModuleError> {
-	loop {
-		match ir_temp.handle() {
-			Ok(state) => match state {
-				IrTempStateChange::None => (),
-				IrTempStateChange::ChanedToBothToHot => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
-							ir_temp.ambient_temp,
-							ir_temp.object_temp
-						)))
-						.await?;
-				}
-				IrTempStateChange::ChangedToAmbientToHot => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
-							ir_temp.ambient_temp
-						)))
-						.await?;
-				}
-				IrTempStateChange::ChangedToObjectToHot => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🌡️ ModIR object sensors too hot! Object: {} °C",
-							ir_temp.object_temp
-						)))
-						.await?;
-				}
-				IrTempStateChange::ChangedToCancelled => {
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
-							ir_temp.ambient_temp,
-							ir_temp.object_temp
-						)))
-						.await?;
-				}
-			},
-			Err(error_typ) => match error_typ {
-				MlxError::I2C(error) => {
-					nextcloud_sender
-						.send(NextcloudEvent::Ping(gettext!(
-							"⚠️ Error while handling ModIR: {}",
-							error
-						)))
-						.await?;
-				}
-				MlxError::ChecksumMismatch => {
-					nextcloud_sender
-						.send(NextcloudEvent::Ping(gettext!(
-							"⚠️ Error while handling ModIR: {}",
-							"ChecksumMismatch"
-						)))
-						.await?;
-				}
-				MlxError::InvalidInputData => {
-					nextcloud_sender
-						.send(NextcloudEvent::Ping(gettext!(
-							"⚠️ Error while handling ModIR: {}",
-							"InvalidInputData"
-						)))
-						.await?;
-				}
-			},
-		}
-		interval.tick().await;
-	}
-}
-
-// morgen nochmal überarbeiten; felx
-
-async fn weatherstation_loop(
-	mut clima_sensor: ClimaSensorUS,
-	mut interval: Interval,
-	nextcloud_sender: Sender<NextcloudEvent>,
-) -> Result<(), ModuleError> {
-	loop {
-		let f = clima_sensor.handle();
-		match f.await {
-			Ok(Some(temp_warning)) => {
-				let message = match temp_warning {
-					TempWarningStateChange::ChangeToCloseWindow => gettext!(
-						"🌡️ Temperature above {} °C, close the window",
-						ClimaSensorUS::CLOSE_WINDOW_TEMP
-					),
-					TempWarningStateChange::ChangeToWarningTempNoWind => gettext!(
-						"🌡️ Temperature above {} °C and no Wind",
-						ClimaSensorUS::NO_WIND_TEMP
-					),
-					TempWarningStateChange::ChangeToWarningTemp => {
-						gettext!("🌡️ Temperature above {} °C", ClimaSensorUS::WARNING_TEMP)
-					}
-					TempWarningStateChange::ChangeToRemoveWarning => gettext!(
-						"🌡 Temperature again under {} °C, warning was removed",
-						ClimaSensorUS::CANCLE_TEMP
-					),
-				};
-				nextcloud_sender.send(NextcloudEvent::Chat(message)).await?;
-			}
-			Ok(None) => (),
-			Err(error) => {
-				nextcloud_sender
-					.send(NextcloudEvent::Ping(gettext!(
-						"⚠️ Error from weather station: {}",
-						error
-					)))
-					.await?;
-			}
-		};
-		interval.tick().await;
-	}
-}
-
-async fn button_loop(
-	mut buttons: Buttons,
-	mut validator: Validator,
-	time_format: String,
-	startup_time: String,
-	mut command_receiver: Receiver<CommandToButtons>,
-	nextcloud_sender: Sender<NextcloudEvent>,
-	garage_enabled: bool,
-	audio_bell: String,
-	location_latitude: f64,
-	location_longitude: f64,
-) -> Result<Never, ModuleError> {
-	let mut interval = interval(Duration::from_millis(10));
-	let mut bell_task = Option::None;
-	loop {
-		if let Ok(command) = command_receiver.try_recv() {
-			match command {
-				CommandToButtons::OpenDoor => {
-					buttons.open_door();
-				}
-				CommandToButtons::RingBell(period, counter) => {
-					buttons.ring_bell(period, counter);
-				}
-				CommandToButtons::SwitchLights(inside, outside, text) => {
-					nextcloud_sender
-						.send(NextcloudEvent::Licht(gettext!(
-							"{}. {}",
-							text,
-							buttons.switch_lights(inside, outside)
-						)))
-						.await;
-				}
-				CommandToButtons::TurnOnLight => (),
-			}
-		}
-
-		match buttons.handle()? {
-			StateChange::Pressed(button) => match button {
-				buttons::BUTTON_BELL => {
-					let now = Local::now();
-					if now.hour() >= 7 && now.hour() <= 21 {
-						buttons.ring_bell(2, 5);
-						if garage_enabled {
-							bell_task = Some(play_audio_file(
-								audio_bell.clone(),
-								"--quiet".to_string().clone(),
-							));
-							thread::Builder::new()
-								.name(String::from("killall to ring bell"))
-								.spawn(move || {
-									exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-								})
-								.unwrap();
-						}
-						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext("🔔 Pressed button bell.")))
-							.await?;
-					} else {
-						buttons.show_wrong_input();
-						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
-								"🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}",
-								now.format(&time_format)
-							)))
-							.await?;
-					}
-				}
-				buttons::TASTER_INNEN => {
-					nextcloud_sender
-						.send(NextcloudEvent::Licht(gettext!(
-							"💡 Pressed switch inside. {}.",
-							buttons.switch_lights(true, true)
-						)))
-						.await?;
-				}
-				buttons::TASTER_AUSSEN => {
-					nextcloud_sender
-						.send(NextcloudEvent::Licht(gettext!(
-							"💡 Pressed switch outside or light button. {}.",
-							buttons.switch_lights(false, true),
-						)))
-						.await?;
-				}
-				buttons::TASTER_GLOCKE => {
-					let now = Local::now();
-					if now.hour() >= 7 && now.hour() <= 21 {
-						buttons.ring_bell(5, 5);
-						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext("🔔 Pressed switch bell.")))
-							.await?;
-					} else {
-						buttons.show_wrong_input();
-						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
-								"🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}",
-								now.format(&time_format)
-							)))
-							.await?;
-					}
-				}
-				_ => panic!("🔘 Pressed {}", button),
-			},
-			StateChange::Released(_button) => (),
-			StateChange::LightsOff => {
-				nextcloud_sender
-					.send(NextcloudEvent::Licht(gettext("🕶️ Light was turned off.")))
-					.await?;
-			}
-			StateChange::None => (),
-			StateChange::Err(_) => (),
-		}
-		// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
-		// Validation start
-		let sequence = buttons.sequence.to_vec();
-		match validator.validate(&mut buttons.sequence) {
-			Validation::Validated(user) => {
-				buttons.open_door();
-				nextcloud_sender
-					.send(NextcloudEvent::Chat(gettext!("🤗 Opened for {}", user)))
-					.await?;
-				let now = Local::now();
-				let (sunrise, sunset) = sunrise_sunset(
-					location_latitude,
-					location_longitude,
-					now.year(),
-					now.month(),
-					now.day(),
-				);
-				if now.timestamp() < sunrise || now.timestamp() > sunset {
-					nextcloud_sender
-						.send(NextcloudEvent::Licht(gettext!(
-							"💡 Switch lights in and out. {}",
-							buttons.switch_lights(true, true)
-						)))
-						.await?;
-				} else {
-					nextcloud_sender
-						.send(NextcloudEvent::Licht(gettext!(
-							"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
-							now.timestamp(),
-							sunrise,
-							sunset
-						)))
-						.await?;
-				}
-			}
-			Validation::Timeout => {
-				if sequence != vec![0, 15] {
-					buttons.show_wrong_input();
-					buttons.ring_bell(20, 0);
-					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!(
-							"⌛ Timeout with sequence {}",
-							format!("{:?}", sequence)
-						)))
-						.await?;
-				}
-			}
-			Validation::SequenceTooLong => {
-				buttons.show_wrong_input();
-				buttons.ring_bell(20, 0);
-				nextcloud_sender
-					.send(NextcloudEvent::Chat(gettext!(
-						"⌛ Sequence {} too long",
-						format!("{:?}", sequence)
-					)))
-					.await?;
-			}
-			Validation::None => (),
-		}
-		interval.tick().await;
-	}
-
-	/*Validation end
-
-	remember_baseline_counter += 1;
-	if remember_baseline_counter == wait_for_remember_baseline {
-		environment.remember_baseline(&mut state);
-		remember_baseline_counter = 0;
-	}
-
-	thread::sleep(time::Duration::from_millis(10));
-	*/
-}
-/*
-	environment.remember_baseline(&mut state);
-	nextcloud.set_info_online(gettext("📴 OFF"));
-	nextcloud_sender.send(NextcloudEvent::Ping(gettext!(
-		"👋 opensesame {} bye-bye {}",
-		env!("CARGO_PKG_VERSION"),
-		Local::now().format(&date_time_format).to_string()
-	)));
-	Ok(())
-}*/
-
-pub enum CommandToButtons {
-	OpenDoor,
-	TurnOnLight,
-	RingBell(u32, u32), // maybe implement it with interval
-	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
-	                                  // TODO Add more
 }
 
 #[tokio::main]
@@ -453,11 +92,9 @@ async fn main() -> Result<(), ModuleError> {
 		let audio_bell = config.get::<String>("audio/bell");
 		let location_latitude = config.get::<f64>("location/latitude");
 		let location_longitude = config.get::<f64>("location/longitude");
-		let mut buttons = Buttons::new(&mut config);
-		let mut validator = Validator::new(&mut config);
-		tasks.push(tokio::spawn(button_loop(
-			buttons,
-			validator,
+		tasks.push(tokio::spawn(Buttons::get_background_task(
+			Buttons::new(&mut config),
+			Validator::new(&mut config),
 			time_format.to_string(),
 			startup_time.to_string(),
 			command_receiver,
@@ -482,9 +119,8 @@ async fn main() -> Result<(), ModuleError> {
 		let mod_ir_result = ModIR::new(&mut config);
 		match mod_ir_result {
 			Ok(mod_ir) => {
-				let mut interval =
-					interval(Duration::from_secs(config.get::<u64>("ir/data/interval")));
-				tasks.push(tokio::spawn(modir_loop(
+				let interval = interval(Duration::from_secs(config.get::<u64>("ir/data/interval")));
+				tasks.push(tokio::spawn(ModIR::get_background_task(
 					mod_ir,
 					interval,
 					nextcloud_sender.clone(),
@@ -520,24 +156,23 @@ async fn main() -> Result<(), ModuleError> {
 		)));
 	}
 
-	/*if weatherstation_enabled {
-		let clima_sensor_result = ClimaSensorUS::new(&config);
-		let interval = interval(Duration::from_secs(config.get::<u64>("weatherstation/data/interval")));
-		match clima_sensor_result {
-			Ok(clima_sensor) => {
-				tasks.push(tokio::spawn(weatherstation_loop(clima_sensor, interval, nextcloud_sender.clone()));
-			},
-			Err(error) => {
-				nextcloud_sender
-					.send(NextcloudEvent::Ping(gettext!(
-						"⚠️ Failed to init libmodbus connection: {}",
-						error
-					)))
-					.await;
-			}
-		}
-
-	}*/
+	// if weatherstation_enabled {
+	// 	let clima_sensor_result = ClimaSensorUS::new(&mut config);
+	// 	let interval = interval(Duration::from_secs(config.get::<u64>("weatherstation/data/interval")));
+	// 	match clima_sensor_result {
+	// 		Ok(clima_sensor) => {
+	// 			tasks.push(tokio::spawn(ClimaSensorUS::get_background_task(clima_sensor, interval, nextcloud_sender.clone()));
+	// 		},
+	// 		Err(error) => {
+	// 			nextcloud_sender
+	// 				.send(NextcloudEvent::Ping(gettext!(
+	// 					"⚠️ Failed to init libmodbus connection: {}",
+	// 					error
+	// 				)))
+	// 				.await;
+	// 		}
+	// 	}
+	// }
 
 	if bat_enabled {
 		tasks.push(tokio::spawn(Bat::get_background_task(

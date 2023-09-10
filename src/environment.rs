@@ -1,19 +1,18 @@
-use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError, CommandToButtons};
-
-use std::fmt;
-
+use bme280::i2c::BME280;
 use futures::never::Never;
 use gettextrs::gettext;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
-
 use linux_embedded_hal::{Delay, I2cdev};
-
-use bme280::i2c::BME280;
+use std::fmt;
 use systemstat::Duration;
 use tokio::{
 	sync::mpsc::Sender,
 	time::{sleep, Interval},
+};
+
+use crate::{
+	buttons::CommandToButtons, config::Config, nextcloud::NextcloudEvent, types::ModuleError,
 };
 
 pub struct Environment {

@@ -7,9 +7,14 @@
 extern crate libmodbus;
 
 use crate::config::Config;
+use crate::nextcloud::NextcloudEvent;
+use crate::types::ModuleError;
+use gettextrs::gettext;
 use libmodbus::*;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
+use tokio::sync::mpsc::Sender;
+use tokio::time::Interval;
 
 ///Constants
 const DEVICE: &'static str = "/dev/ttyS5";
@@ -443,6 +448,47 @@ impl ClimaSensorUS {
 				std::io::ErrorKind::InvalidData,
 				error.to_string(),
 			)),
+		}
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		mut interval: Interval,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<(), ModuleError> {
+		loop {
+			match self.handle().await {
+				Ok(Some(temp_warning)) => {
+					let message = match temp_warning {
+						TempWarningStateChange::ChangeToCloseWindow => gettext!(
+							"🌡️ Temperature above {} °C, close the window",
+							ClimaSensorUS::CLOSE_WINDOW_TEMP
+						),
+						TempWarningStateChange::ChangeToWarningTempNoWind => gettext!(
+							"🌡️ Temperature above {} °C and no Wind",
+							ClimaSensorUS::NO_WIND_TEMP
+						),
+						TempWarningStateChange::ChangeToWarningTemp => {
+							gettext!("🌡️ Temperature above {} °C", ClimaSensorUS::WARNING_TEMP)
+						}
+						TempWarningStateChange::ChangeToRemoveWarning => gettext!(
+							"🌡 Temperature again under {} °C, warning was removed",
+							ClimaSensorUS::CANCLE_TEMP
+						),
+					};
+					nextcloud_sender.send(NextcloudEvent::Chat(message)).await?;
+				}
+				Ok(None) => (),
+				Err(error) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Ping(gettext!(
+							"⚠️ Error from weather station: {}",
+							error
+						)))
+						.await?;
+				}
+			};
+			interval.tick().await;
 		}
 	}
 }
