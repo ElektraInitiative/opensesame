@@ -1,11 +1,10 @@
 use crate::{config::Config, types::ModuleError, CommandToButtons};
-use std::{collections::HashMap, future::Pending};
-
-use futures::{join, never::Never, try_join};
+use futures::{never::Never, try_join};
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},
 	Client,
 };
+use std::collections::HashMap;
 use tokio::{
 	sync::mpsc::{Receiver, Sender},
 	time::{self, interval},
@@ -249,10 +248,7 @@ impl Nextcloud {
 		command_sender: Sender<CommandToButtons>,
 	) -> Result<Never, ModuleError> {
 		let a = self
-			.send_message_once(
-				"Command chat started <explain command system>",
-				&self.chat_commands,
-			)
+			.send_message_once("Started listening to commands here", &self.chat_commands)
 			.await
 			.unwrap();
 		let mut last_known_message_id =
@@ -272,12 +268,57 @@ impl Nextcloud {
 							.map(|m| m["message"].as_str().unwrap())
 						{
 							if message.starts_with("\\") {
-								let command = message.strip_prefix("\\").unwrap().trim();
+								let command_and_args = message
+									.strip_prefix("\\")
+									.unwrap()
+									.trim()
+									.split_whitespace()
+									.collect::<Vec<&str>>();
+								let command = command_and_args[0];
+								let args = &command_and_args[1..];
 								match command {
 									"status" => {
 										nextcloud_sender.send(NextcloudEvent::SendStatus).await?
 									}
-									_ => (),
+									"setpin" => {
+										// TODO: How do we access config?
+									}
+									"switchlights" => {
+										if args.len() != 2 {
+											nextcloud_sender
+												.send(NextcloudEvent::Chat(String::from(
+													"Usage: switchlights <bool> <bool>",
+												)))
+												.await?;
+										}
+
+										let inner_light = args[0].eq_ignore_ascii_case("true");
+										let outer_light = args[1].eq_ignore_ascii_case("true");
+
+										command_sender
+											.send(CommandToButtons::SwitchLights(
+												inner_light,
+												outer_light,
+												String::from("Switch lights {} {}"),
+											))
+											.await?;
+									}
+									"opensesame" => {
+										nextcloud_sender
+											.send(NextcloudEvent::Chat(String::from(
+												"Opening door",
+											)))
+											.await?;
+										command_sender.send(CommandToButtons::OpenDoor).await?;
+									}
+									_ => {
+										nextcloud_sender
+											.send(NextcloudEvent::Chat(String::from(format!(
+												"Unknown command {}!",
+												command
+											))))
+											.await?;
+									}
 								}
 							}
 						}
