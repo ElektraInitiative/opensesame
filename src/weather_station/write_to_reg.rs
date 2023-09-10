@@ -1,4 +1,5 @@
 /// This program writes to a register of the clima-sensor-us weather station
+/// Usage ./weatherstation_write 40015 30 set the AV register to 30 (AV=30)
 extern crate libmodbus;
 use libmodbus::*;
 use std::env;
@@ -20,21 +21,24 @@ fn main() {
 		let reg: u16 = args[1].parse::<u16>().unwrap();
 		let value: Vec<u16> = vec![0, args[2].parse::<u16>().unwrap()];
 
-		// Modbus-Verbindung initialisieren
+		// Initialize Modbus connection
 		let mut ctx = Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS).unwrap();
 		ctx.set_slave(SLAVE_ID).expect("Setting Slave-ID failed!");
 		assert!(ctx.rtu_set_serial_mode(SerialMode::RtuRS232).is_ok());
 		assert!(ctx.rtu_set_rts(RequestToSendMode::RtuRtsUp).is_ok());
 		assert!(ctx.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp).is_ok());
 
-		// Modbus-Verbindung öffnen
+		// open Modbus connection
 		ctx.connect().expect("Verbindung mit ctx Fehlerhaft!");
 
-		ctx.write_registers(KY_REG, 2, &vec![0,0x1267]).expect("Fehler beim setzen vom Register");
-		ctx.write_registers(reg, 2, &value).expect("Fehler beim setzen vom Register");
-		ctx.write_registers(KY_REG, 1, &vec![0,0]).expect("Fehler beim setzen vom Register");
+		ctx.write_registers(KY_REG, 2, &vec![0, 0x1267])
+			.expect("Error while writing register KY_REG");
+		ctx.write_registers(reg, 2, &value)
+			.expect("Error while writing register as given by command-line argument");
+		ctx.write_registers(KY_REG, 1, &vec![0, 0])
+			.expect("Error while writing register KY_REG");
 
-		// Modbus-Verbindung schließen
+		// close Modbus connection
 		ctx.close();
 		ctx.free();
 	} else {
