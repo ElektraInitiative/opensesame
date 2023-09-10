@@ -1,6 +1,8 @@
-use crate::config::Config;
-
-use std::str::FromStr;
+use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
+use futures::never::Never;
+use std::{str::FromStr, sync::mpsc::Sender};
+use tokio::fs::File;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 const ALPHA: f64 = 0.6;
 
@@ -245,6 +247,44 @@ impl Sensors {
 		}
 		self.init = true;
 		return ret;
+	}
+
+	pub async fn get_background_task(
+		mut sensors: Sensors,
+		device_path: String,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		let device_file = File::open(device_path).await.expect("error here");
+		let reader = BufReader::new(device_file);
+		println!("In sensor loop");
+
+		let mut lines = reader.lines();
+		while let Some(line) = lines.next_line().await? {
+			match sensors.update(line.clone()) {
+				SensorsChange::None => {
+					println!("None - Sensors - {}", line);
+					()
+				}
+				SensorsChange::Alarm(w) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)))
+						.await?;
+					println!("Alarm - Sensors - {}", line);
+					/*
+					state.set("alarm/fire", &w.to_string());
+					sighup.store(true, Ordering::Relaxed);
+					exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w));
+					*/
+				}
+				SensorsChange::Chat(w) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(gettext!("Fire Chat {}", w)))
+						.await?;
+					println!("Chat - Sensors - {}", line);
+				}
+			}
+		}
+		Err(ModuleError::new(String::from("sensors_loop exited")))
 	}
 }
 

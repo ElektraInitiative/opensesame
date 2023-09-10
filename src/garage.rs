@@ -1,6 +1,9 @@
+use futures::never::Never;
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
+use systemstat::Duration;
+use tokio::{sync::mpsc::Sender, time::interval};
 
-use crate::config::Config;
+use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError, CommandToButtons};
 
 const TASTER_EINGANG_OBEN_LINE: u32 = 234; // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
 const TASTER_EINGANG_UNTEN_LINE: u32 = 235; // - Taster Eingang Unten            -> Pin38 GPIO235 EINT11
@@ -139,6 +142,73 @@ impl Garage {
 		}
 
 		return GarageChange::None;
+	}
+
+	/// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
+	/// So we dont need to run it all few seconds.
+	pub async fn get_background_task(
+		mut garage: Garage,
+		command_sender: Sender<CommandToButtons>,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		let mut interval = interval(Duration::from_millis(10));
+		loop {
+			match garage.handle() {
+				GarageChange::None => (),
+				GarageChange::PressedTasterEingangOben => {
+					// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
+
+					/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+						"💡 Pressed at entrance top switch. Switch lights in garage. {}",
+						buttons.switch_lights(true, false)
+					)));*/
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							false,
+							"💡 Pressed at entrance top switch. Switch lights in garage"
+								.to_string(),
+						))
+						.await?;
+				}
+				GarageChange::PressedTasterTorOben => {
+					/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
+						"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
+						buttons.switch_lights(true, true)
+					)));*/
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							true,
+							"💡 Pressed top switch at garage door. Switch lights in and out garage"
+								.to_string(),
+						))
+						.await?;
+				}
+				GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
+					//buttons.open_door();
+					command_sender.send(CommandToButtons::OpenDoor).await?;
+				}
+
+				GarageChange::ReachedTorEndposition => {
+					nextcloud_sender
+						.send(NextcloudEvent::SetStatusDoor(String::from("🔒 Open")))
+						.await?;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(String::from("🔒 Garage door closed.")))
+						.await?;
+				}
+				GarageChange::LeftTorEndposition => {
+					nextcloud_sender
+						.send(NextcloudEvent::SetStatusDoor(String::from("🔓 Closed")))
+						.await?;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(String::from("🔓 Garage door open")))
+						.await?;
+				}
+			}
+			interval.tick().await;
+		}
 	}
 }
 

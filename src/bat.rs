@@ -2,8 +2,13 @@
 
 const CAPACITY_FILE: &'static str = "/sys/class/power_supply/axp20x-battery/capacity";
 
+use futures::never::Never;
 use std::fmt;
 use std::fs;
+use tokio::sync::mpsc::Sender;
+
+use crate::nextcloud::NextcloudEvent;
+use crate::types::ModuleError;
 
 pub struct Bat {}
 
@@ -17,6 +22,12 @@ impl Bat {
 			Ok(str) => return str.trim_end().parse::<u8>().unwrap(),
 			Err(_err) => return 100,
 		}
+	}
+
+	pub async fn get_background_task(
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		Err(ModuleError::new(String::from("bat_loop not implemented")))
 	}
 }
 
