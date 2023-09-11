@@ -9,10 +9,13 @@ extern crate libmodbus;
 use crate::config::Config;
 use crate::nextcloud::NextcloudEvent;
 use crate::types::ModuleError;
+use futures::never::Never;
 use gettextrs::gettext;
-use libmodbus::*;
+use libmodbus::{Modbus, ModbusClient, ModbusRTU, RequestToSendMode, SerialMode};
 use reqwest::header::HeaderMap;
 use reqwest::Client;
+use serde::Serialize;
+use std::io;
 use tokio::sync::mpsc::Sender;
 use tokio::time::Interval;
 
@@ -188,10 +191,17 @@ pub enum TempWarning {
 }
 
 pub struct ClimaSensorUS {
-	ctx: Option<Modbus>,
+	ctx: Modbus,
 	opensensebox_id: String,
-	opensense_access_token: String,
 	warning_active: Option<TempWarning>,
+	client: Client,
+	headers: HeaderMap,
+}
+
+#[derive(Serialize)]
+struct SensorValue {
+	sensor: &'static str,
+	value: f32,
 }
 
 impl ClimaSensorUS {
@@ -202,55 +212,32 @@ impl ClimaSensorUS {
 	pub const NO_WIND_SPEED: f32 = 0.3;
 	pub const WARNING_TEMP: f32 = 35.0;
 
-	// This function is for assign a default value of the ClimaSensorUS module
-	pub fn new_default() -> Self {
-		Self {
-			ctx: None,
-			opensensebox_id: "0".to_string(),
-			opensense_access_token: "0".to_string(),
-			warning_active: Option::None,
-		}
-	}
-
 	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
-		let mut s = Self {
-			ctx: None,
-			opensensebox_id: config.get::<String>("weatherstation/opensensemap/id"),
-			opensense_access_token: config.get::<String>("weatherstation/opensensemap/token"),
-			warning_active: Option::None,
-		};
-		if config.get_bool("weatherstation/enable") {
-			if let Err(error) = s.init() {
-				return Err(error);
-			}
-		}
-		Ok(s)
-	}
+		let opensensebox_id = config.get::<String>("weatherstation/opensensemap/id");
+		let opensense_access_token = config.get::<String>("weatherstation/opensensemap/token");
+		let warning_active = Option::None;
 
-	fn init(&mut self) -> Result<(), libmodbus::Error> {
-		match Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS) {
-			Ok(conn) => {
-				self.ctx = Some(conn);
-			}
-			Err(error) => {
-				return Err(error);
-			}
-		}
+		let client = Client::new();
 
-		if let Some(conn) = &mut self.ctx {
-			if let Err(error) = conn.set_slave(SLAVE_ID) {
-				return Err(error);
-			} else if let Err(error) = conn.rtu_set_serial_mode(SerialMode::RtuRS232) {
-				return Err(error);
-			} else if let Err(error) = conn.rtu_set_rts(RequestToSendMode::RtuRtsUp) {
-				return Err(error);
-			} else if let Err(error) = conn.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp) {
-				return Err(error);
-			} else if let Err(error) = conn.connect() {
-				return Err(error);
-			}
-		}
-		Ok(())
+		let mut headers = HeaderMap::new();
+		headers.insert("Authorization", opensense_access_token.parse().unwrap());
+		headers.insert("Content-Type", "application/json".parse().unwrap());
+
+		let mut modbus = Modbus::new_rtu(DEVICE, BAUDRATE, PARITY, DATA_BITS, STOP_BITS)?;
+
+		modbus.set_slave(SLAVE_ID)?;
+		modbus.rtu_set_serial_mode(SerialMode::RtuRS232)?;
+		modbus.rtu_set_rts(RequestToSendMode::RtuRtsUp)?;
+		modbus.rtu_set_custom_rts(RequestToSendMode::RtuRtsUp)?;
+		modbus.connect()?;
+
+		Ok(Self {
+			ctx: modbus,
+			opensensebox_id,
+			warning_active,
+			client,
+			headers,
+		})
 	}
 
 	/// This function should be called periodically to check the sensors' values.
@@ -261,50 +248,44 @@ impl ClimaSensorUS {
 	/// (Input Register - 0x04) wind-reg address 0x7533; typ U32; real_result = response_wind/10
 	/// The return value is bool on success, true if alarm is active and false is alarm is not active
 	/// If no ctx is configured the this function returns always false, so no warning is triggered
-	pub async fn handle(&mut self) -> Result<Option<TempWarningStateChange>, std::io::Error> {
-		match &self.ctx {
-			Some(conn) => {
-				let mut response_temp = vec![0u16; 2];
-				let mut response_wind = vec![0u16; 2];
+	async fn handle(&mut self) -> Result<Option<TempWarningStateChange>, libmodbus::Error> {
+		let mut response_temp = vec![0u16; 2];
+		let mut response_wind = vec![0u16; 2];
 
-				if let Err(error) = conn.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp) {
-					return Err(std::io::Error::new(
-						std::io::ErrorKind::Other,
-						error.to_string(),
-					));
-				}
-				if let Err(error) =
-					conn.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)
-				{
-					return Err(std::io::Error::new(
-						std::io::ErrorKind::Other,
-						error.to_string(),
-					));
-				}
+		self.ctx
+			.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
+		self.ctx
+			.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)?;
 
-				let temp: f32 = (conv_vec_to_value_s((response_temp[0], response_temp[1])).unwrap()
-					as f32) / 10.0;
-				let wind: f32 = (conv_vec_to_value_u((response_wind[0], response_wind[1])).unwrap()
-					as f32) / 10.0;
-				#[cfg(debug_assertions)]
-				println!(
-					"Weatherstation: temperature {} °C, windspeed {} m/s",
-					temp, wind
-				);
-				//check if new data should be published to opensensemap.org
-				match self.publish_to_opensensemap().await {
-					Ok(_) => {}
-					Err(error) => return Err(error),
-				}
-
-				Ok(self.set_warning_active(temp, wind))
-			}
-			None => Ok(Option::None),
+		let temp: f32 =
+			(conv_vec_to_value_s((response_temp[0], response_temp[1])).unwrap() as f32) / 10.0;
+		let wind: f32 =
+			(conv_vec_to_value_u((response_wind[0], response_wind[1])).unwrap() as f32) / 10.0;
+		#[cfg(debug_assertions)]
+		println!(
+			"Weatherstation: temperature {} °C, windspeed {} m/s",
+			temp, wind
+		);
+		//check if new data should be published to opensensemap.org
+		match self.publish_to_opensensemap().await {
+			Ok(_) => {}
+			// TODO
+			Err(error) => return Err(libmodbus::Error::IoError(error)),
 		}
+
+		Ok(ClimaSensorUS::set_warning_active(
+			&mut self.warning_active,
+			temp,
+			wind,
+		))
 	}
 
 	/// This function is used to set the warning_active variable and compare it with the new value.
-	fn set_warning_active(&mut self, temp: f32, wind: f32) -> Option<TempWarningStateChange> {
+	fn set_warning_active(
+		warning_active: &mut Option<TempWarning>,
+		temp: f32,
+		wind: f32,
+	) -> Option<TempWarningStateChange> {
 		let new_warning;
 		let mut result: Option<TempWarningStateChange> = Option::None;
 
@@ -312,28 +293,28 @@ impl ClimaSensorUS {
 			new_warning = Some(TempWarning::WarningTemp);
 		} else if temp > ClimaSensorUS::NO_WIND_TEMP
 			&& wind < ClimaSensorUS::NO_WIND_SPEED
-			&& !matches!(self.warning_active, Option::Some(TempWarning::WarningTemp))
+			&& !matches!(warning_active, Option::Some(TempWarning::WarningTemp))
 		{
 			new_warning = Some(TempWarning::WarningTempNoWind);
 		} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
 			&& !matches!(
-				self.warning_active,
+				warning_active,
 				Option::Some(TempWarning::WarningTemp)
 					| Option::Some(TempWarning::WarningTempNoWind)
 			) {
 			new_warning = Some(TempWarning::CloseWindow);
 		} else if !matches!(
-			self.warning_active,
+			warning_active,
 			Option::None | Option::Some(TempWarning::RemoveWarning)
 		) && temp < ClimaSensorUS::CANCLE_TEMP
 		{
 			new_warning = Some(TempWarning::RemoveWarning);
 		} else {
-			new_warning = self.warning_active;
+			new_warning = *warning_active;
 		}
 
 		// compaire old and new value of TempWarning
-		if self.warning_active != new_warning {
+		if *warning_active != new_warning {
 			result = match new_warning {
 				Some(TempWarning::RemoveWarning) => {
 					Option::Some(TempWarningStateChange::ChangeToRemoveWarning)
@@ -349,61 +330,53 @@ impl ClimaSensorUS {
 				}
 				Option::None => Option::None,
 			};
-			self.warning_active = new_warning;
+			*warning_active = new_warning;
 		}
 		result
 	}
 
 	/// This method creates a json payload out of the array `OPENSENSE_CLIMA_DATA` and the data from the weather station
-	pub fn create_json(&mut self) -> Result<String, libmodbus::Error> {
-		match &self.ctx {
-			Some(conn) => {
-				let mut json_payload: String = "[".to_string();
+	async fn collect_sensor_values(&mut self) -> Vec<SensorValue> {
+		let mut sensor_values = vec![];
 
-				for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
-					let mut response = vec![0u16; 2];
-					match conn.read_input_registers(tuple_data.1, 2, &mut response) {
-						Ok(_) => {
-							let value: f32;
-							if tuple_data.3 == 's' {
-								match conv_vec_to_value_s((response[0], response[1])) {
-									Ok(conv_response) => {
-										value = conv_response as f32 / tuple_data.2;
-									}
-									Err(_) => {
-										value = ERROR_CODE_S32 as f32;
-									}
-								}
-							} else {
-								match conv_vec_to_value_u((response[0], response[1])) {
-									Ok(conv_response) => {
-										value = conv_response as f32 / tuple_data.2;
-									}
-									Err(_) => {
-										value = ERROR_CODE_U32 as f32;
-									}
-								}
+		for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
+			let mut response = vec![0u16; 2];
+			match self
+				.ctx
+				.read_input_registers(tuple_data.1, 2, &mut response)
+			{
+				Ok(_) => {
+					let value: f32;
+					if tuple_data.3 == 's' {
+						match conv_vec_to_value_s((response[0], response[1])) {
+							Ok(conv_response) => {
+								value = conv_response as f32 / tuple_data.2;
 							}
-							if value != ERROR_CODE_S32 as f32 && value != ERROR_CODE_U32 as f32 {
-								json_payload.push_str(&format!(
-									"{}\"sensor\":\"{}\",\"value\":\"{}\"{},",
-									'{', tuple_data.0, value, '}'
-								));
+							Err(_) => {
+								value = ERROR_CODE_S32 as f32;
 							}
 						}
-						Err(_) => {}
+					} else {
+						match conv_vec_to_value_u((response[0], response[1])) {
+							Ok(conv_response) => {
+								value = conv_response as f32 / tuple_data.2;
+							}
+							Err(_) => {
+								value = ERROR_CODE_U32 as f32;
+							}
+						}
+					}
+					if value != ERROR_CODE_S32 as f32 && value != ERROR_CODE_U32 as f32 {
+						sensor_values.push(SensorValue {
+							sensor: tuple_data.0,
+							value,
+						});
 					}
 				}
-				//remove last ','
-				json_payload.pop();
-				json_payload.push_str(&"]");
-				Ok(json_payload)
+				Err(_) => (), // Leave out sensor with error
 			}
-			None => Err(Error::Rtu {
-				msg: ("No modbus connection configured".to_string()),
-				source: (std::io::Error::new(std::io::ErrorKind::NotFound, "Not configured")),
-			}),
 		}
+		sensor_values
 	}
 
 	/// This function pulls data from the weatherstation and forms a json file out of the weather station data and the opensensemap-sensor-id.
@@ -411,41 +384,30 @@ impl ClimaSensorUS {
 	/// All information needed are stored in a const array of tuples. The tuples contain the opensensemap-sensor-id, register-address, factor and datatype.
 	/// The return value indicates if the api request was successfully or not.
 	/// Information about the reading of registers can be accessed through the json_payload  
-	pub async fn publish_to_opensensemap(&mut self) -> Result<(), std::io::Error> {
-		match self.create_json() {
-			Ok(json) => {
-				//Send JSON to https://api.opensensemap.org
-				let mut headers = HeaderMap::new();
-				headers.insert(
-					"Authorization",
-					self.opensense_access_token.parse().unwrap(),
-				);
-				headers.insert("Content-Type", "application/json".parse().unwrap());
-				let result = Client::new()
-					.post(&format!(
-						"https://api.opensensemap.org/boxes/{}/data",
-						self.opensensebox_id
-					))
-					.headers(headers)
-					.body(json)
-					.send()
-					.await;
-				match result {
-					Ok(response) => match response.error_for_status() {
-						Ok(_response) => Ok(()),
-						Err(error) => Err(std::io::Error::new(
-							std::io::ErrorKind::Other,
-							error.to_string(),
-						)),
-					},
-					Err(error) => Err(std::io::Error::new(
-						std::io::ErrorKind::ConnectionRefused,
-						error.to_string(),
-					)),
-				}
-			}
+	async fn publish_to_opensensemap(&mut self) -> Result<(), io::Error> {
+		let json = serde_json::to_string(&self.collect_sensor_values().await).unwrap();
+
+		//Send JSON to https://api.opensensemap.org
+		let result = self
+			.client
+			.post(&format!(
+				"https://api.opensensemap.org/boxes/{}/data",
+				self.opensensebox_id
+			))
+			.headers(self.headers.clone())
+			.body(json)
+			.send()
+			.await;
+		match result {
+			Ok(response) => match response.error_for_status() {
+				Ok(_response) => Ok(()),
+				Err(error) => Err(std::io::Error::new(
+					std::io::ErrorKind::Other,
+					error.to_string(),
+				)),
+			},
 			Err(error) => Err(std::io::Error::new(
-				std::io::ErrorKind::InvalidData,
+				std::io::ErrorKind::ConnectionRefused,
 				error.to_string(),
 			)),
 		}
@@ -455,7 +417,7 @@ impl ClimaSensorUS {
 		mut self,
 		mut interval: Interval,
 		nextcloud_sender: Sender<NextcloudEvent>,
-	) -> Result<(), ModuleError> {
+	) -> Result<Never, ModuleError> {
 		loop {
 			match self.handle().await {
 				Ok(Some(temp_warning)) => {
@@ -524,77 +486,51 @@ mod tests {
 
 	#[test]
 	fn test_set_warning_active() {
-		let mut clima_sens = ClimaSensorUS {
-			ctx: None,
-			opensensebox_id: "null".to_string(),
-			opensense_access_token: "null".to_string(),
-			warning_active: Option::None,
-		};
+		let mut warning_active = Option::None;
 
-		assert!(clima_sens.set_warning_active(15.0, 0.1) == Option::None);
-		assert!(matches!(clima_sens.warning_active, Option::None));
-		assert!(clima_sens.set_warning_active(15.0, 3.5) == Option::None);
-		assert!(matches!(clima_sens.warning_active, Option::None));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1) == Option::None);
+		assert!(matches!(warning_active, Option::None));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5) == Option::None);
+		assert!(matches!(warning_active, Option::None));
 
 		assert!(
-			clima_sens.set_warning_active(25.0, 0.1)
+			ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 0.1)
 				== Some(TempWarningStateChange::ChangeToCloseWindow)
 		);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::CloseWindow)
-		));
-		assert!(clima_sens.set_warning_active(25.0, 3.5) == Option::None);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::CloseWindow)
-		));
+		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 3.5) == Option::None);
+		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
 
 		assert!(
-			clima_sens.set_warning_active(33.0, 0.1)
+			ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 0.1)
 				== Some(TempWarningStateChange::ChangeToWarningTempNoWind)
 		);
 		assert!(matches!(
-			clima_sens.warning_active,
+			warning_active,
 			Some(TempWarning::WarningTempNoWind)
 		));
-		assert!(clima_sens.set_warning_active(33.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 3.5) == Option::None);
 		assert!(matches!(
-			clima_sens.warning_active,
+			warning_active,
 			Some(TempWarning::WarningTempNoWind)
 		));
 
 		assert!(
-			clima_sens.set_warning_active(36.0, 0.1)
+			ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 0.1)
 				== Some(TempWarningStateChange::ChangeToWarningTemp)
 		);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::WarningTemp)
-		));
-		assert!(clima_sens.set_warning_active(36.0, 3.5) == Option::None);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::WarningTemp)
-		));
-		assert!(clima_sens.set_warning_active(25.3, 3.4) == Option::None);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::WarningTemp)
-		));
+		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 3.5) == Option::None);
+		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.3, 3.4) == Option::None);
+		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
 		assert!(
-			clima_sens.set_warning_active(15.0, 0.1)
+			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1)
 				== Some(TempWarningStateChange::ChangeToRemoveWarning)
 		);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::RemoveWarning)
-		));
-		assert!(clima_sens.set_warning_active(15.0, 3.5) == Option::None);
-		assert!(matches!(
-			clima_sens.warning_active,
-			Some(TempWarning::RemoveWarning)
-		));
+		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5) == Option::None);
+		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
 	}
 
 	#[test]

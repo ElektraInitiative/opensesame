@@ -26,7 +26,11 @@ impl Bat {
 
 	pub async fn get_background_task(
 		nextcloud_sender: Sender<NextcloudEvent>,
+		//interval: Interval,
 	) -> Result<Never, ModuleError> {
+		// loop {
+		// 	nextcloud_sender.send()
+		// }
 		Err(ModuleError::new(String::from("bat_loop not implemented")))
 	}
 }

@@ -121,6 +121,14 @@ type = boolean
 example = 1
 default = 0
 
+[watchdog/interval]
+description=Trigger interval in seconds for Watchdog
+default = 10
+
+[watchdog/path]
+description=Device path of Watchdog
+default = "/dev/watchdog"
+
 [environment/device]
 description=Which device to use for the environment sensor. /dev/null means that no environment sensor is connected.
 example = "/dev/i2c"

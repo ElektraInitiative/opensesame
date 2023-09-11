@@ -1,5 +1,3 @@
-use std::thread;
-
 use chrono::Datelike;
 use chrono::Local;
 use chrono::Timelike;
@@ -10,17 +8,19 @@ use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
 use sunrise::sunrise_sunset;
 use systemstat::Duration;
+use systemstat::{Platform, System};
 use tokio::process::Command;
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::mpsc::Sender;
+use tokio::spawn;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
 use crate::config::Config;
 use crate::nextcloud::NextcloudEvent;
+use crate::pwr::Pwr;
 use crate::ssh::exec_ssh_command;
 use crate::types::ModuleError;
-use crate::validator::Validation;
-use crate::validator::Validator;
+use crate::validator::{Validation, Validator};
+use crate::watchdog;
 
 pub struct Buttons {
 	pub sequence: Vec<u8>,
@@ -128,7 +128,7 @@ const RELAY_LICHT_INNEN: u8 = 0x01 << 1;
 const PINS2_INIT: u8 = 0b01100000;
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, arg: String) -> Result<(), ModuleError> {
+async fn play_audio_file(file: String, arg: &str) -> Result<(), ModuleError> {
 	if file != "/dev/null" {
 		Command::new("ogg123")
 			.arg("--quiet")
@@ -489,11 +489,24 @@ impl Buttons {
 		return ret;
 	}
 
+	async fn do_reset(nextcloud_sender: Sender<NextcloudEvent>, pwr: &mut Pwr) {
+		if pwr.enabled() {
+			let mut interval = interval(Duration::from_millis(watchdog::SAFE_TIMEOUT));
+			pwr.switch(false);
+			nextcloud_sender.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH off")));
+			interval.tick().await;
+
+			pwr.switch(true);
+			nextcloud_sender.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH on")));
+			interval.tick().await;
+		}
+	}
+
 	pub async fn get_background_task(
 		mut self,
 		mut validator: Validator,
+		mut pwr: Pwr,
 		time_format: String,
-		startup_time: String,
 		mut command_receiver: Receiver<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		garage_enabled: bool,
@@ -519,7 +532,7 @@ impl Buttons {
 								text,
 								self.switch_lights(inside, outside)
 							)))
-							.await;
+							.await?;
 					}
 					CommandToButtons::TurnOnLight => (),
 				}
@@ -532,17 +545,11 @@ impl Buttons {
 						if now.hour() >= 7 && now.hour() <= 21 {
 							self.ring_bell(2, 5);
 							if garage_enabled {
-								bell_task = Some(play_audio_file(
-									audio_bell.clone(),
-									"--quiet".to_string().clone(),
-								));
-								// TODO: Make this async
-								thread::Builder::new()
-									.name(String::from("killall to ring bell"))
-									.spawn(move || {
-										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-									})
-									.unwrap();
+								bell_task =
+									Some(spawn(play_audio_file(audio_bell.clone(), "--quiet")));
+								spawn(exec_ssh_command(String::from(
+									"killall -SIGUSR2 opensesame",
+								)));
 							}
 							nextcloud_sender
 								.send(NextcloudEvent::Chat(gettext("🔔 Pressed button bell.")))
@@ -599,7 +606,14 @@ impl Buttons {
 						.await?;
 				}
 				StateChange::None => (),
-				StateChange::Err(_) => (),
+				StateChange::Err(board) => {
+					let sys = System::new();
+					let loadavg = sys.load_average().unwrap();
+					nextcloud_sender
+						.send(NextcloudEvent::Ping(gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
+						.await?;
+					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr);
+				}
 			}
 			// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
 			// Validation start
