@@ -1,6 +1,6 @@
 // workaround until https://github.com/svartalf/rust-battery/issues/96 is solved
 
-const CAPACITY_FILE: &'static str = "/sys/class/power_supply/axp20x-battery/capacity";
+const CAPACITY_FILE: &str = "/sys/class/power_supply/axp20x-battery/capacity";
 
 use futures::never::Never;
 use std::fmt;
@@ -19,13 +19,13 @@ impl Bat {
 
 	pub fn capacity(&self) -> u8 {
 		match fs::read_to_string(CAPACITY_FILE) {
-			Ok(str) => return str.trim_end().parse::<u8>().unwrap(),
-			Err(_err) => return 100,
+			Ok(str) => str.trim_end().parse::<u8>().unwrap(),
+			Err(_err) => 100, // TTODO: Do not return full bat in error case!
 		}
 	}
 
 	pub async fn get_background_task(
-		nextcloud_sender: Sender<NextcloudEvent>,
+		_nextcloud_sender: Sender<NextcloudEvent>,
 		//interval: Interval,
 	) -> Result<Never, ModuleError> {
 		// loop {

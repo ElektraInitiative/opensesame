@@ -237,7 +237,7 @@ impl Environment {
 		} else {
 			is_changed = false;
 		}
-		return is_changed;
+		is_changed
 	}
 
 	/// go back to remembered state
@@ -258,7 +258,7 @@ impl Environment {
 	}
 
 	fn print_values(&self) -> String {
-		return format!("Temperature: {} °C, CO₂: {} ppm, VOC: {} ppb, Humidity: {} %, Pressure {} pascals, Baseline: {}", self.temperature, self.co2, self.voc, self.humidity, self.pressure, self.baseline);
+		format!("Temperature: {} °C, CO₂: {} ppm, VOC: {} ppb, Humidity: {} %, Pressure {} pascals, Baseline: {}", self.temperature, self.co2, self.voc, self.humidity, self.pressure, self.baseline)
 	}
 
 	fn convert_env_data(temperature: f32, humidity: f32) -> (u16, u16) {
@@ -274,10 +274,10 @@ impl Environment {
 		not set by the application) to compensate for changes in
 		relative humidity and ambient temperature.*/
 
-		return (
+		(
 			((temperature + 25.0f32) * 512.0f32 + 0.5f32) as u16,
 			(humidity * 512.0f32 + 0.5f32) as u16,
-		);
+		)
 	}
 
 	/// to be periodically called every 10 ms
@@ -293,7 +293,7 @@ impl Environment {
 					self.humidity = measurement.humidity;
 					self.pressure = measurement.pressure;
 
-					return true;
+					true
 				}
 			},
 			Some(board5a) => {
@@ -329,7 +329,7 @@ impl Environment {
 					self.data = data;
 					return self.calculate_air_quality();
 				}
-				return false;
+				false
 			}
 		}
 	}
@@ -359,104 +359,102 @@ impl Environment {
 					sighup.store(true, Ordering::Relaxed);
 				}
 			}*/
-			if self.handle() {
-				if self.air_quality != old_airquality {
-					old_airquality = self.air_quality;
-					nextcloud_sender
-						.send(NextcloudEvent::SetStatusEnv(format!(
-							"💨 {:?}",
-							self.air_quality
-						)))
-						.await?;
+			if self.handle() && self.air_quality != old_airquality {
+   					old_airquality = self.air_quality;
+   					nextcloud_sender
+   						.send(NextcloudEvent::SetStatusEnv(format!(
+   							"💨 {:?}",
+   							self.air_quality
+   						)))
+   						.await?;
 
-					match self.air_quality {
-						AirQualityChange::Error => {
-							let error = gettext!(
-								"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
-								self.error,
-								self.status,
-								self
-							);
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(error.clone()))
-								.await?;
-							return Err(ModuleError::new(error));
-						}
-						AirQualityChange::Ok => {
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(gettext!(
-									"💨 Airquality is ok. {}",
-									self
-								)))
-								.await?;
-						}
-						AirQualityChange::Moderate => {
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(gettext!(
-									"💩 Airquality is moderate. {}",
-									self
-								)))
-								.await?;
-						}
-						AirQualityChange::Bad => {
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(gettext!(
-									"💩 Airquality is bad! {}",
-									self
-								)))
-								.await?;
-						}
+   					match self.air_quality {
+   						AirQualityChange::Error => {
+   							let error = gettext!(
+   								"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
+   								self.error,
+   								self.status,
+   								self
+   							);
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(error.clone()))
+   								.await?;
+   							return Err(ModuleError::new(error));
+   						}
+   						AirQualityChange::Ok => {
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(gettext!(
+   									"💨 Airquality is ok. {}",
+   									self
+   								)))
+   								.await?;
+   						}
+   						AirQualityChange::Moderate => {
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(gettext!(
+   									"💩 Airquality is moderate. {}",
+   									self
+   								)))
+   								.await?;
+   						}
+   						AirQualityChange::Bad => {
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(gettext!(
+   									"💩 Airquality is bad! {}",
+   									self
+   								)))
+   								.await?;
+   						}
 
-						AirQualityChange::FireAlarm => {
-							() //wofür ist dieser return value? bzw. was sollte er im alten bewirken??
-						}
-						AirQualityChange::FireBell => {
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(gettext!(
-									"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
-									self
-								)))
-								.await?;
+   						AirQualityChange::FireAlarm => {
+   							 //wofür ist dieser return value? bzw. was sollte er im alten bewirken??
+   						}
+   						AirQualityChange::FireBell => {
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(gettext!(
+   									"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
+   									self
+   								)))
+   								.await?;
 
-							// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
-							command_sender
-								.send(CommandToButtons::RingBell(20, 0))
-								.await?;
-							/*if config.get_bool("garage/enable") {
-								let file = config.get::<String>("audio/alarm");
-								let arg = "--quiet".to_string();
-								//play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
-								if file != "/dev/null" {
-									thread::Builder::new()
-										.name("ogg123".to_string())
-										.spawn(move || {
-											std::process::Command::new("ogg123")
-												.arg("--quiet")
-												.arg(arg)
-												.arg(file)
-												.status()
-												.expect(&gettext("failed to execute process"));
-										})?;
-								}
-								// build thread in other thread ??? maybe ssh in external thread/task?
-								thread::Builder::new()
-									.name("killall to ring bell".to_string())
-									.spawn(move || {
-										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-									})?;
-							}*/
-						}
-						AirQualityChange::FireChat => {
-							nextcloud_sender
-								.send(NextcloudEvent::Chat(gettext!(
-									"🚨 Possible fire alarm! (don't ring yet). {}",
-									self
-								)))
-								.await?;
-						}
-					};
-				}
-			}
+   							// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
+   							command_sender
+   								.send(CommandToButtons::RingBell(20, 0))
+   								.await?;
+   							/*if config.get_bool("garage/enable") {
+   								let file = config.get::<String>("audio/alarm");
+   								let arg = "--quiet".to_string();
+   								//play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
+   								if file != "/dev/null" {
+   									thread::Builder::new()
+   										.name("ogg123".to_string())
+   										.spawn(move || {
+   											std::process::Command::new("ogg123")
+   												.arg("--quiet")
+   												.arg(arg)
+   												.arg(file)
+   												.status()
+   												.expect(&gettext("failed to execute process"));
+   										})?;
+   								}
+   								// build thread in other thread ??? maybe ssh in external thread/task?
+   								thread::Builder::new()
+   									.name("killall to ring bell".to_string())
+   									.spawn(move || {
+   										exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
+   									})?;
+   							}*/
+   						}
+   						AirQualityChange::FireChat => {
+   							nextcloud_sender
+   								.send(NextcloudEvent::Chat(gettext!(
+   									"🚨 Possible fire alarm! (don't ring yet). {}",
+   									self
+   								)))
+   								.await?;
+   						}
+   					};
+   				}
 			interval.tick().await;
 		}
 	}

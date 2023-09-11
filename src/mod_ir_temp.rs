@@ -97,7 +97,7 @@ impl ModIR {
 		match Mlx9061x::new_mlx90614(I2cdev::new(&self.device).unwrap(), self.addr, 5) {
 			Ok(mlx_sensor) => {
 				self.mlx = Some(mlx_sensor);
-				()
+				
 			}
 			Err(error) => {
 				return Err(error);
@@ -135,7 +135,7 @@ impl ModIR {
 			self.active_object_state = object_state;
 			return IrTempStateChange::ChangedToCancelled;
 		}
-		return IrTempStateChange::None;
+		IrTempStateChange::None
 	}
 
 	/// This function reads the ambient temperature and object temperature from the MOD-IR-TEMP sensor.
@@ -183,7 +183,7 @@ impl ModIR {
 	/// However, the emissivity only needs to be adjusted if we are using a specific object for measurement, as indicated [here](https://en.wikipedia.org/wiki/Emissivity).
 	/// The 'emissivity' parameter can be chosen between 0.0 and 1.0.
 	pub fn _change_emissivity(&mut self, emissivity: f32) -> Result<bool, Error<LinuxI2CError>> {
-		if emissivity >= 0.0 && emissivity <= 1.0 {
+		if (0.0..=1.0).contains(&emissivity) {
 			match &mut self.mlx {
 				Some(mlx_sensor) => match mlx_sensor.set_emissivity(emissivity, &mut Delay {}) {
 					Ok(_) => {
@@ -199,7 +199,7 @@ impl ModIR {
 				}
 			}
 		}
-		return Ok(false);
+		Ok(false)
 	}
 
 	pub async fn get_background_task(

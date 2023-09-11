@@ -267,11 +267,10 @@ impl Nextcloud {
 							.iter()
 							.map(|m| m["message"].as_str().unwrap())
 						{
-							if message.starts_with("\\") {
+							if message.starts_with('\\') {
 								let command_and_args = message
-									.strip_prefix("\\")
+									.strip_prefix('\\')
 									.unwrap()
-									.trim()
 									.split_whitespace()
 									.collect::<Vec<&str>>();
 								let command = command_and_args[0];
@@ -313,10 +312,10 @@ impl Nextcloud {
 									}
 									_ => {
 										nextcloud_sender
-											.send(NextcloudEvent::Chat(String::from(format!(
+											.send(NextcloudEvent::Chat(format!(
 												"Unknown command {}!",
 												command
-											))))
+											)))
 											.await?;
 									}
 								}

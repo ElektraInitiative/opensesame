@@ -262,7 +262,7 @@ impl Buttons {
 			timeout_progress = 0;
 		}
 		self.light_timeout -= timeout_progress;
-		return ret;
+		ret
 	}
 
 	fn handle_bell(&mut self) {
@@ -303,7 +303,7 @@ impl Buttons {
 			self.wrong_input_timeout -= 1;
 			return false;
 		}
-		return true;
+		true
 	}
 
 	/// to be periodically called, e.g. every 10 ms
@@ -400,7 +400,7 @@ impl Buttons {
 				.unwrap();
 			self.pins2 = pins2;
 		}
-		return Ok(ret);
+		Ok(ret)
 	}
 
 	/// opensesame!
@@ -486,7 +486,7 @@ impl Buttons {
 				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN)
 				.unwrap();
 		}
-		return ret;
+		ret
 	}
 
 	async fn do_reset(nextcloud_sender: Sender<NextcloudEvent>, pwr: &mut Pwr) {

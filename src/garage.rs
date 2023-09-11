@@ -97,7 +97,7 @@ impl Garage {
 		if now == 1 && *prev {
 			*prev = false;
 		}
-		return ret;
+		ret
 	}
 
 	pub fn handle(&mut self) -> GarageChange {
@@ -143,7 +143,7 @@ impl Garage {
 			None => (),
 		}
 
-		return GarageChange::None;
+		GarageChange::None
 	}
 
 	/// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
@@ -219,7 +219,7 @@ mod tests {
 	use super::*;
 	use std::{env, thread, time};
 
-	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 
 	#[ignore] // remove and run with: cargo test print_events -- --nocapture
 	#[test]

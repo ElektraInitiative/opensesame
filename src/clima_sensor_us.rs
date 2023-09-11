@@ -20,7 +20,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::time::Interval;
 
 ///Constants
-const DEVICE: &'static str = "/dev/ttyS5";
+const DEVICE: &str = "/dev/ttyS5";
 const BAUDRATE: i32 = 9600;
 const PARITY: char = 'N';
 const DATA_BITS: i32 = 8;
@@ -69,7 +69,7 @@ const REG_PITCH_MAGNETIC_COMPASS_NS: u16 = 0x8915;
 const REG_ROLL_MAGNETIC_COMPASS_EW: u16 = 0x8917;
 
 //Elements of tuple (opensensemap-id, reg-address, factor, datatype(signed or unsigned))
-const OPENSENSE_CLIMA_DATA: [(&'static str, u16, f32, char); 36] = [
+const OPENSENSE_CLIMA_DATA: [(&str, u16, f32, char); 36] = [
 	("64cb602193c69500072a5813", REG_MEAN_WIND_SPEED, 10.0, 'u'),
 	("64cb7c21d588b90007d69a5f", REG_MEAN_WIND_DIREC, 10.0, 'u'),
 	("64cb7c21d588b90007d69a60", REG_AIR_TEMP, 10.0, 's'),
@@ -480,7 +480,7 @@ mod tests {
 				println!("ChangeToRemoveWarning")
 			}
 			Ok(Option::None) => println!("None"),
-			Err(error) => println!("Error"),
+			Err(_error) => println!("Error"),
 		}
 	}
 
@@ -488,9 +488,9 @@ mod tests {
 	fn test_set_warning_active() {
 		let mut warning_active = Option::None;
 
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1).is_none());
 		assert!(matches!(warning_active, Option::None));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
 		assert!(matches!(warning_active, Option::None));
 
 		assert!(
@@ -498,7 +498,7 @@ mod tests {
 				== Some(TempWarningStateChange::ChangeToCloseWindow)
 		);
 		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 3.5).is_none());
 		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
 
 		assert!(
@@ -509,7 +509,7 @@ mod tests {
 			warning_active,
 			Some(TempWarning::WarningTempNoWind)
 		));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 3.5).is_none());
 		assert!(matches!(
 			warning_active,
 			Some(TempWarning::WarningTempNoWind)
@@ -520,16 +520,16 @@ mod tests {
 				== Some(TempWarningStateChange::ChangeToWarningTemp)
 		);
 		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 3.5).is_none());
 		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.3, 3.4) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.3, 3.4).is_none());
 		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1)
 				== Some(TempWarningStateChange::ChangeToRemoveWarning)
 		);
 		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
-		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5) == Option::None);
+		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
 		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
 	}
 

@@ -1,4 +1,4 @@
-use chrono::prelude::*;
+
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
@@ -22,15 +22,15 @@ use tokio::sync::mpsc;
 use tokio::task::spawn_local;
 use tokio::time::interval;
 
-const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
-const STATE_PARENT: &'static str = "/state/libelektra/opensesame/#0/current";
+const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
+const STATE_PARENT: &str = "/state/libelektra/opensesame/#0/current";
 
 #[tokio::main]
 async fn main() -> Result<(), ModuleError> {
 	TextDomain::new("opensesame").init().unwrap();
 
 	let mut config = Config::new(CONFIG_PARENT);
-	let state = Config::new(STATE_PARENT);
+	let _state = Config::new(STATE_PARENT);
 
 	// Sender and receiver to open doors/lights etc via Nextcloud
 	let (command_sender, command_receiver) = mpsc::channel::<CommandToButtons>(32);

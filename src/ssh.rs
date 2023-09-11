@@ -11,7 +11,7 @@ async fn exec_ssh_command_once(command: String) -> i32 {
 		key_file_name: String::from("/home/olimex/.ssh/id_rsa"),
 		key_pass: None,
 	};
-	let mut client = Client::connect(
+	let client = Client::connect(
 		(SSH_HOST_IP, 22),
 		"olimex",
 		auth_method,

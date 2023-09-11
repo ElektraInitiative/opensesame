@@ -47,7 +47,7 @@ const ALARM_JUMP: f64 = 60f64;
 
 impl Config<'_> {
 	fn get_sensor_element_option<T: FromStr + Default>(&mut self, nr: u8, name: &str) -> Option<T> {
-		return self.get_option::<T>(&format!("sensors/#{}/{}", nr, name).to_string());
+		self.get_option::<T>(&format!("sensors/#{}/{}", nr, name).to_string())
 	}
 
 	fn get_sensor_element<T: FromStr + Default>(&mut self, nr: u8, name: &str) -> T {
@@ -116,7 +116,7 @@ impl Sensors {
 			" Min: {} Avg: {} Max: {} Text: {}",
 			self.sensors[i].min, self.sensors[i].avg, self.sensors[i].max, text
 		);
-		return ret;
+		ret
 	}
 
 	fn threstext(&mut self, i: usize, text: &str, value: u16) -> String {
@@ -149,7 +149,7 @@ impl Sensors {
 
 		let mut ret = SensorsChange::None;
 		for i in 0..12 {
-			if self.sensors[i].loc == "" {
+			if self.sensors[i].loc.is_empty() {
 				continue;
 			}
 
@@ -157,7 +157,7 @@ impl Sensors {
 			if self.init {
 				let expmovavg =
 					ALPHA * values[i] as f64 + (1.0f64 - ALPHA) * self.sensors[i].value as f64;
-				let prev_expmovavg = self.sensors[i].expmovavg as f64;
+				let prev_expmovavg = self.sensors[i].expmovavg;
 				match self.sensors[i].triggered {
 					SensorsChange::Alarm(_) => {}
 					SensorsChange::Chat(_) => {
@@ -248,7 +248,7 @@ impl Sensors {
 			} // end of if let
 		}
 		self.init = true;
-		return ret;
+		ret
 	}
 
 	pub async fn get_background_task(
@@ -264,7 +264,7 @@ impl Sensors {
 			match self.update(line.clone()) {
 				SensorsChange::None => {
 					println!("None - Sensors - {}", line);
-					()
+					
 				}
 				SensorsChange::Alarm(w) => {
 					nextcloud_sender
@@ -297,7 +297,7 @@ mod tests {
 	use serial_test::serial;
 	use std::env;
 
-	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 
 	#[ignore]
 	#[test]
