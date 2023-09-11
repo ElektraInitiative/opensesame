@@ -341,39 +341,38 @@ impl ClimaSensorUS {
 
 		for tuple_data in OPENSENSE_CLIMA_DATA.iter() {
 			let mut response = vec![0u16; 2];
-			match self
+
+			// Leave out sensor with error
+			if let Ok(_) = self
 				.ctx
 				.read_input_registers(tuple_data.1, 2, &mut response)
 			{
-				Ok(_) => {
-					let value: f32;
-					if tuple_data.3 == 's' {
-						match conv_vec_to_value_s((response[0], response[1])) {
-							Ok(conv_response) => {
-								value = conv_response as f32 / tuple_data.2;
-							}
-							Err(_) => {
-								value = ERROR_CODE_S32 as f32;
-							}
+				let value: f32;
+				if tuple_data.3 == 's' {
+					match conv_vec_to_value_s((response[0], response[1])) {
+						Ok(conv_response) => {
+							value = conv_response as f32 / tuple_data.2;
 						}
-					} else {
-						match conv_vec_to_value_u((response[0], response[1])) {
-							Ok(conv_response) => {
-								value = conv_response as f32 / tuple_data.2;
-							}
-							Err(_) => {
-								value = ERROR_CODE_U32 as f32;
-							}
+						Err(_) => {
+							value = ERROR_CODE_S32 as f32;
 						}
 					}
-					if value != ERROR_CODE_S32 as f32 && value != ERROR_CODE_U32 as f32 {
-						sensor_values.push(SensorValue {
-							sensor: tuple_data.0,
-							value,
-						});
+				} else {
+					match conv_vec_to_value_u((response[0], response[1])) {
+						Ok(conv_response) => {
+							value = conv_response as f32 / tuple_data.2;
+						}
+						Err(_) => {
+							value = ERROR_CODE_U32 as f32;
+						}
 					}
 				}
-				Err(_) => (), // Leave out sensor with error
+				if value != ERROR_CODE_S32 as f32 && value != ERROR_CODE_U32 as f32 {
+					sensor_values.push(SensorValue {
+						sensor: tuple_data.0,
+						value,
+					});
+				}
 			}
 		}
 		sensor_values

@@ -489,17 +489,25 @@ impl Buttons {
 		ret
 	}
 
-	async fn do_reset(nextcloud_sender: Sender<NextcloudEvent>, pwr: &mut Pwr) {
+	async fn do_reset(
+		nextcloud_sender: Sender<NextcloudEvent>,
+		pwr: &mut Pwr,
+	) -> Result<(), ModuleError> {
 		if pwr.enabled() {
 			let mut interval = interval(Duration::from_millis(watchdog::SAFE_TIMEOUT));
 			pwr.switch(false);
-			nextcloud_sender.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH off")));
+			nextcloud_sender
+				.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH off")))
+				.await?;
 			interval.tick().await;
 
 			pwr.switch(true);
-			nextcloud_sender.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH on")));
+			nextcloud_sender
+				.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH on")))
+				.await?;
 			interval.tick().await;
 		}
+		Ok(())
 	}
 
 	pub async fn get_background_task(
@@ -612,7 +620,7 @@ impl Buttons {
 					nextcloud_sender
 						.send(NextcloudEvent::Ping(gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
 						.await?;
-					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr);
+					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr).await?;
 				}
 			}
 			// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
