@@ -342,7 +342,7 @@ impl Environment {
 	) -> Result<Never, ModuleError> {
 		let mut old_airquality = AirQualityChange::Error;
 		if self.board5a.is_some() {
-			sleep(Duration::from_secs(RESET_INTERVAL.into())).await;
+			sleep(Duration::from_millis(RESET_INTERVAL.into())).await;
 			self.init_ccs811();
 		}
 

@@ -138,7 +138,6 @@ fn conv_vec_to_value_s(vec: Vec<u16>) -> i32 {
 }
 
 fn conv_vec_to_value_u(vec: Vec<u16>) -> u32 {
-	
 	(vec[0] as u32) << 16 | (vec[1] as u32)
 }
 
@@ -174,9 +173,7 @@ fn main() {
 			Err(error) => {
 				eprintln!(
 					"{} - {} : [couldn't read data '{}']",
-					input_reg.0,
-					input_reg.1,
-					error
+					input_reg.0, input_reg.1, error
 				);
 			}
 		}
@@ -208,10 +205,7 @@ fn main() {
 			Err(error) => {
 				eprintln!(
 					"{} - {} - {} : [couldn't read data '{}']",
-					hold_reg.0,
-					hold_reg.1,
-					hold_reg.2,
-					error
+					hold_reg.0, hold_reg.1, hold_reg.2, error
 				);
 			}
 		}

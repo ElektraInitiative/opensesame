@@ -13,6 +13,7 @@ use tokio::process::Command;
 use tokio::spawn;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
+use tokio::time::sleep;
 
 use crate::config::Config;
 use crate::nextcloud::NextcloudEvent;
@@ -494,18 +495,17 @@ impl Buttons {
 		pwr: &mut Pwr,
 	) -> Result<(), ModuleError> {
 		if pwr.enabled() {
-			let mut interval = interval(Duration::from_millis(watchdog::SAFE_TIMEOUT));
 			pwr.switch(false);
 			nextcloud_sender
 				.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH off")))
 				.await?;
-			interval.tick().await;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
 
 			pwr.switch(true);
 			nextcloud_sender
 				.send(NextcloudEvent::Ping(gettext("👋 Turned PWR_SWITCH on")))
 				.await?;
-			interval.tick().await;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
 		}
 		Ok(())
 	}

@@ -264,7 +264,6 @@ impl Sensors {
 			match self.update(line.clone()) {
 				SensorsChange::None => {
 					println!("None - Sensors - {}", line);
-					
 				}
 				SensorsChange::Alarm(w) => {
 					nextcloud_sender

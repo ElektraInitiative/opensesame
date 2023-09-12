@@ -97,7 +97,6 @@ impl ModIR {
 		match Mlx9061x::new_mlx90614(I2cdev::new(&self.device).unwrap(), self.addr, 5) {
 			Ok(mlx_sensor) => {
 				self.mlx = Some(mlx_sensor);
-				
 			}
 			Err(error) => {
 				return Err(error);

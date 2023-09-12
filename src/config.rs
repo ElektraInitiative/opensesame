@@ -58,9 +58,9 @@ impl Config<'_> {
 
 	pub fn get_hash_map_vec_u8(&mut self, name: &str) -> HashMap<Vec<u8>, String> {
 		let mut lookup_key = self.parent_key.duplicate(CopyOption::KEY_CP_NAME);
-		lookup_key
-			.add_name(name)
-			.unwrap_or_else(|_| panic!("Could not add '{}' to '{}'!", name, self.parent_key.name()));
+		lookup_key.add_name(name).unwrap_or_else(|_| {
+			panic!("Could not add '{}' to '{}'!", name, self.parent_key.name())
+		});
 		let mut ret = HashMap::new();
 		for (_i, key) in self.ks.iter_mut().enumerate() {
 			if key.is_directly_below(&lookup_key) {
@@ -79,9 +79,9 @@ impl Config<'_> {
 
 	pub fn get_bool(&mut self, name: &str) -> bool {
 		let mut lookup_key = self.parent_key.duplicate(CopyOption::KEY_CP_NAME);
-		lookup_key
-			.add_name(name)
-			.unwrap_or_else(|_| panic!("Could not add '{}' to '{}'!", name, self.parent_key.name()));
+		lookup_key.add_name(name).unwrap_or_else(|_| {
+			panic!("Could not add '{}' to '{}'!", name, self.parent_key.name())
+		});
 		if let Some(found_key) = self.ks.lookup(lookup_key, LookupOption::KDB_O_NONE) {
 			return found_key.value() == "1";
 		}
@@ -90,9 +90,9 @@ impl Config<'_> {
 
 	pub fn get_option<T: FromStr>(&mut self, name: &str) -> Option<T> {
 		let mut lookup_key = self.parent_key.duplicate(CopyOption::KEY_CP_NAME);
-		lookup_key
-			.add_name(name)
-			.unwrap_or_else(|_| panic!("Could not add '{}' to '{}'!", name, self.parent_key.name()));
+		lookup_key.add_name(name).unwrap_or_else(|_| {
+			panic!("Could not add '{}' to '{}'!", name, self.parent_key.name())
+		});
 		if let Some(found_key) = self.ks.lookup(lookup_key, LookupOption::KDB_O_NONE) {
 			if let Ok(ret) = found_key.value().parse::<T>() {
 				return Some(ret);
@@ -103,9 +103,9 @@ impl Config<'_> {
 
 	pub fn get<T: FromStr>(&mut self, name: &str) -> T {
 		let mut lookup_key = self.parent_key.duplicate(CopyOption::KEY_CP_NAME);
-		lookup_key
-			.add_name(name)
-			.unwrap_or_else(|_| panic!("Could not add '{}' to '{}'!", name, self.parent_key.name()));
+		lookup_key.add_name(name).unwrap_or_else(|_| {
+			panic!("Could not add '{}' to '{}'!", name, self.parent_key.name())
+		});
 		if let Some(found_key) = self.ks.lookup(lookup_key, LookupOption::KDB_O_NONE) {
 			if let Ok(ret) = found_key.value().parse::<T>() {
 				ret
