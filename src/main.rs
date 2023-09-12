@@ -18,7 +18,7 @@ use std::panic;
 use systemstat::Duration;
 use tokio::spawn;
 use tokio::sync::mpsc;
-use tokio::task::spawn_local;
+use tokio::task::LocalSet;
 use tokio::time::interval;
 
 const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
@@ -46,6 +46,7 @@ async fn main() -> Result<(), ModuleError> {
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 
 	let mut tasks = vec![];
+	let local_set = LocalSet::new();
 
 	tasks.push(spawn(Nextcloud::get_background_task(
 		Nextcloud::new(&mut config),
@@ -142,7 +143,7 @@ async fn main() -> Result<(), ModuleError> {
 		));
 		match clima_sensor_result {
 			Ok(clima_sensor) => {
-				tasks.push(spawn_local(ClimaSensorUS::get_background_task(
+				tasks.push(local_set.spawn_local(ClimaSensorUS::get_background_task(
 					clima_sensor,
 					interval,
 					nextcloud_sender.clone(),
@@ -168,6 +169,15 @@ async fn main() -> Result<(), ModuleError> {
 		let path = config.get::<String>("watchdog/path");
 		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
 	}
+
+	nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}", buttons_enabled, 
+	garage_enabled,
+	sensors_enabled,
+	modir_enabled,
+	env_enabled,
+	weatherstation_enabled,
+	bat_enabled,
+	watchdog_enabled,))).await?;
 
 	join_all(tasks).await;
 	println!("hallo");
