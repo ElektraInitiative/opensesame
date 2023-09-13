@@ -2,6 +2,7 @@ use chrono::Local;
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
+use opensesame::audio::AudioEvent;
 use opensesame::bat::Bat;
 use opensesame::buttons::{Buttons, CommandToButtons};
 use opensesame::clima_sensor_us::ClimaSensorUS;
@@ -44,6 +45,8 @@ async fn main() -> Result<(), ModuleError> {
 	let (nextcloud_sender, nextcloud_receiver) = mpsc::channel::<NextcloudEvent>(32);
 	// Sender and receiver to set status of System and Send it to Nextcloud
 	let (ping_sender, ping_receiver) = mpsc::channel::<PingEvent>(32);
+	// Sender and receiver to play audio
+	let (audio_sender, audio_receiver) = mpsc::channel::<AudioEvent>(32);
 
 	let buttons_enabled = config.get_bool("buttons/enable");
 	let garage_enabled = config.get_bool("garage/enable");
@@ -79,7 +82,6 @@ async fn main() -> Result<(), ModuleError> {
 	if buttons_enabled {
 		let time_format = config.get::<String>("nextcloud/format/time");
 		let garage_enabled = config.get_bool("garage/enable");
-		let audio_bell = config.get::<String>("audio/bell");
 		let location_latitude = config.get::<f64>("location/latitude");
 		let location_longitude = config.get::<f64>("location/longitude");
 		tasks.push(spawn(Buttons::get_background_task(
@@ -146,6 +148,12 @@ async fn main() -> Result<(), ModuleError> {
 		)));
 	}
 
+	if env_enabled || buttons_enabled {
+		let audio_bell = config.get::<String>("audio/bell");
+
+		Audio::get_background_task(Audio::new(), audio_receiver);
+	}
+
 	if weatherstation_enabled {
 		let clima_sensor_result = ClimaSensorUS::new(&mut config);
 		let interval = interval(Duration::from_secs(
@@ -187,7 +195,9 @@ async fn main() -> Result<(), ModuleError> {
 
 	tasks.push(spawn(Signals::get_background_task(ping_sender.clone(), ping_enabled, command_sender.clone(), buttons_enabled, nextcloud_sender.clone())));
 
-	nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
+	nextcloud_sender.send(
+		NextcloudEvent::Chat(
+			gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
 	buttons_enabled, 
 	garage_enabled,
 	sensors_enabled,
@@ -195,7 +205,8 @@ async fn main() -> Result<(), ModuleError> {
 	env_enabled,
 	weatherstation_enabled,
 	bat_enabled,
-	watchdog_enabled,))).await?;
+	watchdog_enabled,
+))).await?;
 
 	join_all(tasks).await;
 	println!("hallo");
