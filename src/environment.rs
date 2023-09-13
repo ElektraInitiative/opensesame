@@ -347,18 +347,6 @@ impl Environment {
 		}
 
 		loop {
-			/* From buttons_loop
-			if self.handle() {
-				if handle_environment(
-					&mut environment,
-					&mut nextcloud,
-					Some(&mut buttons),
-					&mut config,
-				)? {
-					state.set("alarm/fire", &self.name);
-					sighup.store(true, Ordering::Relaxed);
-				}
-			}*/
 			if self.handle() && self.air_quality != old_airquality {
 				old_airquality = self.air_quality;
 				nextcloud_sender
@@ -407,7 +395,8 @@ impl Environment {
 					}
 
 					AirQualityChange::FireAlarm => {
-						//wofür ist dieser return value? bzw. was sollte er im alten bewirken??
+						/*state.set("alarm/fire", &self.name);
+						sighup.store(true, Ordering::Relaxed);*/
 					}
 					AirQualityChange::FireBell => {
 						nextcloud_sender
@@ -417,7 +406,6 @@ impl Environment {
 							)))
 							.await?;
 
-						// buttons.ring_bell(20, 0); where is it called, and how does it increment the counter???
 						command_sender
 							.send(CommandToButtons::RingBell(20, 0))
 							.await?;

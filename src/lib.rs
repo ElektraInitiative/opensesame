@@ -12,3 +12,5 @@ pub mod ssh;
 pub mod types;
 pub mod validator;
 pub mod watchdog;
+pub mod ping;
+pub mod signals;

@@ -1,3 +1,4 @@
+use chrono::Local;
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
@@ -9,15 +10,18 @@ use opensesame::environment::Environment;
 use opensesame::garage::Garage;
 use opensesame::mod_ir_temp::ModIR;
 use opensesame::nextcloud::{Nextcloud, NextcloudEvent};
+use opensesame::ping::{PingEvent, Ping};
 use opensesame::pwr::Pwr;
 use opensesame::sensors::Sensors;
 use opensesame::types::ModuleError;
 use opensesame::validator::Validator;
 use opensesame::watchdog::Watchdog;
+use opensesame::signals::Signals;
 use std::panic;
+use std::sync::Arc;
 use systemstat::Duration;
 use tokio::spawn;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio::task::LocalSet;
 use tokio::time::interval;
 
@@ -29,12 +33,17 @@ async fn main() -> Result<(), ModuleError> {
 	TextDomain::new("opensesame").init().unwrap();
 
 	let mut config = Config::new(CONFIG_PARENT);
-	let _state = Config::new(STATE_PARENT);
+	let _state = Arc::new(Mutex::new(Config::new(STATE_PARENT))); //Use Mutex for ENV and Signals
+
+	let date_time_format = config.get::<String>("nextcloud/format/datetime");
+	let startup_time = Local::now().format(&date_time_format);
 
 	// Sender and receiver to open doors/lights etc via Nextcloud
 	let (command_sender, command_receiver) = mpsc::channel::<CommandToButtons>(32);
 	// Info to send to next cloud
 	let (nextcloud_sender, nextcloud_receiver) = mpsc::channel::<NextcloudEvent>(32);
+	// Sender and receiver to set status of System and Send it to Nextcloud
+	let (ping_sender, ping_receiver) = mpsc::channel::<PingEvent>(32);
 
 	let buttons_enabled = config.get_bool("buttons/enable");
 	let garage_enabled = config.get_bool("garage/enable");
@@ -44,6 +53,7 @@ async fn main() -> Result<(), ModuleError> {
 	let weatherstation_enabled = config.get_bool("weatherstation/enable");
 	let bat_enabled = config.get_bool("bat/enable");
 	let watchdog_enabled = config.get_bool("watchdog/enable");
+	let ping_enabled = config.get_bool("ping/enable");
 
 	let mut tasks = vec![];
 	let local_set = LocalSet::new();
@@ -170,7 +180,15 @@ async fn main() -> Result<(), ModuleError> {
 		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
 	}
 
-	nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}", buttons_enabled, 
+	//TODO: create Task for Signals and Ping!
+	if ping_enabled {
+		tasks.push(spawn(Ping::get_background_task(Ping::new(startup_time.to_string()), ping_receiver, nextcloud_sender.clone())))
+	}
+
+	tasks.push(spawn(Signals::get_background_task(ping_sender.clone(), ping_enabled, command_sender.clone(), buttons_enabled, nextcloud_sender.clone())));
+
+	nextcloud_sender.send(NextcloudEvent::Chat(gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
+	buttons_enabled, 
 	garage_enabled,
 	sensors_enabled,
 	modir_enabled,

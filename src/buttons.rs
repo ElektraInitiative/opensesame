@@ -72,6 +72,7 @@ pub enum CommandToButtons {
 	OpenDoor,
 	TurnOnLight,
 	RingBell(u32, u32),               // maybe implement it with interval
+	RingBellAlarm(u32),
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
 
@@ -543,6 +544,9 @@ impl Buttons {
 							.await?;
 					}
 					CommandToButtons::TurnOnLight => (),
+					CommandToButtons::RingBellAlarm(period) => {
+						self.ring_bell_alarm(period);
+					},
 				}
 			}
 
@@ -617,6 +621,7 @@ impl Buttons {
 				StateChange::Err(board) => {
 					let sys = System::new();
 					let loadavg = sys.load_average().unwrap();
+					//TODO implementierung von Ping Senden
 					nextcloud_sender
 						.send(NextcloudEvent::Ping(gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
 						.await?;
