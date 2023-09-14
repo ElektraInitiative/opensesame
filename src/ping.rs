@@ -1,11 +1,11 @@
 use futures::never::Never;
 use gettextrs::gettext;
-use systemstat::{Platform,System};
+use systemstat::{Platform, System};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::{nextcloud::NextcloudEvent, types::ModuleError};
 
-pub enum PingEvent{
+pub enum PingEvent {
 	UpadeEnv(String),
 	UpdateEnvStatus(u8),
 	UpdateEnvError(u8),
@@ -23,7 +23,6 @@ pub struct Ping {
 }
 
 impl Ping {
-
 	pub fn new(startup_time: String) -> Self {
 		Self {
 			ping_counter: 0,
@@ -31,18 +30,29 @@ impl Ping {
 			environment_status: 0,
 			environment_error: 0,
 			bat_capacity: 0,
-			startup_time
+			startup_time,
 		}
 	}
 
-	pub async fn get_background_task(mut self, mut ping_receiver: Receiver<PingEvent>, nextcloud_sender: Sender<NextcloudEvent>) -> Result<Never, ModuleError> {
-		
+	pub async fn get_background_task(
+		mut self,
+		mut ping_receiver: Receiver<PingEvent>,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
 		while let Some(event) = ping_receiver.recv().await {
 			match event {
-				PingEvent::UpadeEnv(value) => {self.environment = value;}
-				PingEvent::UpdateEnvStatus(value) => {self.environment_status = value;}
-				PingEvent::UpdateEnvError(value) => {self.environment_error = value;}
-				PingEvent::UpdateBatCapacity(value) => {self.bat_capacity = value;}
+				PingEvent::UpadeEnv(value) => {
+					self.environment = value;
+				}
+				PingEvent::UpdateEnvStatus(value) => {
+					self.environment_status = value;
+				}
+				PingEvent::UpdateEnvError(value) => {
+					self.environment_error = value;
+				}
+				PingEvent::UpdateBatCapacity(value) => {
+					self.bat_capacity = value;
+				}
 				PingEvent::SendPing => {
 					let sys = System::new();
 					let loadavg = sys.load_average().unwrap();
@@ -62,13 +72,11 @@ impl Ping {
 						self.startup_time,
 						self.bat_capacity))).await?;
 
-					self.ping_counter+=1;
+					self.ping_counter += 1;
 				}
 			}
 		}
 
-		Err(ModuleError::new(String::from(
-			"Exit Ping loop!",
-		)))
+		Err(ModuleError::new(String::from("Exit Ping loop!")))
 	}
 }

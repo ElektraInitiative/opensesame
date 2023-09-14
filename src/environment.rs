@@ -96,6 +96,11 @@ pub enum AirQualityChange {
 	FireAlarm,
 }
 
+pub enum EnvEvent {
+	RememberBaseline,
+	RestoreBaseline,
+}
+
 fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity: f32) {
 	let (temp_conv, hum_conv) = Environment::convert_env_data(temperature, humidity);
 
