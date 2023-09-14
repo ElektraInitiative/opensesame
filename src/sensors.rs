@@ -269,7 +269,6 @@ impl Sensors {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)))
 						.await?;
-					println!("Alarm - Sensors - {}", line);
 					/*
 					state.set("alarm/fire", &w.to_string());
 					sighup.store(true, Ordering::Relaxed);
