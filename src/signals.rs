@@ -22,6 +22,7 @@ pub struct Signals<'a> {
 	buttons_enabled: bool,
 	nextcloud_sender: Sender<NextcloudEvent>,
 	environment_sender: Sender<EnvEvent>,
+	environment_enabled: bool,
 	alarm_not_active: bool,
 	startup_time: String,
 	config_mutex: Arc<Mutex<Config<'a>>>,
@@ -34,6 +35,7 @@ impl<'a> Signals<'a> {
 		state_mutex: Arc<Mutex<Config<'a>>>,
 		ping_enabled: bool,
 		buttons_enabled: bool,
+		environment_enabled: bool,
 		startup_time: String,
 		ping_sender: Sender<PingEvent>,
 		command_sender: Sender<CommandToButtons>,
@@ -49,6 +51,7 @@ impl<'a> Signals<'a> {
 			startup_time,
 			ping_enabled,
 			buttons_enabled,
+			environment_enabled,
 			config_mutex,
 			state_mutex,
 		}
@@ -78,11 +81,11 @@ impl<'a> Signals<'a> {
 		let mut state = self.state_mutex.lock().await;
 		config.sync();
 		state.sync();
-
-		self.environment_sender
-			.send(EnvEvent::RestoreBaseline)
-			.await?;
-
+		if self.environment_enabled {
+			self.environment_sender
+				.send(EnvEvent::RestoreBaseline)
+				.await?;
+		}
 		self.nextcloud_sender
 			.send(NextcloudEvent::Ping(gettext!(
 				"👋 reloaded config&state in sensor mode for opensesame {} {}",
@@ -91,7 +94,6 @@ impl<'a> Signals<'a> {
 			)))
 			.await?;
 
-		//Environment gets mutex of state so we first call sync and then we send a Channel Message to Env and ENV calls restore_baseline
 		if let Some(alarm) = state.get_option::<String>("alarm/fire") {
 			if self.alarm_not_active {
 				self.nextcloud_sender
@@ -100,9 +102,11 @@ impl<'a> Signals<'a> {
 						alarm
 					)))
 					.await?;
-				self.command_sender
-					.send(CommandToButtons::RingBellAlarm(10))
-					.await?;
+				if self.buttons_enabled {
+					self.command_sender
+						.send(CommandToButtons::RingBellAlarm(10))
+						.await?;
+				}
 				if config.get_bool("garage/enable") {
 					/*play_audio_file(
 						config.get::<String>("audio/alarm"),
@@ -183,7 +187,9 @@ impl<'a> Signals<'a> {
 					println!("Received SIGHUP");
 				}
 				_ = sig_term.recv() => {
-					self.sigterm().await?;
+					if self.environment_enabled {
+						self.sigterm().await?;
+					}
 					println!("Received SIGTERM");
 				}
 			}

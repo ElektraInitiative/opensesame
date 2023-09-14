@@ -197,6 +197,7 @@ async fn main() -> Result<(), ModuleError> {
 		state_mutex.clone(),
 		ping_enabled,
 		buttons_enabled,
+		env_enabled,
 		startup_time.to_string(),
 		ping_sender.clone(),
 		command_sender.clone(),
