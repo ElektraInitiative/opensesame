@@ -2,7 +2,7 @@ use chrono::Local;
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
-use opensesame::audio::AudioEvent;
+use opensesame::audio::{AudioEvent, Audio};
 use opensesame::bat::Bat;
 use opensesame::buttons::{Buttons, CommandToButtons};
 use opensesame::clima_sensor_us::ClimaSensorUS;
@@ -91,8 +91,8 @@ async fn main() -> Result<(), ModuleError> {
 			time_format.to_string(),
 			command_receiver,
 			nextcloud_sender.clone(),
+			audio_sender.clone(),
 			garage_enabled,
-			audio_bell.to_string(),
 			location_latitude,
 			location_longitude,
 		)));
@@ -150,8 +150,8 @@ async fn main() -> Result<(), ModuleError> {
 
 	if env_enabled || buttons_enabled {
 		let audio_bell = config.get::<String>("audio/bell");
-
-		Audio::get_background_task(Audio::new(), audio_receiver);
+		let audio_alarm = config.get::<String>("audio/alarm");
+		tasks.push(spawn(Audio::get_background_task(Audio::new(audio_bell, audio_alarm), audio_receiver)));
 	}
 
 	if weatherstation_enabled {

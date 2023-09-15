@@ -15,6 +15,8 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 use tokio::time::sleep;
 
+use crate::audio;
+use crate::audio::AudioEvent;
 use crate::config::Config;
 use crate::nextcloud::NextcloudEvent;
 use crate::pwr::Pwr;
@@ -71,7 +73,7 @@ pub enum StateChange {
 pub enum CommandToButtons {
 	OpenDoor,
 	TurnOnLight,
-	RingBell(u32, u32),               // maybe implement it with interval
+	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
@@ -128,20 +130,6 @@ const RELAY_BELL: u8 = 0x01;
 const RELAY_LICHT_INNEN: u8 = 0x01 << 1;
 
 const PINS2_INIT: u8 = 0b01100000;
-
-// play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, arg: &str) -> Result<(), ModuleError> {
-	if file != "/dev/null" {
-		Command::new("ogg123")
-			.arg("--quiet")
-			.arg(arg)
-			.arg(file)
-			.status()
-			.await
-			.unwrap();
-	}
-	Ok(())
-}
 
 impl Buttons {
 	pub fn new(config: &mut Config) -> Self {
@@ -518,13 +506,12 @@ impl Buttons {
 		time_format: String,
 		mut command_receiver: Receiver<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
+		audio_sender: Sender<AudioEvent>,
 		garage_enabled: bool,
-		audio_bell: String,
 		location_latitude: f64,
 		location_longitude: f64,
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(10));
-		let mut bell_task = Option::None;
 		loop {
 			if let Ok(command) = command_receiver.try_recv() {
 				match command {
@@ -546,7 +533,7 @@ impl Buttons {
 					CommandToButtons::TurnOnLight => (),
 					CommandToButtons::RingBellAlarm(period) => {
 						self.ring_bell_alarm(period);
-					},
+					}
 				}
 			}
 
@@ -557,11 +544,7 @@ impl Buttons {
 						if now.hour() >= 7 && now.hour() <= 21 {
 							self.ring_bell(2, 5);
 							if garage_enabled {
-								bell_task =
-									Some(spawn(play_audio_file(audio_bell.clone(), "--quiet")));
-								spawn(exec_ssh_command(String::from(
-									"killall -SIGUSR2 opensesame",
-								)));
+								audio_sender.send(AudioEvent::Bell);
 							}
 							nextcloud_sender
 								.send(NextcloudEvent::Chat(gettext("🔔 Pressed button bell.")))

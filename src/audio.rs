@@ -34,7 +34,7 @@ impl Audio {
 		}
 	}
 
-	async fn get_background_task(
+	pub async fn get_background_task(
 		self,
 		mut audio_receiver: Receiver<AudioEvent>,
 	) -> Result<Never, ModuleError> {
