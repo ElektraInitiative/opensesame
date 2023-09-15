@@ -1,3 +1,4 @@
+pub mod audio;
 pub mod bat;
 pub mod buttons;
 pub mod clima_sensor_us;
