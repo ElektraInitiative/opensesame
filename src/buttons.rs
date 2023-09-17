@@ -544,7 +544,7 @@ impl Buttons {
 						if now.hour() >= 7 && now.hour() <= 21 {
 							self.ring_bell(2, 5);
 							if garage_enabled {
-								audio_sender.send(AudioEvent::Bell);
+								audio_sender.send(AudioEvent::Bell).await?;
 							}
 							nextcloud_sender
 								.send(NextcloudEvent::Chat(gettext("🔔 Pressed button bell.")))
