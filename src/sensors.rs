@@ -2,14 +2,14 @@ use crate::ssh::exec_ssh_command;
 use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
 use futures::never::Never;
 use gettextrs::gettext;
-use tokio::spawn;
-use tokio::sync::Mutex;
+use nix::sys::signal::{kill, Signal};
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::spawn;
 use tokio::sync::mpsc::Sender;
-use nix::sys::signal::{kill, Signal};
+use tokio::sync::Mutex;
 
 const ALPHA: f64 = 0.6;
 
@@ -279,7 +279,10 @@ impl Sensors {
 					let mut state = state_mutex.lock().await;
 					state.set("alarm/fire", &w.to_string());
 					kill(nix::unistd::Pid::from_raw(pid as i32), Signal::SIGHUP)?;
-					spawn(exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w)));
+					spawn(exec_ssh_command(format!(
+						"kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"",
+						w
+					)));
 				}
 				SensorsChange::Chat(w) => {
 					nextcloud_sender

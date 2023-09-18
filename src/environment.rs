@@ -7,7 +7,10 @@ use linux_embedded_hal::{Delay, I2cdev};
 use std::{fmt, sync::Arc};
 use systemstat::Duration;
 use tokio::{
-	sync::{mpsc::{Sender, Receiver}, Mutex},
+	sync::{
+		mpsc::{Receiver, Sender},
+		Mutex,
+	},
 	time::{sleep, Interval},
 };
 
@@ -16,7 +19,7 @@ use crate::{
 	types::ModuleError,
 };
 
-pub struct Environment<'a>{
+pub struct Environment<'a> {
 	pub co2: u16,
 	pub voc: u16,
 	pub temperature: f32,
@@ -119,7 +122,7 @@ fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity:
 		.unwrap();
 }
 
-impl <'a> Environment <'a>{
+impl<'a> Environment<'a> {
 	pub fn new(config: &mut Config, state_mutex: Arc<Mutex<Config<'a>>>) -> Self {
 		let dev_name = config.get::<String>("environment/device");
 		if dev_name == "/dev/null" {
@@ -365,7 +368,7 @@ impl <'a> Environment <'a>{
 				match env {
 					EnvEvent::RememberBaseline => {
 						self.remember_baseline().await;
-					},
+					}
 					EnvEvent::RestoreBaseline => {
 						self.restore_baseline().await;
 					}

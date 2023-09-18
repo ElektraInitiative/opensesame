@@ -1,9 +1,4 @@
-use crate::{
-	audio::{AudioEvent},
-	buttons::CommandToButtons,
-	config::Config,
-	types::ModuleError,
-};
+use crate::{audio::AudioEvent, buttons::CommandToButtons, config::Config, types::ModuleError};
 use futures::{never::Never, try_join};
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},

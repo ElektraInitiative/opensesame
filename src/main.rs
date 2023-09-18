@@ -10,7 +10,7 @@ use tokio::spawn;
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::interval;
 
-use opensesame::audio::{AudioEvent, Audio};
+use opensesame::audio::{Audio, AudioEvent};
 use opensesame::bat::Bat;
 use opensesame::buttons::{Buttons, CommandToButtons};
 use opensesame::clima_sensor_us::ClimaSensorUS;
@@ -159,9 +159,12 @@ async fn main() -> Result<(), ModuleError> {
 	}
 
 	// if env_enabled || buttons_enabled {
-		let audio_bell = config.get::<String>("audio/bell");
-		let audio_alarm = config.get::<String>("audio/alarm");
-		tasks.push(spawn(Audio::get_background_task(Audio::new(audio_bell, audio_alarm), audio_receiver)));
+	let audio_bell = config.get::<String>("audio/bell");
+	let audio_alarm = config.get::<String>("audio/alarm");
+	tasks.push(spawn(Audio::get_background_task(
+		Audio::new(audio_bell, audio_alarm),
+		audio_receiver,
+	)));
 	// }
 
 	if weatherstation_enabled {
@@ -226,7 +229,7 @@ async fn main() -> Result<(), ModuleError> {
 	nextcloud_sender.send(
 		NextcloudEvent::Chat(
 			gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
-	buttons_enabled, 
+	buttons_enabled,
 	garage_enabled,
 	sensors_enabled,
 	modir_enabled,
