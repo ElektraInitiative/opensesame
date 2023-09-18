@@ -159,12 +159,11 @@ fn main() {
 		let mut data = vec![0u16; 2];
 		match ctx.read_input_registers(input_reg.0, 2, &mut data) {
 			Ok(_) => {
-				let conv_data: f32;
-				if input_reg.4 == 'u' {
-					conv_data = (conv_vec_to_value_u(data) as f32) / input_reg.3 as f32;
+				let conv_data = if input_reg.4 == 'u' {
+					(conv_vec_to_value_u(data) as f32) / input_reg.3 as f32
 				} else {
-					conv_data = (conv_vec_to_value_s(data) as f32) / input_reg.3 as f32;
-				}
+					(conv_vec_to_value_s(data) as f32) / input_reg.3 as f32
+				};
 				println!(
 					"{} - {} : {} {}",
 					input_reg.0, input_reg.1, conv_data, input_reg.2

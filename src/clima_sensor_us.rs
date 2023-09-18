@@ -345,9 +345,10 @@ impl ClimaSensorUS {
 			let mut response = vec![0u16; 2];
 
 			// Leave out sensor with error
-			if let Ok(_) = self
+			if self
 				.ctx
 				.read_input_registers(tuple_data.1, 2, &mut response)
+				.is_ok()
 			{
 				let value: f32;
 				if tuple_data.3 == 's' {

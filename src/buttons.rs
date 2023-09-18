@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use chrono::Datelike;
 use chrono::Local;
 use chrono::Timelike;
@@ -10,11 +12,9 @@ use sunrise::sunrise_sunset;
 use systemstat::Duration;
 use systemstat::{Platform, System};
 
-
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 use tokio::time::sleep;
-
 
 use crate::audio::AudioEvent;
 use crate::config::Config;
@@ -281,19 +281,22 @@ impl Buttons {
 	}
 
 	fn handle_wrong_input(&mut self) -> bool {
-		if self.wrong_input_timeout == 1 {
-			self.led_light = false;
-			self.led1 = false;
-			self.led2 = false;
-			self.led3 = false;
-			self.led4 = false;
-			self.wrong_input_timeout = 0;
-			return false;
-		} else if self.wrong_input_timeout > 1 {
-			self.wrong_input_timeout -= 1;
-			return false;
+		match self.wrong_input_timeout.cmp(&1) {
+			Ordering::Equal => {
+				self.led_light = false;
+				self.led1 = false;
+				self.led2 = false;
+				self.led3 = false;
+				self.led4 = false;
+				self.wrong_input_timeout = 0;
+				false
+			}
+			Ordering::Greater => {
+				self.wrong_input_timeout -= 1;
+				false
+			}
+			Ordering::Less => true,
 		}
-		true
 	}
 
 	/// to be periodically called, e.g. every 10 ms
