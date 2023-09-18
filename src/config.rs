@@ -10,6 +10,8 @@ pub struct Config<'a> {
 	ks: KeySet,
 }
 
+unsafe impl<'a> Send for Config<'a> {}
+
 impl Config<'_> {
 	pub fn new(parent: &str) -> Self {
 		let mut s = Self {

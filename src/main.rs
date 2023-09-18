@@ -2,6 +2,13 @@ use chrono::Local;
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
+use std::panic;
+use std::sync::Arc;
+use systemstat::Duration;
+use tokio::spawn;
+use tokio::sync::{mpsc, Mutex};
+use tokio::time::interval;
+
 use opensesame::audio::{AudioEvent, Audio};
 use opensesame::bat::Bat;
 use opensesame::buttons::{Buttons, CommandToButtons};
@@ -18,13 +25,6 @@ use opensesame::signals::Signals;
 use opensesame::types::ModuleError;
 use opensesame::validator::Validator;
 use opensesame::watchdog::Watchdog;
-use std::panic;
-use std::sync::Arc;
-use systemstat::Duration;
-use tokio::spawn;
-use tokio::sync::{mpsc, Mutex};
-use tokio::task::LocalSet;
-use tokio::time::interval;
 
 const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &str = "/state/libelektra/opensesame/#0/current";
@@ -49,7 +49,7 @@ async fn main() -> Result<(), ModuleError> {
 	// Sender and receiver to play audio
 	let (audio_sender, audio_receiver) = mpsc::channel::<AudioEvent>(32);
 
-	let (environment_sender, environment_receiver) = mpsc::channel::<EnvEvent>(32);
+	let (environment_sender, _environment_receiver) = mpsc::channel::<EnvEvent>(32);
 
 	let buttons_enabled = config.get_bool("buttons/enable");
 	let garage_enabled = config.get_bool("garage/enable");
@@ -62,13 +62,13 @@ async fn main() -> Result<(), ModuleError> {
 	let ping_enabled = config.get_bool("ping/enable");
 
 	let mut tasks = vec![];
-	let local_set = LocalSet::new();
 
 	tasks.push(spawn(Nextcloud::get_background_task(
 		Nextcloud::new(&mut config),
 		nextcloud_receiver,
 		nextcloud_sender.clone(),
 		command_sender.clone(),
+		audio_sender.clone(),
 	)));
 
 	if garage_enabled {
@@ -143,19 +143,22 @@ async fn main() -> Result<(), ModuleError> {
 		let interval = interval(Duration::from_secs(
 			config.get::<u64>("environment/data/interval"),
 		));
+		let garage_enabled = config.get_bool("garage/enable");
 		tasks.push(spawn(Environment::get_background_task(
 			Environment::new(&mut config),
 			interval,
 			nextcloud_sender.clone(),
 			command_sender.clone(),
+			audio_sender.clone(),
+			garage_enabled,
 		)));
 	}
 
-	if env_enabled || buttons_enabled {
+	// if env_enabled || buttons_enabled {
 		let audio_bell = config.get::<String>("audio/bell");
 		let audio_alarm = config.get::<String>("audio/alarm");
 		tasks.push(spawn(Audio::get_background_task(Audio::new(audio_bell, audio_alarm), audio_receiver)));
-	}
+	// }
 
 	if weatherstation_enabled {
 		let clima_sensor_result = ClimaSensorUS::new(&mut config);
@@ -164,7 +167,7 @@ async fn main() -> Result<(), ModuleError> {
 		));
 		match clima_sensor_result {
 			Ok(clima_sensor) => {
-				tasks.push(local_set.spawn_local(ClimaSensorUS::get_background_task(
+				tasks.push(spawn(ClimaSensorUS::get_background_task(
 					clima_sensor,
 					interval,
 					nextcloud_sender.clone(),
@@ -211,9 +214,10 @@ async fn main() -> Result<(), ModuleError> {
 		command_sender.clone(),
 		nextcloud_sender.clone(),
 		environment_sender.clone(),
+		audio_sender.clone(),
 	);
 
-	tasks.push(local_set.spawn_local(signals.get_background_task()));
+	tasks.push(spawn(signals.get_background_task()));
 
 	nextcloud_sender.send(
 		NextcloudEvent::Chat(

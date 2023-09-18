@@ -1,10 +1,10 @@
 use futures::never::Never;
 use tokio::{process::Command, spawn, sync::mpsc::Receiver, task::JoinHandle};
 
-use crate::types::ModuleError;
+use crate::{ssh::exec_ssh_command, types::ModuleError};
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, arg: &str) -> Result<(), ModuleError> {
+async fn play_audio_file(file: String, _arg: &str) -> Result<(), ModuleError> {
 	if file != "/dev/null" {
 		Command::new("ogg123")
 			.arg("--quiet")
@@ -44,11 +44,19 @@ impl Audio {
 				handler.abort();
 			}
 			join_handler = match event {
-				AudioEvent::Bell => Some(spawn(play_audio_file(self.bell_path.clone(), ""))),
-				AudioEvent::FireAlarm => Some(spawn(play_audio_file(
-					self.fire_alarm_path.clone(),
-					"--repeat",
-				))),
+				AudioEvent::Bell => {
+					eprintln!("Ringing bell...");
+					Some(spawn(play_audio_file(self.bell_path.clone(), "")))
+				}
+				AudioEvent::FireAlarm => {
+					eprintln!("Alarm...");
+					let result = Some(spawn(play_audio_file(
+						self.fire_alarm_path.clone(),
+						"--repeat",
+					)));
+					exec_ssh_command(String::from("killall -SIGUSR2 opensesame")).await;
+					result
+				}
 			}
 		}
 		Err(ModuleError::new(String::from(

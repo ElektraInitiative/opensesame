@@ -12,7 +12,8 @@ use tokio::{
 };
 
 use crate::{
-	buttons::CommandToButtons, config::Config, nextcloud::NextcloudEvent, types::ModuleError,
+	audio::AudioEvent, buttons::CommandToButtons, config::Config, nextcloud::NextcloudEvent,
+	types::ModuleError,
 };
 
 pub struct Environment {
@@ -344,6 +345,8 @@ impl Environment {
 		mut interval: Interval,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
+		audio_sender: Sender<AudioEvent>,
+		garage_enabled: bool,
 	) -> Result<Never, ModuleError> {
 		let mut old_airquality = AirQualityChange::Error;
 		if self.board5a.is_some() {
@@ -414,29 +417,9 @@ impl Environment {
 						command_sender
 							.send(CommandToButtons::RingBell(20, 0))
 							.await?;
-						/*if config.get_bool("garage/enable") {
-							let file = config.get::<String>("audio/alarm");
-							let arg = "--quiet".to_string();
-							//play_audio_file(config.get::<String>("audio/alarm"), "--quiet".to_string())?;
-							if file != "/dev/null" {
-								thread::Builder::new()
-									.name("ogg123".to_string())
-									.spawn(move || {
-										std::process::Command::new("ogg123")
-											.arg("--quiet")
-											.arg(arg)
-											.arg(file)
-											.status()
-											.expect(&gettext("failed to execute process"));
-									})?;
-							}
-							// build thread in other thread ??? maybe ssh in external thread/task?
-							thread::Builder::new()
-								.name("killall to ring bell".to_string())
-								.spawn(move || {
-									exec_ssh_command("killall -SIGUSR2 opensesame".to_string());
-								})?;
-						}*/
+						if garage_enabled {
+							audio_sender.send(AudioEvent::FireAlarm).await?;
+						}
 					}
 					AirQualityChange::FireChat => {
 						nextcloud_sender

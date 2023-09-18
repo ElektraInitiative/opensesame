@@ -11,8 +11,8 @@ use tokio::{
 };
 
 use crate::{
-	buttons::CommandToButtons, config::Config, environment::EnvEvent, nextcloud::NextcloudEvent,
-	ping::PingEvent, ssh::exec_ssh_command, types::ModuleError,
+	audio::AudioEvent, buttons::CommandToButtons, config::Config, environment::EnvEvent,
+	nextcloud::NextcloudEvent, ping::PingEvent, ssh::exec_ssh_command, types::ModuleError,
 };
 
 pub struct Signals<'a> {
@@ -23,11 +23,14 @@ pub struct Signals<'a> {
 	nextcloud_sender: Sender<NextcloudEvent>,
 	environment_sender: Sender<EnvEvent>,
 	environment_enabled: bool,
+	audio_sender: Sender<AudioEvent>,
 	alarm_not_active: bool,
 	startup_time: String,
 	config_mutex: Arc<Mutex<Config<'a>>>,
 	state_mutex: Arc<Mutex<Config<'a>>>,
 }
+
+unsafe impl<'a> Send for Signals<'a> {}
 
 impl<'a> Signals<'a> {
 	pub fn new(
@@ -41,12 +44,14 @@ impl<'a> Signals<'a> {
 		command_sender: Sender<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		environment_sender: Sender<EnvEvent>,
+		audio_sender: Sender<AudioEvent>,
 	) -> Self {
 		Self {
 			ping_sender,
 			command_sender,
 			nextcloud_sender,
 			environment_sender,
+			audio_sender,
 			alarm_not_active: true,
 			startup_time,
 			ping_enabled,
@@ -65,7 +70,7 @@ impl<'a> Signals<'a> {
 		self.environment_sender
 			.send(EnvEvent::RememberBaseline)
 			.await?;
-		return Ok(());
+		Ok(())
 	}
 
 	async fn sighup(&mut self) -> Result<(), ModuleError> {
@@ -108,10 +113,7 @@ impl<'a> Signals<'a> {
 						.await?;
 				}
 				if config.get_bool("garage/enable") {
-					/*play_audio_file(
-						config.get::<String>("audio/alarm"),
-						"--repeat".to_string(),
-					);*/
+					self.audio_sender.send(AudioEvent::FireAlarm).await?;
 					spawn(exec_ssh_command(format!(
 						"kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"",
 						alarm
@@ -134,6 +136,7 @@ impl<'a> Signals<'a> {
 		}
 		//Wird mit play audio modul implementiert
 		//play_audio_file(config.get::<String>("audio/alarm"), "--repeat".to_string());
+		self.audio_sender.send(AudioEvent::FireAlarm).await?;
 		self.nextcloud_sender
 			.send(NextcloudEvent::Chat(gettext("🚨 Received alarm")))
 			.await?;
@@ -153,6 +156,7 @@ impl<'a> Signals<'a> {
 		}
 		//Wird mit play audio modul implementiert
 		//	play_audio_file(config.get::<String>("audio/bell"), "--quiet".to_string());
+		self.audio_sender.send(AudioEvent::Bell).await?;
 		self.nextcloud_sender
 			.send(NextcloudEvent::Chat(gettext("🔔 Received bell")))
 			.await?;

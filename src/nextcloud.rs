@@ -1,4 +1,9 @@
-use crate::{buttons::CommandToButtons, config::Config, types::ModuleError};
+use crate::{
+	audio::{AudioEvent},
+	buttons::CommandToButtons,
+	config::Config,
+	types::ModuleError,
+};
 use futures::{never::Never, try_join};
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},
@@ -211,10 +216,11 @@ impl Nextcloud {
 		nextcloud_receiver: Receiver<NextcloudEvent>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
+		audio_sender: Sender<AudioEvent>,
 	) -> Result<Never, ModuleError> {
 		try_join!(
 			self.clone().message_sender_loop(nextcloud_receiver),
-			self.command_loop(nextcloud_sender, command_sender)
+			self.command_loop(nextcloud_sender, command_sender, audio_sender)
 		)?;
 		Err(ModuleError::new(String::from(
 			"Exit get_background_task loop!",
@@ -246,6 +252,7 @@ impl Nextcloud {
 		self,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
+		audio_sender: Sender<AudioEvent>,
 	) -> Result<Never, ModuleError> {
 		let a = self
 			.send_message_once("Started listening to commands here", &self.chat_commands)
@@ -309,6 +316,10 @@ impl Nextcloud {
 											)))
 											.await?;
 										command_sender.send(CommandToButtons::OpenDoor).await?;
+									}
+									"ring_bell" => audio_sender.send(AudioEvent::Bell).await?,
+									"fire_alarm" => {
+										audio_sender.send(AudioEvent::FireAlarm).await?
 									}
 									_ => {
 										nextcloud_sender

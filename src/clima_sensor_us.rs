@@ -204,6 +204,8 @@ struct SensorValue {
 	value: f32,
 }
 
+unsafe impl Send for ClimaSensorUS {}
+
 impl ClimaSensorUS {
 	// Temperature
 	pub const CANCLE_TEMP: f32 = 20.0;
