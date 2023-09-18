@@ -1,4 +1,5 @@
 use i2cdev::linux::LinuxI2CError;
+use nix::errno::Errno;
 use std::{error::Error, fmt};
 use tokio::sync::mpsc::error::SendError;
 
@@ -43,6 +44,14 @@ impl From<LinuxI2CError> for ModuleError {
 	fn from(error: LinuxI2CError) -> Self {
 		ModuleError {
 			reason: format!("LinuxI2CError: {}", error),
+		}
+	}
+}
+
+impl From<Errno> for ModuleError {
+	fn from(error: Errno) -> Self {
+		ModuleError {
+			reason: format!("Errno: {}", error),
 		}
 	}
 }

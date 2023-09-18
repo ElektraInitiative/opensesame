@@ -4,10 +4,10 @@ use gettextrs::gettext;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use linux_embedded_hal::{Delay, I2cdev};
-use std::fmt;
+use std::{fmt, sync::Arc};
 use systemstat::Duration;
 use tokio::{
-	sync::mpsc::Sender,
+	sync::{mpsc::{Sender, Receiver}, Mutex},
 	time::{sleep, Interval},
 };
 
@@ -16,7 +16,7 @@ use crate::{
 	types::ModuleError,
 };
 
-pub struct Environment {
+pub struct Environment<'a>{
 	pub co2: u16,
 	pub voc: u16,
 	pub temperature: f32,
@@ -36,6 +36,7 @@ pub struct Environment {
 	pub data_interval: u16,
 	pub baseline: u16,
 	pub name: String,
+	state_mutex: Arc<Mutex<Config<'a>>>,
 }
 
 const LOW_CO2_OK_QUALITY: u16 = 3000;
@@ -118,8 +119,8 @@ fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity:
 		.unwrap();
 }
 
-impl Environment {
-	pub fn new(config: &mut Config) -> Self {
+impl <'a> Environment <'a>{
+	pub fn new(config: &mut Config, state_mutex: Arc<Mutex<Config<'a>>>) -> Self {
 		let dev_name = config.get::<String>("environment/device");
 		if dev_name == "/dev/null" {
 			Self {
@@ -140,6 +141,7 @@ impl Environment {
 				data_interval: 0,
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
+				state_mutex,
 			}
 		} else {
 			let i2c_bus = I2cdev::new(dev_name).unwrap();
@@ -164,6 +166,7 @@ impl Environment {
 				data_interval: config.get::<u16>("environment/data/interval"),
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
+				state_mutex,
 			};
 			//if sending SW_RESET failes it disables ccs811
 			match s
@@ -247,7 +250,8 @@ impl Environment {
 	}
 
 	/// go back to remembered state
-	pub fn restore_baseline(&mut self, state: &mut Config) {
+	async fn restore_baseline(&mut self) {
+		let mut state = self.state_mutex.lock().await;
 		match self.board5a.as_mut() {
 			None => (),
 			Some(board5a) => {
@@ -259,7 +263,8 @@ impl Environment {
 	}
 
 	/// remember for later
-	pub fn remember_baseline(&mut self, state: &mut Config) {
+	async fn remember_baseline(&mut self) {
+		let mut state = self.state_mutex.lock().await;
 		state.set("environment/baseline", &self.baseline.to_string());
 	}
 
@@ -346,6 +351,7 @@ impl Environment {
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
 		audio_sender: Sender<AudioEvent>,
+		mut environment_receiver: Receiver<EnvEvent>,
 		garage_enabled: bool,
 	) -> Result<Never, ModuleError> {
 		let mut old_airquality = AirQualityChange::Error;
@@ -355,6 +361,17 @@ impl Environment {
 		}
 
 		loop {
+			if let Ok(env) = environment_receiver.try_recv() {
+				match env {
+					EnvEvent::RememberBaseline => {
+						self.remember_baseline().await;
+					},
+					EnvEvent::RestoreBaseline => {
+						self.restore_baseline().await;
+					}
+				}
+			}
+
 			if self.handle() && self.air_quality != old_airquality {
 				old_airquality = self.air_quality;
 				nextcloud_sender
@@ -403,8 +420,8 @@ impl Environment {
 					}
 
 					AirQualityChange::FireAlarm => {
-						/*state.set("alarm/fire", &self.name);
-						sighup.store(true, Ordering::Relaxed);*/
+						let mut state = self.state_mutex.lock().await;
+						state.set("alarm/fire", &self.name);
 					}
 					AirQualityChange::FireBell => {
 						nextcloud_sender
@@ -436,7 +453,7 @@ impl Environment {
 	}
 }
 
-impl fmt::Display for Environment {
+impl fmt::Display for Environment<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}. {}", self.name, self.print_values())
 	}

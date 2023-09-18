@@ -52,6 +52,8 @@ linux-embedded-hal = { version = "0.3", features = ["gpio_cdev"] }
 
 systemstat = "0.1.11"
 
+nix = "0.25"
+
 chrono = "0.4.19"
 
 signal-hook = "0.3.14"

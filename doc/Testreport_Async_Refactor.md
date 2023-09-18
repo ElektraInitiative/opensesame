@@ -14,7 +14,7 @@ This is the testreport of the async refector of opensesame. (`-`) means that the
 
 
 ## Signals
-### Config
+### Configuration
 ```toml
 nextcloud.chat = "<chat-token>"
 nextcloud.chat.licht = "<chat-token>"
@@ -41,7 +41,7 @@ ping.enable = 0
 ### (`-`): This module doesn't enter the async-loop, because of problems with `spawn_local`
 
 ## Buttons
-### Config 
+### Configuration 
 ```toml
 ...
 buttons.enable = 1
@@ -51,7 +51,7 @@ buttons.enable = 1
 ### (`~`): First entering of pin caused time `sequence timeout`, the timeout was too fast. Besides this one failure it worked fine. Cloud be a startup issue.
 
 ## Buttons + Bell
-### Config
+### Configuration
 ```toml
 ...
 buttons.enable = 1
@@ -61,7 +61,7 @@ bell.enable = 1
 ### (`+`): bell and buttons worked
 
 ## Buttons + Garage
-### Config
+### Configuration
 ```toml
 ...
 buttons.enable = 1
@@ -72,7 +72,7 @@ garage.enable = 1
 ### (`~`): TasterTorOben switched only the light indoor at the first time, after a retry it switch both
 
 ## Sensors
-### Config
+### Configuration
 ```toml
 ...
 sensors.enable = 1
@@ -108,3 +108,15 @@ done
 ```
 ### (`+`): Chat and Alarm trigger worked as expected
 ### (`~`): **!!! implementation of state mutex is missing in async function of sensors !!!**
+
+## Weatherstation
+### Configuration
+```toml
+...
+weatherstation.enable = 1
+weatherstation.data.interval = 60
+weatherstation.opensensemap.id = "64cb602193c69500072a580f"
+weatherstation.opensensemap.token = "7bbb014ffbf974255caef2f88525b0512bd0817d9d222f70c7741a4a9cd56c6c"
+...
+```
+### (`+`): Works as expected, sends warning to Nextcloud and updates opensensemap.org

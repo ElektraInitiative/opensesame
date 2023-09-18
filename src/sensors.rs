@@ -1,10 +1,15 @@
+use crate::ssh::exec_ssh_command;
 use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
 use futures::never::Never;
 use gettextrs::gettext;
+use tokio::spawn;
+use tokio::sync::Mutex;
 use std::str::FromStr;
+use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc::Sender;
+use nix::sys::signal::{kill, Signal};
 
 const ALPHA: f64 = 0.6;
 
@@ -255,6 +260,8 @@ impl Sensors {
 		mut self,
 		device_path: String,
 		nextcloud_sender: Sender<NextcloudEvent>,
+		state_mutex: Arc<Mutex<Config<'_>>>,
+		pid: u32,
 	) -> Result<Never, ModuleError> {
 		let device_file = File::open(device_path).await.expect("error here");
 		let reader = BufReader::new(device_file);
@@ -269,11 +276,10 @@ impl Sensors {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)))
 						.await?;
-					/*
+					let mut state = state_mutex.lock().await;
 					state.set("alarm/fire", &w.to_string());
-					sighup.store(true, Ordering::Relaxed);
-					exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w));
-					*/
+					kill(nix::unistd::Pid::from_raw(pid as i32), Signal::SIGHUP)?;
+					spawn(exec_ssh_command(format!("kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"", w)));
 				}
 				SensorsChange::Chat(w) => {
 					nextcloud_sender

@@ -3,6 +3,7 @@ use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
 use std::panic;
+use std::process::id;
 use std::sync::Arc;
 use systemstat::Duration;
 use tokio::spawn;
@@ -107,6 +108,8 @@ async fn main() -> Result<(), ModuleError> {
 			Sensors::new(&mut config),
 			device_path.to_string(),
 			nextcloud_sender.clone(),
+			state_mutex.clone(),
+			id(),
 		)));
 	}
 
@@ -145,11 +148,12 @@ async fn main() -> Result<(), ModuleError> {
 		));
 		let garage_enabled = config.get_bool("garage/enable");
 		tasks.push(spawn(Environment::get_background_task(
-			Environment::new(&mut config),
+			Environment::new(&mut config, state_mutex.clone()),
 			interval,
 			nextcloud_sender.clone(),
 			command_sender.clone(),
 			audio_sender.clone(),
+			_environment_receiver,
 			garage_enabled,
 		)));
 	}
