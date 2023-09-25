@@ -50,7 +50,7 @@ async fn main() -> Result<(), ModuleError> {
 	// Sender and receiver to play audio
 	let (audio_sender, audio_receiver) = mpsc::channel::<AudioEvent>(32);
 
-	let (environment_sender, _environment_receiver) = mpsc::channel::<EnvEvent>(32);
+	let (environment_sender, environment_receiver) = mpsc::channel::<EnvEvent>(32);
 
 	let buttons_enabled = config.get_bool("buttons/enable");
 	let garage_enabled = config.get_bool("garage/enable");
@@ -153,7 +153,7 @@ async fn main() -> Result<(), ModuleError> {
 			nextcloud_sender.clone(),
 			command_sender.clone(),
 			audio_sender.clone(),
-			_environment_receiver,
+			environment_receiver,
 			garage_enabled,
 		)));
 	}
@@ -201,7 +201,6 @@ async fn main() -> Result<(), ModuleError> {
 		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
 	}
 
-	//TODO: create Task for Signals and Ping!
 	if ping_enabled {
 		tasks.push(spawn(Ping::get_background_task(
 			Ping::new(startup_time.to_string()),

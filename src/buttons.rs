@@ -72,7 +72,6 @@ pub enum StateChange {
 
 pub enum CommandToButtons {
 	OpenDoor,
-	TurnOnLight,
 	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
@@ -533,7 +532,6 @@ impl Buttons {
 							)))
 							.await?;
 					}
-					CommandToButtons::TurnOnLight => (),
 					CommandToButtons::RingBellAlarm(period) => {
 						self.ring_bell_alarm(period);
 					}
