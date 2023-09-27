@@ -18,7 +18,7 @@ use opensesame::config::Config;
 use opensesame::environment::{EnvEvent, Environment};
 use opensesame::garage::Garage;
 use opensesame::mod_ir_temp::ModIR;
-use opensesame::nextcloud::{Nextcloud, NextcloudEvent};
+use opensesame::nextcloud::{Nextcloud, NextcloudEvent, NextcloudChat};
 use opensesame::ping::{Ping, PingEvent};
 use opensesame::pwr::Pwr;
 use opensesame::sensors::Sensors;
@@ -133,7 +133,7 @@ async fn main() -> Result<(), ModuleError> {
 					}
 				};
 				nextcloud_sender
-					.send(NextcloudEvent::Ping(gettext!(
+					.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 						"⚠️ Failed to init ModIR: {}",
 						reason
 					)))
@@ -182,7 +182,7 @@ async fn main() -> Result<(), ModuleError> {
 			}
 			Err(error) => {
 				nextcloud_sender
-					.send(NextcloudEvent::Ping(gettext!(
+					.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 						"⚠️ Failed to init libmodbus connection: {}",
 						error
 					)))
@@ -226,7 +226,7 @@ async fn main() -> Result<(), ModuleError> {
 	tasks.push(spawn(signals.get_background_task()));
 
 	nextcloud_sender.send(
-		NextcloudEvent::Chat(
+		NextcloudEvent::Chat(NextcloudChat::Default,
 			gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
 	buttons_enabled,
 	garage_enabled,

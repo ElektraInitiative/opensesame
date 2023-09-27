@@ -12,7 +12,7 @@ use tokio::{
 
 use crate::{
 	audio::AudioEvent, buttons::CommandToButtons, config::Config, environment::EnvEvent,
-	nextcloud::NextcloudEvent, ping::PingEvent, ssh::exec_ssh_command, types::ModuleError,
+	nextcloud::{NextcloudEvent, NextcloudChat}, ping::PingEvent, ssh::exec_ssh_command, types::ModuleError,
 };
 
 pub struct Signals<'a> {
@@ -75,7 +75,7 @@ impl<'a> Signals<'a> {
 
 	async fn sighup(&mut self) -> Result<(), ModuleError> {
 		self.nextcloud_sender
-			.send(NextcloudEvent::Ping(gettext!(
+			.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 				"👋reloading config&state for opensesame {} {}",
 				env!("CARGO_PKG_VERSION"),
 				self.startup_time
@@ -92,7 +92,7 @@ impl<'a> Signals<'a> {
 				.await?;
 		}
 		self.nextcloud_sender
-			.send(NextcloudEvent::Ping(gettext!(
+			.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 				"👋 reloaded config&state in sensor mode for opensesame {} {}",
 				env!("CARGO_PKG_VERSION"),
 				self.startup_time
@@ -102,7 +102,7 @@ impl<'a> Signals<'a> {
 		if let Some(alarm) = state.get_option::<String>("alarm/fire") {
 			if self.alarm_not_active {
 				self.nextcloud_sender
-					.send(NextcloudEvent::Chat(gettext!(
+					.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 						"🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}",
 						alarm
 					)))
@@ -138,7 +138,7 @@ impl<'a> Signals<'a> {
 		//play_audio_file(config.get::<String>("audio/alarm"), "--repeat".to_string());
 		self.audio_sender.send(AudioEvent::FireAlarm).await?;
 		self.nextcloud_sender
-			.send(NextcloudEvent::Chat(gettext("🚨 Received alarm")))
+			.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext("🚨 Received alarm")))
 			.await?;
 		Ok(())
 	}
@@ -158,7 +158,7 @@ impl<'a> Signals<'a> {
 		//	play_audio_file(config.get::<String>("audio/bell"), "--quiet".to_string());
 		self.audio_sender.send(AudioEvent::Bell).await?;
 		self.nextcloud_sender
-			.send(NextcloudEvent::Chat(gettext("🔔 Received bell")))
+			.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext("🔔 Received bell")))
 			.await?;
 		Ok(())
 	}

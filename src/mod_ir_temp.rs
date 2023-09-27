@@ -4,7 +4,7 @@
 /// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
 /// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 use crate::config::Config;
-use crate::nextcloud::NextcloudEvent;
+use crate::nextcloud::{NextcloudEvent, NextcloudChat};
 use crate::types::ModuleError;
 use futures::never::Never;
 use gettextrs::gettext;
@@ -212,7 +212,7 @@ impl ModIR {
 					IrTempStateChange::None => (),
 					IrTempStateChange::ChanedToBothToHot => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
 								self.ambient_temp,
 								self.object_temp
@@ -221,7 +221,7 @@ impl ModIR {
 					}
 					IrTempStateChange::ChangedToAmbientToHot => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
 								self.ambient_temp
 							)))
@@ -229,7 +229,7 @@ impl ModIR {
 					}
 					IrTempStateChange::ChangedToObjectToHot => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🌡️ ModIR object sensors too hot! Object: {} °C",
 								self.object_temp
 							)))
@@ -237,7 +237,7 @@ impl ModIR {
 					}
 					IrTempStateChange::ChangedToCancelled => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
 								self.ambient_temp,
 								self.object_temp
@@ -248,7 +248,7 @@ impl ModIR {
 				Err(error_typ) => match error_typ {
 					MlxError::I2C(error) => {
 						nextcloud_sender
-							.send(NextcloudEvent::Ping(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 								"⚠️ Error while handling ModIR: {}",
 								error
 							)))
@@ -256,7 +256,7 @@ impl ModIR {
 					}
 					MlxError::ChecksumMismatch => {
 						nextcloud_sender
-							.send(NextcloudEvent::Ping(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 								"⚠️ Error while handling ModIR: {}",
 								"ChecksumMismatch"
 							)))
@@ -264,7 +264,7 @@ impl ModIR {
 					}
 					MlxError::InvalidInputData => {
 						nextcloud_sender
-							.send(NextcloudEvent::Ping(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 								"⚠️ Error while handling ModIR: {}",
 								"InvalidInputData"
 							)))

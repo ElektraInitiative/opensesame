@@ -15,7 +15,7 @@ use tokio::{
 };
 
 use crate::{
-	audio::AudioEvent, buttons::CommandToButtons, config::Config, nextcloud::NextcloudEvent,
+	audio::AudioEvent, buttons::CommandToButtons, config::Config, nextcloud::{NextcloudEvent, NextcloudChat, NextcloudStatus},
 	types::ModuleError,
 };
 
@@ -378,7 +378,7 @@ impl<'a> Environment<'a> {
 			if self.handle() && self.air_quality != old_airquality {
 				old_airquality = self.air_quality;
 				nextcloud_sender
-					.send(NextcloudEvent::SetStatusEnv(format!(
+					.send(NextcloudEvent::Status(NextcloudStatus::Env,format!(
 						"💨 {:?}",
 						self.air_quality
 					)))
@@ -393,13 +393,13 @@ impl<'a> Environment<'a> {
 							self
 						);
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(error.clone()))
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, error.clone()))
 							.await?;
 						return Err(ModuleError::new(error));
 					}
 					AirQualityChange::Ok => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"💨 Airquality is ok. {}",
 								self
 							)))
@@ -407,7 +407,7 @@ impl<'a> Environment<'a> {
 					}
 					AirQualityChange::Moderate => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"💩 Airquality is moderate. {}",
 								self
 							)))
@@ -415,7 +415,7 @@ impl<'a> Environment<'a> {
 					}
 					AirQualityChange::Bad => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"💩 Airquality is bad! {}",
 								self
 							)))
@@ -428,7 +428,7 @@ impl<'a> Environment<'a> {
 					}
 					AirQualityChange::FireBell => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🚨 Possible fire alarm! Ring bell once! ⏰. {}",
 								self
 							)))
@@ -443,7 +443,7 @@ impl<'a> Environment<'a> {
 					}
 					AirQualityChange::FireChat => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(gettext!(
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
 								"🚨 Possible fire alarm! (don't ring yet). {}",
 								self
 							)))

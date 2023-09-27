@@ -1,3 +1,4 @@
+use crate::nextcloud::NextcloudChat;
 use crate::ssh::exec_ssh_command;
 use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
 use futures::never::Never;
@@ -270,11 +271,11 @@ impl Sensors {
 		while let Some(line) = lines.next_line().await? {
 			match self.update(line.clone()) {
 				SensorsChange::None => {
-					println!("None - Sensors - {}", line);
+					()
 				}
 				SensorsChange::Alarm(w) => {
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!("Fire Alarm {}", w)))
+						.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!("Fire Alarm {}", w)))
 						.await?;
 					let mut state = state_mutex.lock().await;
 					state.set("alarm/fire", &w.to_string());
@@ -286,7 +287,7 @@ impl Sensors {
 				}
 				SensorsChange::Chat(w) => {
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(gettext!("Fire Chat {}", w)))
+						.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!("Fire Chat {}", w)))
 						.await?;
 					println!("Chat - Sensors - {}", line);
 				}

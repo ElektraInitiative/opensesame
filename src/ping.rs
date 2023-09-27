@@ -3,7 +3,7 @@ use gettextrs::gettext;
 use systemstat::{Platform, System};
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::{nextcloud::NextcloudEvent, types::ModuleError};
+use crate::{nextcloud::{NextcloudEvent, NextcloudChat}, types::ModuleError};
 
 pub enum PingEvent {
 	UpadeEnv(String),
@@ -57,7 +57,7 @@ impl Ping {
 					let sys = System::new();
 					let loadavg = sys.load_average().unwrap();
 
-					nextcloud_sender.send(NextcloudEvent::Ping(gettext!("{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}", 
+					nextcloud_sender.send(NextcloudEvent::Chat(NextcloudChat::Ping,gettext!("{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}", 
 						self.ping_counter,
 						env!("CARGO_PKG_VERSION"),
 						self.environment,

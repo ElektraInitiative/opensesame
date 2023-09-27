@@ -7,7 +7,7 @@
 extern crate libmodbus;
 
 use crate::config::Config;
-use crate::nextcloud::NextcloudEvent;
+use crate::nextcloud::{NextcloudEvent, NextcloudChat};
 use crate::types::ModuleError;
 use futures::never::Never;
 use gettextrs::gettext;
@@ -440,12 +440,12 @@ impl ClimaSensorUS {
 							ClimaSensorUS::CANCLE_TEMP
 						),
 					};
-					nextcloud_sender.send(NextcloudEvent::Chat(message)).await?;
+					nextcloud_sender.send(NextcloudEvent::Chat(NextcloudChat::Default, message)).await?;
 				}
 				Ok(None) => (),
 				Err(error) => {
 					nextcloud_sender
-						.send(NextcloudEvent::Ping(gettext!(
+						.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
 							"⚠️ Error from weather station: {}",
 							error
 						)))
