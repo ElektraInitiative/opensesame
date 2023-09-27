@@ -65,7 +65,6 @@ pub struct Buttons {
 #[derive(PartialEq, Debug)]
 pub enum StateChange {
 	None,
-	Err(u8),
 	Pressed(u8),
 	Released(u8),
 	LightsOff,
@@ -522,6 +521,7 @@ impl Buttons {
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(10));
 		loop {
+			interval.tick().await;
 			if let Ok(command) = command_receiver.try_recv() {
 				match command {
 					CommandToButtons::OpenDoor => {
@@ -544,8 +544,8 @@ impl Buttons {
 				}
 			}
 
-			match self.handle()? {
-				StateChange::Pressed(button) => match button {
+			match self.handle() {
+				Ok(StateChange::Pressed(button)) => match button {
 					BUTTON_BELL => {
 						let now = Local::now();
 						if now.hour() >= 7 && now.hour() <= 21 {
@@ -619,8 +619,8 @@ impl Buttons {
 					}
 					_ => panic!("🔘 Pressed {}", button),
 				},
-				StateChange::Released(_button) => (),
-				StateChange::LightsOff => {
+				Ok(StateChange::Released(_button)) => (),
+				Ok(StateChange::LightsOff) => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Licht,
@@ -628,8 +628,8 @@ impl Buttons {
 						))
 						.await?;
 				}
-				StateChange::None => (),
-				StateChange::Err(board) => {
+				Ok(StateChange::None) => (),
+				Err(board) => {
 					let sys = System::new();
 					let loadavg = sys.load_average().unwrap();
 					//TODO implementierung von Ping Senden
@@ -707,7 +707,6 @@ impl Buttons {
 				}
 				Validation::None => (),
 			}
-			interval.tick().await;
 		}
 	}
 }

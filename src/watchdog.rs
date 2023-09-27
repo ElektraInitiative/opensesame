@@ -17,11 +17,11 @@ impl Watchdog {
 			.await
 			.map_err(|_| ModuleError::new(String::from("could not open watchdog")))?;
 		loop {
+			interval.tick().await;
 			handle
 				.write_all(b"a")
 				.await
 				.map_err(|_| ModuleError::new(String::from("could not write to watchdog")))?;
-			interval.tick().await;
 		}
 	}
 }

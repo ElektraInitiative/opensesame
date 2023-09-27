@@ -42,35 +42,37 @@ impl Bat {
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_secs(1800));
 		loop {
-			self.capacity = self.capacity();
-
-			if self.capacity < self.capacity_threshold {
-				if self.capacity_threshold - 10 > 0 {
-					self.capacity_threshold -= 10;
-				} else {
-					self.capacity_threshold = 0;
-				}
-				nextcloud_sender
-					.send(NextcloudEvent::Chat(
-						NextcloudChat::Default,
-						gettext!(
-							"🪫 Battery Capacity is below {}% at {}%",
-							self.capacity_threshold,
-							self.capacity
-						),
-					))
-					.await?;
-			} else if self.capacity == 100 {
-				self.capacity_threshold = 50;
-				nextcloud_sender
-					.send(NextcloudEvent::Chat(
-						NextcloudChat::Default,
-						gettext!("🔋 Battery Capacity is back to {}%", self.capacity),
-					))
-					.await?;
-			}
-
 			interval.tick().await;
+			let new_capacity = self.capacity();
+
+			if new_capacity != self.capacity {
+				self.capacity = new_capacity;
+				if self.capacity < self.capacity_threshold {
+					if self.capacity_threshold - 10 > 0 {
+						self.capacity_threshold -= 10;
+					} else {
+						self.capacity_threshold = 0;
+					}
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!(
+								"🪫 Battery Capacity is below {}% at {}%",
+								self.capacity_threshold,
+								self.capacity
+							),
+						))
+						.await?;
+				} else if self.capacity == 100 {
+					self.capacity_threshold = START_CAPACITY_THRESHOLD;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("🔋 Battery Capacity is back to {}%", self.capacity),
+						))
+						.await?;
+				}
+			}
 		}
 	}
 }

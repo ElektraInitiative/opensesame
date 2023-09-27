@@ -207,6 +207,7 @@ impl ModIR {
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		loop {
+			interval.tick().await;
 			match self.handle() {
 				Ok(state) => match state {
 					IrTempStateChange::None => (),
@@ -284,7 +285,6 @@ impl ModIR {
 					}
 				},
 			}
-			interval.tick().await;
 		}
 	}
 }

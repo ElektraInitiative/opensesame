@@ -367,6 +367,7 @@ impl<'a> Environment<'a> {
 		}
 
 		loop {
+			interval.tick().await;
 			if let Ok(env) = environment_receiver.try_recv() {
 				match env {
 					EnvEvent::RememberBaseline => {
@@ -454,7 +455,6 @@ impl<'a> Environment<'a> {
 					}
 				};
 			}
-			interval.tick().await;
 		}
 	}
 }
