@@ -18,7 +18,7 @@ use opensesame::config::Config;
 use opensesame::environment::{EnvEvent, Environment};
 use opensesame::garage::Garage;
 use opensesame::mod_ir_temp::ModIR;
-use opensesame::nextcloud::{Nextcloud, NextcloudEvent, NextcloudChat};
+use opensesame::nextcloud::{Nextcloud, NextcloudChat, NextcloudEvent};
 use opensesame::ping::{Ping, PingEvent};
 use opensesame::pwr::Pwr;
 use opensesame::sensors::Sensors;
@@ -133,10 +133,10 @@ async fn main() -> Result<(), ModuleError> {
 					}
 				};
 				nextcloud_sender
-					.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
-						"⚠️ Failed to init ModIR: {}",
-						reason
-					)))
+					.send(NextcloudEvent::Chat(
+						NextcloudChat::Ping,
+						gettext!("⚠️ Failed to init ModIR: {}", reason),
+					))
 					.await?;
 			}
 		}
@@ -182,17 +182,20 @@ async fn main() -> Result<(), ModuleError> {
 			}
 			Err(error) => {
 				nextcloud_sender
-					.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!(
-						"⚠️ Failed to init libmodbus connection: {}",
-						error
-					)))
+					.send(NextcloudEvent::Chat(
+						NextcloudChat::Ping,
+						gettext!("⚠️ Failed to init libmodbus connection: {}", error),
+					))
 					.await?;
 			}
 		}
 	}
 
 	if bat_enabled {
-		tasks.push(spawn(Bat::get_background_task(nextcloud_sender.clone())));
+		tasks.push(spawn(Bat::get_background_task(
+			Bat::new(),
+			nextcloud_sender.clone(),
+		)));
 	}
 
 	if watchdog_enabled {

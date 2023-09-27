@@ -10,13 +10,13 @@ use tokio::{
 	time::{self, interval},
 };
 
-pub enum NextcloudChat{
+pub enum NextcloudChat {
 	Default,
 	Ping,
 	Licht,
 }
 
-pub enum NextcloudStatus{
+pub enum NextcloudStatus {
 	Online,
 	Env,
 	Door,
@@ -237,21 +237,17 @@ impl Nextcloud {
 		self.send_message(String::from("Nextcloud stated...")).await;
 		while let Some(event) = nextcloud_receiver.recv().await {
 			match event {
-				NextcloudEvent::Chat(chat,message) => {
-					match chat {
-						NextcloudChat::Default => self.send_message(message).await,
-						NextcloudChat::Ping => self.ping(message).await,
-						NextcloudChat::Licht =>  self.licht(message).await,
-					}
+				NextcloudEvent::Chat(chat, message) => match chat {
+					NextcloudChat::Default => self.send_message(message).await,
+					NextcloudChat::Ping => self.ping(message).await,
+					NextcloudChat::Licht => self.licht(message).await,
 				},
 				NextcloudEvent::SendStatus => self.set_status_in_chat().await,
-				NextcloudEvent::Status(status, message) => {
-					match status {
-						NextcloudStatus::Online => self.set_info_online(message).await,
-						NextcloudStatus::Env => self.set_info_environment(message).await,
-						NextcloudStatus::Door => self.set_info_door(message).await,
-					}
-				}
+				NextcloudEvent::Status(status, message) => match status {
+					NextcloudStatus::Online => self.set_info_online(message).await,
+					NextcloudStatus::Env => self.set_info_environment(message).await,
+					NextcloudStatus::Door => self.set_info_door(message).await,
+				},
 			}
 		}
 		Err(ModuleError::new(String::from(
@@ -303,9 +299,12 @@ impl Nextcloud {
 									"switchlights" => {
 										if args.len() != 2 {
 											nextcloud_sender
-												.send(NextcloudEvent::Chat(NextcloudChat::Default, String::from(
-													"Usage: switchlights <bool> <bool>",
-												)))
+												.send(NextcloudEvent::Chat(
+													NextcloudChat::Default,
+													String::from(
+														"Usage: switchlights <bool> <bool>",
+													),
+												))
 												.await?;
 										}
 
@@ -322,9 +321,10 @@ impl Nextcloud {
 									}
 									"opensesame" => {
 										nextcloud_sender
-											.send(NextcloudEvent::Chat(NextcloudChat::Default, String::from(
-												"Opening door",
-											)))
+											.send(NextcloudEvent::Chat(
+												NextcloudChat::Default,
+												String::from("Opening door"),
+											))
 											.await?;
 										command_sender.send(CommandToButtons::OpenDoor).await?;
 									}
@@ -334,10 +334,10 @@ impl Nextcloud {
 									}
 									_ => {
 										nextcloud_sender
-											.send(NextcloudEvent::Chat(NextcloudChat::Default, format!(
-												"Unknown command {}!",
-												command
-											)))
+											.send(NextcloudEvent::Chat(
+												NextcloudChat::Default,
+												format!("Unknown command {}!", command),
+											))
 											.await?;
 									}
 								}

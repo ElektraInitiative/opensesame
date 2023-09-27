@@ -3,7 +3,10 @@ use gettextrs::gettext;
 use systemstat::{Platform, System};
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::{nextcloud::{NextcloudEvent, NextcloudChat}, types::ModuleError};
+use crate::{
+	nextcloud::{NextcloudChat, NextcloudEvent},
+	types::ModuleError,
+};
 
 pub enum PingEvent {
 	UpadeEnv(String),

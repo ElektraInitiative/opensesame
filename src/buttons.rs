@@ -489,13 +489,19 @@ impl Buttons {
 		if pwr.enabled() {
 			pwr.switch(false);
 			nextcloud_sender
-				.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext("👋 Turned PWR_SWITCH off")))
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH off"),
+				))
 				.await?;
 			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
 
 			pwr.switch(true);
 			nextcloud_sender
-				.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext("👋 Turned PWR_SWITCH on")))
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH on"),
+				))
 				.await?;
 			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
 		}
@@ -526,11 +532,10 @@ impl Buttons {
 					}
 					CommandToButtons::SwitchLights(inside, outside, text) => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext!(
-								"{}. {}",
-								text,
-								self.switch_lights(inside, outside)
-							)))
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!("{}. {}", text, self.switch_lights(inside, outside)),
+							))
 							.await?;
 					}
 					CommandToButtons::RingBellAlarm(period) => {
@@ -549,32 +554,44 @@ impl Buttons {
 								audio_sender.send(AudioEvent::Bell).await?;
 							}
 							nextcloud_sender
-								.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext("🔔 Pressed button bell.")))
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext("🔔 Pressed button bell."),
+								))
 								.await?;
 						} else {
 							self.show_wrong_input();
 							nextcloud_sender
-								.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext!(
 									"🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}",
 									now.format(&time_format)
-								)))
+								),
+								))
 								.await?;
 						}
 					}
 					TASTER_INNEN => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext!(
-								"💡 Pressed switch inside. {}.",
-								self.switch_lights(true, true)
-							)))
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Pressed switch inside. {}.",
+									self.switch_lights(true, true)
+								),
+							))
 							.await?;
 					}
 					TASTER_AUSSEN => {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext!(
-								"💡 Pressed switch outside or light button. {}.",
-								self.switch_lights(false, true),
-							)))
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Pressed switch outside or light button. {}.",
+									self.switch_lights(false, true),
+								),
+							))
 							.await?;
 					}
 					TASTER_GLOCKE => {
@@ -582,15 +599,21 @@ impl Buttons {
 						if now.hour() >= 7 && now.hour() <= 21 {
 							self.ring_bell(5, 5);
 							nextcloud_sender
-								.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext("🔔 Pressed switch bell.")))
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext("🔔 Pressed switch bell."),
+								))
 								.await?;
 						} else {
 							self.show_wrong_input();
 							nextcloud_sender
-								.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext!(
 									"🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}",
 									now.format(&time_format)
-								)))
+								),
+								))
 								.await?;
 						}
 					}
@@ -599,7 +622,10 @@ impl Buttons {
 				StateChange::Released(_button) => (),
 				StateChange::LightsOff => {
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext("🕶️ Light was turned off.")))
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Licht,
+							gettext("🕶️ Light was turned off."),
+						))
 						.await?;
 				}
 				StateChange::None => (),
@@ -620,7 +646,10 @@ impl Buttons {
 				Validation::Validated(user) => {
 					self.open_door();
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!("🤗 Opened for {}", user)))
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("🤗 Opened for {}", user),
+						))
 						.await?;
 					let now = Local::now();
 					let (sunrise, sunset) = sunrise_sunset(
@@ -632,19 +661,25 @@ impl Buttons {
 					);
 					if now.timestamp() < sunrise || now.timestamp() > sunset {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext!(
-								"💡 Switch lights in and out. {}",
-								self.switch_lights(true, true)
-							)))
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Switch lights in and out. {}",
+									self.switch_lights(true, true)
+								),
+							))
 							.await?;
 					} else {
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Licht, gettext!(
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
 								"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
 								now.timestamp(),
 								sunrise,
 								sunset
-							)))
+							),
+							))
 							.await?;
 					}
 				}
@@ -653,10 +688,10 @@ impl Buttons {
 						self.show_wrong_input();
 						self.ring_bell(20, 0);
 						nextcloud_sender
-							.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
-								"⌛ Timeout with sequence {}",
-								format!("{:?}", sequence)
-							)))
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("⌛ Timeout with sequence {}", format!("{:?}", sequence)),
+							))
 							.await?;
 					}
 				}
@@ -664,10 +699,10 @@ impl Buttons {
 					self.show_wrong_input();
 					self.ring_bell(20, 0);
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(NextcloudChat::Default, gettext!(
-							"⌛ Sequence {} too long",
-							format!("{:?}", sequence)
-						)))
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("⌛ Sequence {} too long", format!("{:?}", sequence)),
+						))
 						.await?;
 				}
 				Validation::None => (),

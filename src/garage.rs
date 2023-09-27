@@ -4,7 +4,10 @@ use systemstat::Duration;
 use tokio::{sync::mpsc::Sender, time::interval};
 
 use crate::{
-	buttons::CommandToButtons, config::Config, nextcloud::{NextcloudEvent, NextcloudStatus, NextcloudChat}, types::ModuleError,
+	buttons::CommandToButtons,
+	config::Config,
+	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
+	types::ModuleError,
 };
 
 const TASTER_EINGANG_OBEN_LINE: u32 = 234; // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
@@ -194,18 +197,30 @@ impl Garage {
 
 				GarageChange::ReachedTorEndposition => {
 					nextcloud_sender
-						.send(NextcloudEvent::Status(NextcloudStatus::Door, String::from("🔒 Open")))
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Door,
+							String::from("🔒 Open"),
+						))
 						.await?;
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(NextcloudChat::Default, String::from("🔒 Garage door closed.")))
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔒 Garage door closed."),
+						))
 						.await?;
 				}
 				GarageChange::LeftTorEndposition => {
 					nextcloud_sender
-						.send(NextcloudEvent::Status(NextcloudStatus::Door, String::from("🔓 Closed")))
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Door,
+							String::from("🔓 Closed"),
+						))
 						.await?;
 					nextcloud_sender
-						.send(NextcloudEvent::Chat(NextcloudChat::Default, String::from("🔓 Garage door open")))
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔓 Garage door open"),
+						))
 						.await?;
 				}
 			}
