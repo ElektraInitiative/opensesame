@@ -60,6 +60,7 @@ signal-hook = "0.3.14"
 signal-hook-tokio = "0.3.1"
 
 tokio = { version = "1.15.0", features = ["full"] }
+tokio-util = "0.6.9"
 async-ssh2-tokio = "0.7.1"
 futures = "0.3.19"
 gettext-rs = "0.7.0"

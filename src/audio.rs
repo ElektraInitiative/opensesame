@@ -1,17 +1,28 @@
 use futures::never::Never;
-use tokio::{process::Command, spawn, sync::mpsc::Receiver, task::JoinHandle};
+
+use tokio::{io, process::Command, spawn, sync::mpsc::Receiver};
+use tokio_util::sync::CancellationToken;
 
 use crate::{ssh::exec_ssh_command, types::ModuleError};
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
-async fn play_audio_file(file: String, _arg: &str) -> Result<(), ModuleError> {
+async fn play_audio_file(
+	file: String,
+	_arg: &str,
+	cancellation_token: CancellationToken,
+) -> Result<(), io::Error> {
 	if file != "/dev/null" {
-		Command::new("ogg123")
-			.arg("--quiet")
-			.arg(file)
-			.status()
-			.await
-			.unwrap();
+		let mut command = Command::new("ogg123").arg("--quiet").arg(file).spawn()?;
+
+		// Wait for the process to finish
+		let _ = tokio::select! {
+			result = command.wait() => result,
+			_ = cancellation_token.cancelled() => {
+				// If cancellation is requested, kill the audio playback process
+				let _ = command.kill().await;
+				return Ok(());
+			}
+		};
 	}
 	Ok(())
 }
@@ -38,24 +49,40 @@ impl Audio {
 		self,
 		mut audio_receiver: Receiver<AudioEvent>,
 	) -> Result<Never, ModuleError> {
-		let mut join_handler: Option<JoinHandle<Result<(), ModuleError>>> = Option::None;
+		let mut maybe_cancellation_token: Option<CancellationToken> = Option::None;
+
 		while let Some(event) = audio_receiver.recv().await {
-			if let Some(handler) = join_handler {
-				handler.abort();
-			}
-			join_handler = match event {
+			if maybe_cancellation_token.is_some() {
+				maybe_cancellation_token.unwrap().cancel();
+			};
+			maybe_cancellation_token = Option::Some(CancellationToken::new());
+			eprintln!("Cancelling previous audio...");
+			match event {
 				AudioEvent::Bell => {
 					eprintln!("Ringing bell...");
-					Some(spawn(play_audio_file(self.bell_path.clone(), "")))
+					spawn(play_audio_file(
+						self.bell_path.clone(),
+						"",
+						maybe_cancellation_token.clone().unwrap(),
+					));
 				}
 				AudioEvent::FireAlarm => {
-					eprintln!("Alarm...");
-					let result = Some(spawn(play_audio_file(
+					eprintln!("Starting alarm...");
+					spawn(play_audio_file(
 						self.fire_alarm_path.clone(),
 						"--repeat",
-					)));
-					exec_ssh_command(String::from("killall -SIGUSR2 opensesame")).await;
-					result
+						maybe_cancellation_token.clone().unwrap(),
+					));
+					spawn(async move {
+						let ssh_result =
+							exec_ssh_command(String::from("killall -SIGUSR2 opensesame")).await;
+						if let Err(err) = ssh_result {
+							eprintln!(
+								"Couldn't send SIGUSR2 to other opensesame instance: {}",
+								err
+							);
+						}
+					});
 				}
 			}
 		}
