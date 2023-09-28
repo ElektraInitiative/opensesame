@@ -85,7 +85,6 @@ async fn main() -> Result<(), ModuleError> {
 
 	if buttons_enabled {
 		let time_format = config.get::<String>("nextcloud/format/time");
-		let garage_enabled = config.get_bool("garage/enable");
 		let location_latitude = config.get::<f64>("location/latitude");
 		let location_longitude = config.get::<f64>("location/longitude");
 		tasks.push(spawn(Buttons::get_background_task(
@@ -96,7 +95,6 @@ async fn main() -> Result<(), ModuleError> {
 			command_receiver,
 			nextcloud_sender.clone(),
 			audio_sender.clone(),
-			garage_enabled,
 			location_latitude,
 			location_longitude,
 		)));

@@ -515,7 +515,6 @@ impl Buttons {
 		mut command_receiver: Receiver<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		audio_sender: Sender<AudioEvent>,
-		garage_enabled: bool,
 		location_latitude: f64,
 		location_longitude: f64,
 	) -> Result<Never, ModuleError> {
@@ -550,9 +549,7 @@ impl Buttons {
 						let now = Local::now();
 						if now.hour() >= 7 && now.hour() <= 21 {
 							self.ring_bell(2, 5);
-							if garage_enabled {
-								audio_sender.send(AudioEvent::Bell).await?;
-							}
+							audio_sender.send(AudioEvent::Bell).await?;
 							nextcloud_sender
 								.send(NextcloudEvent::Chat(
 									NextcloudChat::Default,

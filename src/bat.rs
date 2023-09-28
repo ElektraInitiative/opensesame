@@ -40,7 +40,7 @@ impl Bat {
 		mut self,
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
-		let mut interval = interval(Duration::from_secs(1800));
+		let mut interval = interval(Duration::from_secs(600));
 		loop {
 			interval.tick().await;
 			let new_capacity = self.capacity();
@@ -48,11 +48,6 @@ impl Bat {
 			if new_capacity != self.capacity {
 				self.capacity = new_capacity;
 				if self.capacity < self.capacity_threshold {
-					if self.capacity_threshold - 10 > 0 {
-						self.capacity_threshold -= 10;
-					} else {
-						self.capacity_threshold = 0;
-					}
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
@@ -63,6 +58,11 @@ impl Bat {
 							),
 						))
 						.await?;
+					if self.capacity_threshold - 10 > 0 {
+						self.capacity_threshold -= 10;
+					} else {
+						self.capacity_threshold = 0;
+					}
 				} else if self.capacity == 100 {
 					self.capacity_threshold = START_CAPACITY_THRESHOLD;
 					nextcloud_sender

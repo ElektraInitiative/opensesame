@@ -136,7 +136,7 @@ default = "/dev/null"
 
 [environment/data/interval]
 description=How often to get new data (default: every 60 seconds, which is the highest interval)
-default = 6000
+default = 60
 type = unsigned_short
 
 [sensors/enable]
@@ -198,6 +198,7 @@ description = Which Opensensemap senseBoxes should be connected to the weather s
 
 [weatherstation/opensensemap/token]
 description = Access-Token for Opensensemap senseBoxes, see doc/Opensensemap.md
+
 [ir/enable]
 description=enables/disables MOD-IR-TEMP sensor
 example=1
