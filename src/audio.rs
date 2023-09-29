@@ -1,9 +1,19 @@
 use futures::never::Never;
 
-use tokio::{io, process::Command, spawn, sync::mpsc::Receiver};
+use gettextrs::gettext;
+use tokio::{
+	io,
+	process::Command,
+	spawn,
+	sync::mpsc::{Receiver, Sender},
+};
 use tokio_util::sync::CancellationToken;
 
-use crate::{ssh::exec_ssh_command, types::ModuleError};
+use crate::{
+	nextcloud::{NextcloudChat, NextcloudEvent},
+	ssh::exec_ssh_command,
+	types::ModuleError,
+};
 
 // play audio file with argument. If you do not have an argument, simply pass --quiet again
 async fn play_audio_file(
@@ -48,6 +58,7 @@ impl Audio {
 	pub async fn get_background_task(
 		self,
 		mut audio_receiver: Receiver<AudioEvent>,
+		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		let mut maybe_cancellation_token: Option<CancellationToken> = Option::None;
 
@@ -59,7 +70,12 @@ impl Audio {
 			eprintln!("Cancelling previous audio...");
 			match event {
 				AudioEvent::Bell => {
-					eprintln!("Ringing bell...");
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext("🔔 Rining the Audio Bell "),
+						))
+						.await?;
 					spawn(play_audio_file(
 						self.bell_path.clone(),
 						"",
@@ -67,20 +83,31 @@ impl Audio {
 					));
 				}
 				AudioEvent::FireAlarm => {
-					eprintln!("Starting alarm...");
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext("🚨 Audio Fire Alarm!"),
+						))
+						.await?;
 					spawn(play_audio_file(
 						self.fire_alarm_path.clone(),
 						"--repeat",
 						maybe_cancellation_token.clone().unwrap(),
 					));
+					let nextcloud_sender_clone = nextcloud_sender.clone();
 					spawn(async move {
 						let ssh_result =
 							exec_ssh_command(String::from("killall -SIGUSR2 opensesame")).await;
 						if let Err(err) = ssh_result {
-							eprintln!(
-								"Couldn't send SIGUSR2 to other opensesame instance: {}",
-								err
-							);
+							let _ = nextcloud_sender_clone
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Ping,
+									gettext!(
+										"Couldn't send SIGUSR2 to other opensesame instance: {}",
+										err
+									),
+								))
+								.await;
 						}
 					});
 				}

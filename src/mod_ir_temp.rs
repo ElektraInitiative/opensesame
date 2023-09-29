@@ -46,20 +46,6 @@ pub struct ModIR {
 }
 
 impl ModIR {
-	/// This function is used to initialize a default instance.
-	pub fn new_default() -> Self {
-		Self {
-			mlx: None,
-			device: String::from("/dev/null"),
-			addr: SlaveAddr::Default,
-			ambient_temp: 0.0,
-			object_temp: 0.0,
-			_emissivity: 1.0,
-			active_ambient_state: IrTempState::Normal,
-			active_object_state: IrTempState::Normal,
-		}
-	}
-
 	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
 	/// In case of an error, the error code is returned.
 	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
@@ -86,7 +72,16 @@ impl ModIR {
 				}
 			}
 		} else {
-			s = ModIR::new_default();
+			s = Self {
+				mlx: None,
+				device: String::from("/dev/null"),
+				addr: SlaveAddr::Default,
+				ambient_temp: 0.0,
+				object_temp: 0.0,
+				_emissivity: 1.0,
+				active_ambient_state: IrTempState::Normal,
+				active_object_state: IrTempState::Normal,
+			}
 		}
 		Ok(s)
 	}

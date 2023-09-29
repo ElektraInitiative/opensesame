@@ -162,6 +162,7 @@ async fn main() -> Result<(), ModuleError> {
 	tasks.push(spawn(Audio::get_background_task(
 		Audio::new(audio_bell, audio_alarm),
 		audio_receiver,
+		nextcloud_sender.clone(),
 	)));
 	// }
 
