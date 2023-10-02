@@ -161,12 +161,6 @@ impl Garage {
 			match garage.handle() {
 				GarageChange::None => (),
 				GarageChange::PressedTasterEingangOben => {
-					// muss in buttons implementiert werden, damit button dann an nextcloud weiter gibt!
-
-					/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-						"💡 Pressed at entrance top switch. Switch lights in garage. {}",
-						buttons.switch_lights(true, false)
-					)));*/
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							true,
@@ -177,10 +171,6 @@ impl Garage {
 						.await?;
 				}
 				GarageChange::PressedTasterTorOben => {
-					/*nextcloud_sender.send(NextcloudEvent::Licht(gettext!(
-						"💡 Pressed top switch at garage door. Switch lights in and out garage. {}",
-						buttons.switch_lights(true, true)
-					)));*/
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							true,
@@ -191,7 +181,6 @@ impl Garage {
 						.await?;
 				}
 				GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
-					//buttons.open_door();
 					command_sender.send(CommandToButtons::OpenDoor).await?;
 				}
 

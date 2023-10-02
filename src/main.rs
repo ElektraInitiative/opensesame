@@ -3,7 +3,6 @@ use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
 use std::panic;
-use std::process::id;
 use std::sync::Arc;
 use systemstat::Duration;
 use tokio::spawn;
@@ -106,8 +105,8 @@ async fn main() -> Result<(), ModuleError> {
 			Sensors::new(&mut config),
 			device_path.to_string(),
 			nextcloud_sender.clone(),
-			state_mutex.clone(),
-			id(),
+			/*state_mutex.clone(),
+			id(),*/
 		)));
 	}
 
