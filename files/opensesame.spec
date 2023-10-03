@@ -183,10 +183,6 @@ type = unsigned_short
 description = path of the sensor device
 default = "/dev/ttyACM0"
 
-[sensors/log]
-description = logging sensor data to file
-default = "/home/olimex/data.log"
-
 [weatherstation/enable]
 description = enables/disables weatherstation
 type = boolean

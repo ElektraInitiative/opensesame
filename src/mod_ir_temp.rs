@@ -49,40 +49,28 @@ impl ModIR {
 	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
 	/// In case of an error, the error code is returned.
 	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
-		let mut s: Self;
-		if config.get_bool("ir/enable") {
-			s = Self {
-				mlx: None,
-				device: config.get::<String>("ir/device"),
-				addr: SlaveAddr::Default,
-				ambient_temp: 0.0,
-				object_temp: 0.0,
-				_emissivity: 1.0,
-				active_ambient_state: IrTempState::Normal,
-				active_object_state: IrTempState::Normal,
-			};
-			if s.device != "/dev/null" {
-				match s.init() {
-					Ok(_) => {
-						return Ok(s);
-					}
-					Err(error) => {
-						return Err(error);
-					}
+		let mut s = Self {
+			mlx: None,
+			device: config.get::<String>("ir/device"),
+			addr: SlaveAddr::Default,
+			ambient_temp: 0.0,
+			object_temp: 0.0,
+			_emissivity: 1.0,
+			active_ambient_state: IrTempState::Normal,
+			active_object_state: IrTempState::Normal,
+		};
+
+		if s.device != "/dev/null" {
+			match s.init() {
+				Ok(_) => {
+					return Ok(s);
+				}
+				Err(error) => {
+					return Err(error);
 				}
 			}
-		} else {
-			s = Self {
-				mlx: None,
-				device: String::from("/dev/null"),
-				addr: SlaveAddr::Default,
-				ambient_temp: 0.0,
-				object_temp: 0.0,
-				_emissivity: 1.0,
-				active_ambient_state: IrTempState::Normal,
-				active_object_state: IrTempState::Normal,
-			}
 		}
+
 		Ok(s)
 	}
 

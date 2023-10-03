@@ -228,7 +228,7 @@ async fn main() -> Result<(), ModuleError> {
 
 	nextcloud_sender.send(
 		NextcloudEvent::Chat(NextcloudChat::Default,
-			gettext!("Enabled Modules: Buttons: {}, Garage: {}, Sensors: {}, ModIR: {}, Environment: {}, Weatherstation: {}, Battery: {}, Watchdog: {}",
+			gettext!("Enabled Modules: \nButtons: {}\n, Garage: {}\n, Sensors: {}\n, ModIR: {}\n, Environment: {}\n, Weatherstation: {}\n, Battery: {}\n, Watchdog: {}\n",
 	buttons_enabled,
 	garage_enabled,
 	sensors_enabled,
@@ -240,6 +240,5 @@ async fn main() -> Result<(), ModuleError> {
 ))).await?;
 
 	join_all(tasks).await;
-	println!("hallo");
 	Ok(())
 }

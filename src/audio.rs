@@ -67,13 +67,12 @@ impl Audio {
 				maybe_cancellation_token.unwrap().cancel();
 			};
 			maybe_cancellation_token = Option::Some(CancellationToken::new());
-			eprintln!("Cancelling previous audio...");
 			match event {
 				AudioEvent::Bell => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							gettext("🔔 Rining the Audio Bell "),
+							gettext("🔔 Ringing the Audio Bell "),
 						))
 						.await?;
 					spawn(play_audio_file(

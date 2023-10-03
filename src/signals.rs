@@ -84,7 +84,7 @@ impl<'a> Signals<'a> {
 			.send(NextcloudEvent::Chat(
 				NextcloudChat::Ping,
 				gettext!(
-					"👋reloading config&state for opensesame {} {}",
+					"👋 reloading config&state for opensesame {} {}",
 					env!("CARGO_PKG_VERSION"),
 					self.startup_time
 				),
@@ -146,8 +146,6 @@ impl<'a> Signals<'a> {
 				.send(CommandToButtons::RingBellAlarm(20))
 				.await?;
 		}
-		//Wird mit play audio modul implementiert
-		//play_audio_file(config.get::<String>("audio/alarm"), "--repeat".to_string());
 		self.audio_sender.send(AudioEvent::FireAlarm).await?;
 		self.nextcloud_sender
 			.send(NextcloudEvent::Chat(
@@ -169,8 +167,6 @@ impl<'a> Signals<'a> {
 				.send(CommandToButtons::RingBell(20, 0))
 				.await?;
 		}
-		//Wird mit play audio modul implementiert
-		//	play_audio_file(config.get::<String>("audio/bell"), "--quiet".to_string());
 		self.audio_sender.send(AudioEvent::Bell).await?;
 		self.nextcloud_sender
 			.send(NextcloudEvent::Chat(
@@ -194,25 +190,20 @@ impl<'a> Signals<'a> {
 					if self.ping_enabled {
 						self.sigusr1().await?;
 					}
-					println!("Received SIGUSR1");
 				}
 				_ = sig_usr2.recv() => {
 					self.sigusr2().await?;
-					println!("Received SIGUSR2");
 				}
 				_ = sig_alarm.recv() => {
 					self.sigalarm().await?;
-					println!("Received SIGALRM");
 				}
 				_ = sig_hanghup.recv() => {
 					self.sighup().await?;
-					println!("Received SIGHUP");
 				}
 				_ = sig_term.recv() => {
 					if self.environment_enabled {
 						self.sigterm().await?;
 					}
-					println!("Received SIGTERM");
 				}
 			}
 		}
