@@ -35,7 +35,7 @@ fn main() {
 			.expect("Error while writing register KY_REG");
 		ctx.write_registers(reg, 2, &value)
 			.expect("Error while writing register as given by command-line argument");
-		ctx.write_registers(KY_REG, 1, &vec![0, 0])
+		ctx.write_registers(KY_REG, 2, &vec![0, 0])
 			.expect("Error while writing register KY_REG");
 
 		// close Modbus connection
