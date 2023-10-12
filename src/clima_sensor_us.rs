@@ -263,11 +263,7 @@ impl ClimaSensorUS {
 			(conv_vec_to_value_s((response_temp[0], response_temp[1])).unwrap() as f32) / 10.0;
 		let wind: f32 =
 			(conv_vec_to_value_u((response_wind[0], response_wind[1])).unwrap() as f32) / 10.0;
-		#[cfg(debug_assertions)]
-		println!(
-			"Weatherstation: temperature {} °C, windspeed {} m/s",
-			temp, wind
-		);
+
 		//check if new data should be published to opensensemap.org
 		match self.publish_to_opensensemap().await {
 			Ok(_) => {}

@@ -288,7 +288,6 @@ impl Sensors {
 							gettext!("Fire Chat {}", w),
 						))
 						.await?;
-					println!("Chat - Sensors - {}", line);
 				}
 			}
 		}
