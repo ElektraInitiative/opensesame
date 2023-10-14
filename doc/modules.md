@@ -1,4 +1,4 @@
-# OpenSesame
+# Opensesame
 
 ## audio.rs
 This module handles audio output for playing fire alarms and bell sounds. This module can receive commands from the Module Buttons (Bell), Environment (FireAlarm), Nextcloud (FireAlarm, Bell), and Signals (FireAlarm, Bell).
@@ -16,10 +16,10 @@ This module works independently, sending warnings to Nextcloud and publishing to
 No changes were made to this module.
 
 ## environment.rs
-Changed the functions `rememberBaseline`, `restoreBaseline`, and added a `Muext` of state. We moved `handle_environment` from the main into the `get_background_task`. This module receives commands (RestoreBaseline, RememberBaseline) from Signals.
+Changed the functions `rememberBaseline`, `restoreBaseline`, and added a `Mutex` of state. We moved `handle_environment` from the main into the `get_background_task`. This module receives commands (RestoreBaseline, RememberBaseline) from Signals.
 
 ## garage.rs
-This module is checked at intervals of 10 milliseconds, triggering Nextcloud Chat or Buttons commands if the button is pressed. Future changes will involve removing the interval and implementing trigger-oriented events because GPIO pins from the Olimex board are used, along with interrupts.
+This module is checked at intervals of 10 milliseconds, triggering Nextcloud Chat or Buttons commands if the button is pressed. 
 
 ## mod_ir_temp.rs
 This module is triggered at given intervals and warns by sending Nextcloud messages.
