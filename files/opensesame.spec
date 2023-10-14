@@ -54,6 +54,11 @@ description = which chat to use for sending ping messages. Note: this chat will 
 required =
 check/length/max = 8
 
+[nextcloud/chat/commands]
+description = which chat is used to send commands to Opensesame.
+required =
+check/length/max = 8
+
 [nextcloud/format/time]
 description=Format to be used for formatting time within Nextcloud messages, e.g. when entry gets prohibited because of time. By default ISO 8601 (Hour-minute-second format). Example is locales time.
 see/#0 = nextcloud/format/date
@@ -116,6 +121,14 @@ type = boolean
 example = 1
 default = 0
 
+[watchdog/interval]
+description=Trigger interval in seconds for Watchdog
+default = 10
+
+[watchdog/path]
+description=Device path of Watchdog
+default = "/dev/watchdog"
+
 [environment/device]
 description=Which device to use for the environment sensor. /dev/null means that no environment sensor is connected.
 example = "/dev/i2c"
@@ -123,8 +136,13 @@ default = "/dev/null"
 
 [environment/data/interval]
 description=How often to get new data (default: every 60 seconds, which is the highest interval)
-default = 6000
+default = 60
 type = unsigned_short
+
+[sensors/enable]
+description = If the sensors module is enabled
+type = boolean
+default = 0
 
 [sensors]
 description = a list of up to 12 MQ135 sensors
@@ -161,6 +179,9 @@ type = unsigned_short
 description = maximum value measured during calibration
 type = unsigned_short
 
+[sensors/device]
+description = path of the sensor device
+default = "/dev/ttyACM0"
 
 [weatherstation/enable]
 description = enables/disables weatherstation
@@ -173,6 +194,7 @@ description = Which Opensensemap senseBoxes should be connected to the weather s
 
 [weatherstation/opensensemap/token]
 description = Access-Token for Opensensemap senseBoxes, see doc/Opensensemap.md
+
 [ir/enable]
 description=enables/disables MOD-IR-TEMP sensor
 example=1

@@ -1,35 +1,46 @@
-use std::fs;
-use std::io::Write;
+use futures::never::Never;
 
-use crate::config::Config;
+use tokio::{fs::File, io::AsyncWriteExt, time::Interval};
 
-// pub const MAX_TIMEOUT: u64 = 16 * 1000; // timeout in ms as seen in dmesg
+use crate::types::ModuleError;
+
 pub const SAFE_TIMEOUT: u64 = 15 * 1000; // safe to wait if trigger was done just before
 
-pub struct Watchdog {
-	handle: Option<fs::File>,
-	pub wait_for_watchdog_trigger: u64,
-}
+pub struct Watchdog {}
 
 impl Watchdog {
-	pub fn new(config: &mut Config) -> Self {
-		Self {
-			handle: if config.get_bool("watchdog/enable") {
-				Some(fs::File::create("/dev/watchdog").expect("could not open watchdog"))
-			} else {
-				None
-			},
-			wait_for_watchdog_trigger: 0,
+	pub async fn get_background_task(
+		path: String,
+		mut interval: Interval,
+	) -> Result<Never, ModuleError> {
+		let mut handle = File::create(path)
+			.await
+			.map_err(|_| ModuleError::new(String::from("could not open watchdog")))?;
+		loop {
+			interval.tick().await;
+			handle
+				.write_all(b"a")
+				.await
+				.map_err(|_| ModuleError::new(String::from("could not write to watchdog")))?;
 		}
 	}
 
-	pub fn trigger(&mut self) {
-		if let Some(handle) = &mut self.handle {
-			self.wait_for_watchdog_trigger += 1;
-			if self.wait_for_watchdog_trigger > 1000 {
-				handle.write_all(b"a").expect("could not write to watchdog");
-				self.wait_for_watchdog_trigger = 0;
-			}
+	//This function is only used to test if the system reboots after this module stops writing to the watchdog file.
+	//For testing change the get_background_task to test_get_background_task in main.rs
+	pub async fn test_get_background_task(
+		path: String,
+		mut interval: Interval,
+	) -> Result<Never, ModuleError> {
+		let mut handle = File::create(path)
+			.await
+			.map_err(|_| ModuleError::new(String::from("could not open watchdog")))?;
+		for _i in 1..=100 {
+			interval.tick().await;
+			handle
+				.write_all(b"a")
+				.await
+				.map_err(|_| ModuleError::new(String::from("could not write to watchdog")))?;
 		}
+		Err(ModuleError::new(String::from("doesnt run for loop")))
 	}
 }

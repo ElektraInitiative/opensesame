@@ -4,10 +4,17 @@
 /// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
 /// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 use crate::config::Config;
+use crate::nextcloud::{NextcloudChat, NextcloudEvent};
+use crate::types::ModuleError;
+use futures::never::Never;
+use gettextrs::gettext;
 use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::{Delay, I2cdev};
 use mlx9061x::ic::Mlx90614;
+use mlx9061x::Error as MlxError;
 use mlx9061x::{Error, Mlx9061x, SlaveAddr};
+use tokio::sync::mpsc::Sender;
+use tokio::time::Interval;
 
 const THRESHOLD_AMBIENT: f32 = 22.0;
 const THRESHOLD_OBJECT: f32 = 44.0;
@@ -36,57 +43,34 @@ pub struct ModIR {
 	_emissivity: f32,
 	active_ambient_state: IrTempState,
 	active_object_state: IrTempState,
-	data_interval: u16,
-	read_counter: u16,
 }
 
 impl ModIR {
-	/// This function is used to initialize a default instance.
-	pub fn new_default() -> Self {
-		Self {
+	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
+	/// In case of an error, the error code is returned.
+	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
+		let mut s = Self {
 			mlx: None,
-			device: "/dev/null".to_string(),
+			device: config.get::<String>("ir/device"),
 			addr: SlaveAddr::Default,
 			ambient_temp: 0.0,
 			object_temp: 0.0,
 			_emissivity: 1.0,
 			active_ambient_state: IrTempState::Normal,
 			active_object_state: IrTempState::Normal,
-			data_interval: 0,
-			read_counter: 0,
-		}
-	}
+		};
 
-	/// This function initializes the MOD-IR-TEMP and returns an instance of ModIR upon success.
-	/// In case of an error, the error code is returned.
-	pub fn new(config: &mut Config) -> Result<Self, Error<LinuxI2CError>> {
-		let mut s: Self;
-		if config.get_bool("ir/enable") {
-			s = Self {
-				mlx: None,
-				device: config.get::<String>("ir/device"),
-				addr: SlaveAddr::Default,
-				ambient_temp: 0.0,
-				object_temp: 0.0,
-				_emissivity: 1.0,
-				active_ambient_state: IrTempState::Normal,
-				active_object_state: IrTempState::Normal,
-				data_interval: config.get::<u16>("ir/data/interval"),
-				read_counter: config.get::<u16>("ir/data/interval"),
-			};
-			if s.device != "/dev/null" {
-				match s.init() {
-					Ok(_) => {
-						return Ok(s);
-					}
-					Err(error) => {
-						return Err(error);
-					}
+		if s.device != "/dev/null" {
+			match s.init() {
+				Ok(_) => {
+					return Ok(s);
+				}
+				Err(error) => {
+					return Err(error);
 				}
 			}
-		} else {
-			s = ModIR::new_default();
 		}
+
 		Ok(s)
 	}
 
@@ -96,7 +80,6 @@ impl ModIR {
 		match Mlx9061x::new_mlx90614(I2cdev::new(&self.device).unwrap(), self.addr, 5) {
 			Ok(mlx_sensor) => {
 				self.mlx = Some(mlx_sensor);
-				()
 			}
 			Err(error) => {
 				return Err(error);
@@ -134,7 +117,7 @@ impl ModIR {
 			self.active_object_state = object_state;
 			return IrTempStateChange::ChangedToCancelled;
 		}
-		return IrTempStateChange::None;
+		IrTempStateChange::None
 	}
 
 	/// This function reads the ambient temperature and object temperature from the MOD-IR-TEMP sensor.
@@ -145,37 +128,32 @@ impl ModIR {
 	pub fn handle(&mut self) -> Result<IrTempStateChange, Error<LinuxI2CError>> {
 		match &mut self.mlx {
 			Some(mlx_sensor) => {
-				self.read_counter += 1;
-				// The '>=` operator is used to execute this function on the first call to initialize data.
-				if self.read_counter >= self.data_interval {
-					self.read_counter = 0;
-					let mut ambient_state = IrTempState::Normal;
-					let mut object_state = IrTempState::Normal;
-					match mlx_sensor.ambient_temperature() {
-						Ok(amb_temp) => {
-							self.ambient_temp = amb_temp;
-							if amb_temp > THRESHOLD_AMBIENT {
-								ambient_state = IrTempState::TooHot;
-							}
-						}
-						Err(error) => {
-							return Err(error);
+				let mut ambient_state = IrTempState::Normal;
+				let mut object_state = IrTempState::Normal;
+				match mlx_sensor.ambient_temperature() {
+					Ok(amb_temp) => {
+						self.ambient_temp = amb_temp;
+						if amb_temp > THRESHOLD_AMBIENT {
+							ambient_state = IrTempState::TooHot;
 						}
 					}
-
-					match mlx_sensor.object1_temperature() {
-						Ok(obj_temp) => {
-							self.object_temp = obj_temp;
-							if obj_temp > THRESHOLD_OBJECT {
-								object_state = IrTempState::TooHot;
-							}
-						}
-						Err(error) => {
-							return Err(error);
-						}
+					Err(error) => {
+						return Err(error);
 					}
-					return Ok(self.set_handle_output(ambient_state, object_state));
 				}
+
+				match mlx_sensor.object1_temperature() {
+					Ok(obj_temp) => {
+						self.object_temp = obj_temp;
+						if obj_temp > THRESHOLD_OBJECT {
+							object_state = IrTempState::TooHot;
+						}
+					}
+					Err(error) => {
+						return Err(error);
+					}
+				}
+				return Ok(self.set_handle_output(ambient_state, object_state));
 			}
 			None => (),
 		}
@@ -187,7 +165,7 @@ impl ModIR {
 	/// However, the emissivity only needs to be adjusted if we are using a specific object for measurement, as indicated [here](https://en.wikipedia.org/wiki/Emissivity).
 	/// The 'emissivity' parameter can be chosen between 0.0 and 1.0.
 	pub fn _change_emissivity(&mut self, emissivity: f32) -> Result<bool, Error<LinuxI2CError>> {
-		if emissivity >= 0.0 && emissivity <= 1.0 {
+		if (0.0..=1.0).contains(&emissivity) {
 			match &mut self.mlx {
 				Some(mlx_sensor) => match mlx_sensor.set_emissivity(emissivity, &mut Delay {}) {
 					Ok(_) => {
@@ -203,7 +181,94 @@ impl ModIR {
 				}
 			}
 		}
-		return Ok(false);
+		Ok(false)
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		mut interval: Interval,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		loop {
+			interval.tick().await;
+			match self.handle() {
+				Ok(state) => match state {
+					IrTempStateChange::None => (),
+					IrTempStateChange::ChanedToBothToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!(
+									"🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C",
+									self.ambient_temp,
+									self.object_temp
+								),
+							))
+							.await?;
+					}
+					IrTempStateChange::ChangedToAmbientToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!(
+									"🌡️ ModIR ambient sensors too hot! Ambient: {} °C",
+									self.ambient_temp
+								),
+							))
+							.await?;
+					}
+					IrTempStateChange::ChangedToObjectToHot => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!(
+									"🌡️ ModIR object sensors too hot! Object: {} °C",
+									self.object_temp
+								),
+							))
+							.await?;
+					}
+					IrTempStateChange::ChangedToCancelled => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!(
+									"🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C",
+									self.ambient_temp,
+									self.object_temp
+								),
+							))
+							.await?;
+					}
+				},
+				Err(error_typ) => match error_typ {
+					MlxError::I2C(error) => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Ping,
+								gettext!("⚠️ Error while handling ModIR: {}", error),
+							))
+							.await?;
+					}
+					MlxError::ChecksumMismatch => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Ping,
+								gettext!("⚠️ Error while handling ModIR: {}", "ChecksumMismatch"),
+							))
+							.await?;
+					}
+					MlxError::InvalidInputData => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Ping,
+								gettext!("⚠️ Error while handling ModIR: {}", "InvalidInputData"),
+							))
+							.await?;
+					}
+				},
+			}
+		}
 	}
 }
 
@@ -222,8 +287,6 @@ mod tests {
 			_emissivity: 1.0,
 			active_ambient_state: IrTempState::Normal,
 			active_object_state: IrTempState::Normal,
-			data_interval: 0,
-			read_counter: 0,
 		};
 
 		assert!(

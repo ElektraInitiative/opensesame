@@ -1,8 +1,30 @@
+use std::cmp::Ordering;
+
+use chrono::Datelike;
+use chrono::Local;
+use chrono::Timelike;
+use futures::never::Never;
+use gettextrs::gettext;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
+use sunrise::sunrise_sunset;
+use systemstat::Duration;
+use systemstat::{Platform, System};
 
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::interval;
+use tokio::time::sleep;
+
+use crate::audio::AudioEvent;
 use crate::config::Config;
+use crate::nextcloud::NextcloudChat;
+use crate::nextcloud::NextcloudEvent;
+use crate::pwr::Pwr;
+
+use crate::types::ModuleError;
+use crate::validator::{Validation, Validator};
+use crate::watchdog;
 
 pub struct Buttons {
 	pub sequence: Vec<u8>,
@@ -43,10 +65,16 @@ pub struct Buttons {
 #[derive(PartialEq, Debug)]
 pub enum StateChange {
 	None,
-	Err(u8),
 	Pressed(u8),
 	Released(u8),
 	LightsOff,
+}
+
+pub enum CommandToButtons {
+	OpenDoor,
+	RingBell(u32, u32), // maybe implement it with interval
+	RingBellAlarm(u32),
+	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
 
 const FAILED_COUNTER: u8 = 20; // = 200ms how long to wait after failure before resetting (*10ms)
@@ -223,7 +251,7 @@ impl Buttons {
 			timeout_progress = 0;
 		}
 		self.light_timeout -= timeout_progress;
-		return ret;
+		ret
 	}
 
 	fn handle_bell(&mut self) {
@@ -252,50 +280,53 @@ impl Buttons {
 	}
 
 	fn handle_wrong_input(&mut self) -> bool {
-		if self.wrong_input_timeout == 1 {
-			self.led_light = false;
-			self.led1 = false;
-			self.led2 = false;
-			self.led3 = false;
-			self.led4 = false;
-			self.wrong_input_timeout = 0;
-			return false;
-		} else if self.wrong_input_timeout > 1 {
-			self.wrong_input_timeout -= 1;
-			return false;
+		match self.wrong_input_timeout.cmp(&1) {
+			Ordering::Equal => {
+				self.led_light = false;
+				self.led1 = false;
+				self.led2 = false;
+				self.led3 = false;
+				self.led4 = false;
+				self.wrong_input_timeout = 0;
+				false
+			}
+			Ordering::Greater => {
+				self.wrong_input_timeout -= 1;
+				false
+			}
+			Ordering::Less => true,
 		}
-		return true;
 	}
 
 	/// to be periodically called, e.g. every 10 ms
-	pub fn handle(&mut self) -> StateChange {
+	pub fn handle(&mut self) -> Result<StateChange, LinuxI2CError> {
 		// wait for recover
 		if self.failed_counter > 1 {
 			self.failed_counter -= 1;
-			return StateChange::None;
+			return Ok(StateChange::None);
 		// try to recover
 		} else if self.failed_counter == 1 {
 			self.pins1 = PINS1_INIT;
 			self.pins2 = PINS2_INIT;
 			self.init();
 			self.failed_counter = 0;
-			return StateChange::None;
+			return Ok(StateChange::None);
 		}
 
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
-		if epins1.is_err() {
+		if let Err(error) = epins1 {
 			self.failed_counter = FAILED_COUNTER;
 			self.led1 = true;
 			self.led2 = true;
-			return StateChange::Err(20);
+			return Err(error);
 		}
 
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
-		if epins2.is_err() {
+		if let Err(error) = epins2 {
 			self.failed_counter = FAILED_COUNTER;
 			self.led1 = true;
 			self.led3 = true;
-			return StateChange::Err(21);
+			return Err(error);
 		}
 
 		let mut pins1 = epins1.unwrap() & ALL_BUTTONS;
@@ -361,7 +392,7 @@ impl Buttons {
 				.unwrap();
 			self.pins2 = pins2;
 		}
-		return ret;
+		Ok(ret)
 	}
 
 	/// opensesame!
@@ -447,7 +478,234 @@ impl Buttons {
 				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN)
 				.unwrap();
 		}
-		return ret;
+		ret
+	}
+
+	async fn do_reset(
+		nextcloud_sender: Sender<NextcloudEvent>,
+		pwr: &mut Pwr,
+	) -> Result<(), ModuleError> {
+		if pwr.enabled() {
+			pwr.switch(false);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH off"),
+				))
+				.await?;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+
+			pwr.switch(true);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH on"),
+				))
+				.await?;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+		}
+		Ok(())
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		mut validator: Validator,
+		mut pwr: Pwr,
+		time_format: String,
+		mut command_receiver: Receiver<CommandToButtons>,
+		nextcloud_sender: Sender<NextcloudEvent>,
+		audio_sender: Sender<AudioEvent>,
+		location_latitude: f64,
+		location_longitude: f64,
+	) -> Result<Never, ModuleError> {
+		let mut interval = interval(Duration::from_millis(10));
+		loop {
+			interval.tick().await;
+			if let Ok(command) = command_receiver.try_recv() {
+				match command {
+					CommandToButtons::OpenDoor => {
+						self.open_door();
+					}
+					CommandToButtons::RingBell(period, counter) => {
+						self.ring_bell(period, counter);
+					}
+					CommandToButtons::SwitchLights(inside, outside, text) => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!("{}. {}", text, self.switch_lights(inside, outside)),
+							))
+							.await?;
+					}
+					CommandToButtons::RingBellAlarm(period) => {
+						self.ring_bell_alarm(period);
+					}
+				}
+			}
+
+			match self.handle() {
+				Ok(StateChange::Pressed(button)) => match button {
+					BUTTON_BELL => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							self.ring_bell(2, 5);
+							audio_sender.send(AudioEvent::Bell).await?;
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext("🔔 Pressed button bell."),
+								))
+								.await?;
+						} else {
+							self.show_wrong_input();
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext!(
+									"🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}",
+									now.format(&time_format)
+								),
+								))
+								.await?;
+						}
+					}
+					TASTER_INNEN => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Pressed switch inside. {}.",
+									self.switch_lights(true, true)
+								),
+							))
+							.await?;
+					}
+					TASTER_AUSSEN => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Pressed switch outside or light button. {}.",
+									self.switch_lights(false, true),
+								),
+							))
+							.await?;
+					}
+					TASTER_GLOCKE => {
+						let now = Local::now();
+						if now.hour() >= 7 && now.hour() <= 21 {
+							self.ring_bell(5, 5);
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext("🔔 Pressed switch bell."),
+								))
+								.await?;
+						} else {
+							self.show_wrong_input();
+							nextcloud_sender
+								.send(NextcloudEvent::Chat(
+									NextcloudChat::Default,
+									gettext!(
+									"🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}",
+									now.format(&time_format)
+								),
+								))
+								.await?;
+						}
+					}
+					_ => panic!("🔘 Pressed {}", button),
+				},
+				Ok(StateChange::Released(_button)) => (),
+				Ok(StateChange::LightsOff) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Licht,
+							gettext("🕶️ Light was turned off."),
+						))
+						.await?;
+				}
+				Ok(StateChange::None) => (),
+				Err(board) => {
+					let sys = System::new();
+					let loadavg = sys.load_average().unwrap();
+					//TODO implementierung von Ping Senden
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
+						.await?;
+					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr).await?;
+				}
+			}
+			// Validation required	 Buttons
+			// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
+			// Validation start
+			let sequence = self.sequence.to_vec();
+			match validator.validate(&mut self.sequence) {
+				Validation::Validated(user) => {
+					self.open_door();
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("🤗 Opened for {}", user),
+						))
+						.await?;
+					let now = Local::now();
+					let (sunrise, sunset) = sunrise_sunset(
+						location_latitude,
+						location_longitude,
+						now.year(),
+						now.month(),
+						now.day(),
+					);
+					if now.timestamp() < sunrise || now.timestamp() > sunset {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+									"💡 Switch lights in and out. {}",
+									self.switch_lights(true, true)
+								),
+							))
+							.await?;
+					} else {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Licht,
+								gettext!(
+								"🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}",
+								now.timestamp(),
+								sunrise,
+								sunset
+							),
+							))
+							.await?;
+					}
+				}
+				Validation::Timeout => {
+					if sequence != vec![0, 15] {
+						self.show_wrong_input();
+						self.ring_bell(20, 0);
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("⌛ Timeout with sequence {}", format!("{:?}", sequence)),
+							))
+							.await?;
+					}
+				}
+				Validation::SequenceTooLong => {
+					self.show_wrong_input();
+					self.ring_bell(20, 0);
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("⌛ Sequence {} too long", format!("{:?}", sequence)),
+						))
+						.await?;
+				}
+				Validation::None => (),
+			}
+		}
 	}
 }
 

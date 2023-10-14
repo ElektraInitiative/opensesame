@@ -1,8 +1,8 @@
 [package]
 name = "opensesame"
-version = "0.7.9"
+version = "0.8.0"
 authors = ["Opensesame Contributors"]
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 license = "BSD"
 description  = "Awesome home automation"
@@ -44,7 +44,7 @@ i2cdev = "0.5.1"
 
 elektra = { version = "0.11.0", features = ["pkg-config"] }
 
-reqwest = "0.9.24"
+reqwest = { version = "0.11", features = ["json"] }
 
 bme280 = "0.3.0"
 mlx9061x = "0.2.1"
@@ -52,16 +52,21 @@ linux-embedded-hal = { version = "0.3", features = ["gpio_cdev"] }
 
 systemstat = "0.1.11"
 
-ssh2 = "0.9.3"
+nix = "0.25"
+
 chrono = "0.4.19"
 
 signal-hook = "0.3.14"
 signal-hook-tokio = "0.3.1"
 
 tokio = { version = "1.15.0", features = ["full"] }
+tokio-util = "0.6.9"
+async-ssh2-tokio = "0.7.1"
 futures = "0.3.19"
-
 gettext-rs = "0.7.0"
+
+serde = "1.0.188"
+serde_json = "1.0.106"
 
 serial_test = "0.4.0" # TODO, remove when issues.libelektra.org/4466 is fixed
 

@@ -43,7 +43,7 @@ impl Validator {
 			self.timeout = 0;
 			return Validation::Validated(ret);
 		}
-		return Validation::None;
+		Validation::None
 	}
 }
 
@@ -53,7 +53,7 @@ mod tests {
 	use super::*;
 	use std::{env, vec};
 
-	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 
 	fn setup_test_env(sequence: &str) -> Config {
 		let mut config: Config = Config::new(CONFIG_PARENT);
@@ -61,7 +61,7 @@ mod tests {
 		env::set_var("RUST_BACKTRACE", config.get::<String>("debug/backtrace"));
 
 		config.cut("validator");
-		config.add("validator/test", &sequence);
+		config.add("validator/test", sequence);
 		config
 	}
 

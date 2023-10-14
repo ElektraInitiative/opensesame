@@ -34,8 +34,8 @@ impl Pwr {
 
 	pub fn enabled(&mut self) -> bool {
 		match &self.pwr_line {
-			Some(_pwr_line) => return true,
-			None => return false,
+			Some(_pwr_line) => true,
+			None => false,
 		}
 	}
 

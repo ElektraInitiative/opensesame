@@ -1,15 +1,28 @@
-use crate::config::Config;
-
-use std::fmt;
-
+use bme280::i2c::BME280;
+use futures::never::Never;
+use gettextrs::gettext;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
-
 use linux_embedded_hal::{Delay, I2cdev};
+use std::{fmt, sync::Arc};
+use systemstat::Duration;
+use tokio::{
+	sync::{
+		mpsc::{Receiver, Sender},
+		Mutex,
+	},
+	time::{sleep, Interval},
+};
 
-use bme280::i2c::BME280;
+use crate::{
+	audio::AudioEvent,
+	buttons::CommandToButtons,
+	config::Config,
+	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
+	types::ModuleError,
+};
 
-pub struct Environment {
+pub struct Environment<'a> {
 	pub co2: u16,
 	pub voc: u16,
 	pub temperature: f32,
@@ -23,13 +36,13 @@ pub struct Environment {
 	pub app_version: u16,
 
 	data: Vec<u8>,
-	read_counter: u16,
-	board5a: Option<LinuxI2CDevice>,
+	pub board5a: Option<LinuxI2CDevice>,
 	bme280: Option<BME280<I2cdev, Delay>>,
 	first_time: bool,
-	data_interval: u16,
+	pub data_interval: u16,
 	pub baseline: u16,
 	pub name: String,
+	state_mutex: Arc<Mutex<Config<'a>>>,
 }
 
 const LOW_CO2_OK_QUALITY: u16 = 3000;
@@ -78,7 +91,7 @@ const ALG_RESULT_LENGTH: u8 = 5;
 
 // const BOARD77: u16 = 0x77;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum AirQualityChange {
 	Error,
 
@@ -89,6 +102,11 @@ pub enum AirQualityChange {
 	FireChat,
 	FireBell,
 	FireAlarm,
+}
+
+pub enum EnvEvent {
+	RememberBaseline,
+	RestoreBaseline,
 }
 
 fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity: f32) {
@@ -107,8 +125,8 @@ fn set_env_data_ccs811(board5a: &mut LinuxI2CDevice, temperature: f32, humidity:
 		.unwrap();
 }
 
-impl Environment {
-	pub fn new(config: &mut Config) -> Self {
+impl<'a> Environment<'a> {
+	pub fn new(config: &mut Config, state_mutex: Arc<Mutex<Config<'a>>>) -> Self {
 		let dev_name = config.get::<String>("environment/device");
 		if dev_name == "/dev/null" {
 			Self {
@@ -121,7 +139,6 @@ impl Environment {
 				error: 0,
 				air_quality: AirQualityChange::Ok,
 				data: Vec::new(),
-				read_counter: 0,
 				app_version: 0,
 				boot_version: 0,
 				board5a: None,
@@ -130,6 +147,7 @@ impl Environment {
 				data_interval: 0,
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
+				state_mutex,
 			}
 		} else {
 			let i2c_bus = I2cdev::new(dev_name).unwrap();
@@ -143,7 +161,6 @@ impl Environment {
 				error: 0,
 				air_quality: AirQualityChange::Ok,
 				data: Vec::new(),
-				read_counter: 0,
 				app_version: 0,
 				boot_version: 0,
 				board5a: Some(
@@ -155,6 +172,7 @@ impl Environment {
 				data_interval: config.get::<u16>("environment/data/interval"),
 				baseline: 0,
 				name: config.get::<String>("environment/name"),
+				state_mutex,
 			};
 			//if sending SW_RESET failes it disables ccs811
 			match s
@@ -170,6 +188,29 @@ impl Environment {
 			}
 			s.bme280.as_mut().unwrap().init().unwrap();
 			s
+		}
+	}
+
+	/// This function need to be called a few seconds after the creation of the object
+	/// It inits the connection to the ccS811 sensor
+	#[allow(non_snake_case)]
+	pub fn init_ccs811(&mut self) -> bool {
+		match self.board5a.as_mut() {
+			Some(board5a) => {
+				board5a.smbus_write_byte(APP_START).unwrap();
+				board5a
+					.smbus_write_byte_data(MEAS_MODE, MEAS_MODE_DATA)
+					.unwrap();
+
+				self.boot_version = board5a.smbus_read_word_data(FW_BOOT_VERSION).unwrap();
+				self.app_version = board5a.smbus_read_word_data(FW_APP_VERSION).unwrap();
+
+				self.status = board5a.smbus_read_byte_data(STATUS).unwrap();
+				self.error = board5a.smbus_read_byte_data(ERROR_ID).unwrap();
+				self.first_time = false;
+				true
+			}
+			None => false,
 		}
 	}
 
@@ -211,11 +252,12 @@ impl Environment {
 		} else {
 			is_changed = false;
 		}
-		return is_changed;
+		is_changed
 	}
 
 	/// go back to remembered state
-	pub fn restore_baseline(&mut self, state: &mut Config) {
+	async fn restore_baseline(&mut self) {
+		let mut state = self.state_mutex.lock().await;
 		match self.board5a.as_mut() {
 			None => (),
 			Some(board5a) => {
@@ -227,12 +269,13 @@ impl Environment {
 	}
 
 	/// remember for later
-	pub fn remember_baseline(&mut self, state: &mut Config) {
+	async fn remember_baseline(&mut self) {
+		let mut state = self.state_mutex.lock().await;
 		state.set("environment/baseline", &self.baseline.to_string());
 	}
 
 	fn print_values(&self) -> String {
-		return format!("Temperature: {} °C, CO₂: {} ppm, VOC: {} ppb, Humidity: {} %, Pressure {} pascals, Baseline: {}", self.temperature, self.co2, self.voc, self.humidity, self.pressure, self.baseline);
+		format!("Temperature: {} °C, CO₂: {} ppm, VOC: {} ppb, Humidity: {} %, Pressure {} pascals, Baseline: {}", self.temperature, self.co2, self.voc, self.humidity, self.pressure, self.baseline)
 	}
 
 	fn convert_env_data(temperature: f32, humidity: f32) -> (u16, u16) {
@@ -248,40 +291,31 @@ impl Environment {
 		not set by the application) to compensate for changes in
 		relative humidity and ambient temperature.*/
 
-		return (
+		(
 			((temperature + 25.0f32) * 512.0f32 + 0.5f32) as u16,
 			(humidity * 512.0f32 + 0.5f32) as u16,
-		);
+		)
 	}
 
 	/// to be periodically called every 10 ms
+	/// Return value indicates if data has been changed
 	pub fn handle(&mut self) -> bool {
 		match self.board5a.as_mut() {
 			None => match self.bme280.as_mut() {
 				None => false,
 				Some(bme280) => {
-					self.read_counter += 1;
-					if self.read_counter == self.data_interval {
-						self.read_counter = 0;
+					let measurement = bme280.measure().unwrap();
 
-						let measurement = bme280.measure().unwrap();
+					self.temperature = measurement.temperature;
+					self.humidity = measurement.humidity;
+					self.pressure = measurement.pressure;
 
-						self.temperature = measurement.temperature;
-						self.humidity = measurement.humidity;
-						self.pressure = measurement.pressure;
-
-						return true;
-					}
-					return false;
+					true
 				}
 			},
 			Some(board5a) => {
-				self.read_counter += 1;
-
 				// check if we get new data
-				if !self.first_time && self.read_counter == self.data_interval {
-					self.read_counter = 0;
-
+				if !self.first_time {
 					let measurement = self.bme280.as_mut().unwrap().measure().unwrap();
 					set_env_data_ccs811(board5a, measurement.temperature, measurement.humidity);
 					self.temperature = measurement.temperature;
@@ -312,30 +346,120 @@ impl Environment {
 					self.data = data;
 					return self.calculate_air_quality();
 				}
+				false
+			}
+		}
+	}
 
-				if self.read_counter == RESET_INTERVAL && self.first_time {
-					board5a.smbus_write_byte(APP_START).unwrap();
-					board5a
-						.smbus_write_byte_data(MEAS_MODE, MEAS_MODE_DATA)
-						.unwrap();
+	pub async fn get_background_task(
+		mut self,
+		mut interval: Interval,
+		nextcloud_sender: Sender<NextcloudEvent>,
+		command_sender: Sender<CommandToButtons>,
+		audio_sender: Sender<AudioEvent>,
+		mut environment_receiver: Receiver<EnvEvent>,
+		garage_enabled: bool,
+	) -> Result<Never, ModuleError> {
+		let mut old_airquality = AirQualityChange::Error;
+		if self.board5a.is_some() {
+			sleep(Duration::from_millis(RESET_INTERVAL.into())).await;
+			self.init_ccs811();
+		}
 
-					self.boot_version = board5a.smbus_read_word_data(FW_BOOT_VERSION).unwrap();
-					self.app_version = board5a.smbus_read_word_data(FW_APP_VERSION).unwrap();
-
-					self.status = board5a.smbus_read_byte_data(STATUS).unwrap();
-					self.error = board5a.smbus_read_byte_data(ERROR_ID).unwrap();
-					self.first_time = false;
-					self.read_counter = 0;
-					return false;
+		loop {
+			interval.tick().await;
+			if let Ok(env) = environment_receiver.try_recv() {
+				match env {
+					EnvEvent::RememberBaseline => {
+						self.remember_baseline().await;
+					}
+					EnvEvent::RestoreBaseline => {
+						self.restore_baseline().await;
+					}
 				}
+			}
 
-				return false;
+			if self.handle() && self.air_quality != old_airquality {
+				old_airquality = self.air_quality;
+				nextcloud_sender
+					.send(NextcloudEvent::Status(
+						NextcloudStatus::Env,
+						format!("💨 {:?}", self.air_quality),
+					))
+					.await?;
+
+				match self.air_quality {
+					AirQualityChange::Error => {
+						let error = gettext!(
+							"⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}",
+							self.error,
+							self.status,
+							self
+						);
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(NextcloudChat::Default, error.clone()))
+							.await?;
+						return Err(ModuleError::new(error));
+					}
+					AirQualityChange::Ok => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("💨 Airquality is ok. {}", self),
+							))
+							.await?;
+					}
+					AirQualityChange::Moderate => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("💩 Airquality is moderate. {}", self),
+							))
+							.await?;
+					}
+					AirQualityChange::Bad => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("💩 Airquality is bad! {}", self),
+							))
+							.await?;
+					}
+
+					AirQualityChange::FireAlarm => {
+						let mut state = self.state_mutex.lock().await;
+						state.set("alarm/fire", &self.name);
+					}
+					AirQualityChange::FireBell => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("🚨 Possible fire alarm! Ring bell once! ⏰. {}", self),
+							))
+							.await?;
+
+						command_sender
+							.send(CommandToButtons::RingBell(20, 0))
+							.await?;
+						if garage_enabled {
+							audio_sender.send(AudioEvent::FireAlarm).await?;
+						}
+					}
+					AirQualityChange::FireChat => {
+						nextcloud_sender
+							.send(NextcloudEvent::Chat(
+								NextcloudChat::Default,
+								gettext!("🚨 Possible fire alarm! (don't ring yet). {}", self),
+							))
+							.await?;
+					}
+				};
 			}
 		}
 	}
 }
 
-impl fmt::Display for Environment {
+impl fmt::Display for Environment<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}. {}", self.name, self.print_values())
 	}

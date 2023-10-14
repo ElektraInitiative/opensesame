@@ -1,6 +1,11 @@
-use crate::config::Config;
-
+use crate::nextcloud::NextcloudChat;
+use crate::{config::Config, nextcloud::NextcloudEvent, types::ModuleError};
+use futures::never::Never;
+use gettextrs::gettext;
 use std::str::FromStr;
+use tokio::fs::File;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::mpsc::Sender;
 
 const ALPHA: f64 = 0.6;
 
@@ -43,7 +48,7 @@ const ALARM_JUMP: f64 = 60f64;
 
 impl Config<'_> {
 	fn get_sensor_element_option<T: FromStr + Default>(&mut self, nr: u8, name: &str) -> Option<T> {
-		return self.get_option::<T>(&format!("sensors/#{}/{}", nr, name).to_string());
+		self.get_option::<T>(&format!("sensors/#{}/{}", nr, name).to_string())
 	}
 
 	fn get_sensor_element<T: FromStr + Default>(&mut self, nr: u8, name: &str) -> T {
@@ -112,7 +117,7 @@ impl Sensors {
 			" Min: {} Avg: {} Max: {} Text: {}",
 			self.sensors[i].min, self.sensors[i].avg, self.sensors[i].max, text
 		);
-		return ret;
+		ret
 	}
 
 	fn threstext(&mut self, i: usize, text: &str, value: u16) -> String {
@@ -145,7 +150,7 @@ impl Sensors {
 
 		let mut ret = SensorsChange::None;
 		for i in 0..12 {
-			if self.sensors[i].loc == "" {
+			if self.sensors[i].loc.is_empty() {
 				continue;
 			}
 
@@ -153,7 +158,7 @@ impl Sensors {
 			if self.init {
 				let expmovavg =
 					ALPHA * values[i] as f64 + (1.0f64 - ALPHA) * self.sensors[i].value as f64;
-				let prev_expmovavg = self.sensors[i].expmovavg as f64;
+				let prev_expmovavg = self.sensors[i].expmovavg;
 				match self.sensors[i].triggered {
 					SensorsChange::Alarm(_) => {}
 					SensorsChange::Chat(_) => {
@@ -244,7 +249,49 @@ impl Sensors {
 			} // end of if let
 		}
 		self.init = true;
-		return ret;
+		ret
+	}
+
+	pub async fn get_background_task(
+		mut self,
+		device_path: String,
+		nextcloud_sender: Sender<NextcloudEvent>,
+		//state_mutex: Arc<Mutex<Config<'_>>>,
+		//pid: u32,
+	) -> Result<Never, ModuleError> {
+		let device_file = File::open(device_path).await.expect("error here");
+		let reader = BufReader::new(device_file);
+
+		let mut lines = reader.lines();
+		while let Some(line) = lines.next_line().await? {
+			match self.update(line.clone()) {
+				SensorsChange::None => (),
+				SensorsChange::Alarm(w) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("Fire Alarm {}", w),
+						))
+						.await?;
+					/*let mut state = state_mutex.lock().await;
+					state.set("alarm/fire", &w.to_string());
+					kill(nix::unistd::Pid::from_raw(pid as i32), Signal::SIGHUP)?;
+					spawn(exec_ssh_command(format!(
+						"kdb set user:/state/libelektra/opensesame/#0/current/alarm/fire \"{}\"",
+						w
+					)));*/
+				}
+				SensorsChange::Chat(w) => {
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("Fire Chat {}", w),
+						))
+						.await?;
+				}
+			}
+		}
+		Err(ModuleError::new(String::from("sensors_loop exited")))
 	}
 }
 
@@ -256,7 +303,7 @@ mod tests {
 	use serial_test::serial;
 	use std::env;
 
-	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 
 	#[ignore]
 	#[test]

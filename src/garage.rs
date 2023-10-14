@@ -1,6 +1,14 @@
+use futures::never::Never;
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
+use systemstat::Duration;
+use tokio::{sync::mpsc::Sender, time::interval};
 
-use crate::config::Config;
+use crate::{
+	buttons::CommandToButtons,
+	config::Config,
+	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
+	types::ModuleError,
+};
 
 const TASTER_EINGANG_OBEN_LINE: u32 = 234; // - Taster Eingang Oben             -> Pin40 GPIO234 EINT10
 const TASTER_EINGANG_UNTEN_LINE: u32 = 235; // - Taster Eingang Unten            -> Pin38 GPIO235 EINT11
@@ -92,7 +100,7 @@ impl Garage {
 		if now == 1 && *prev {
 			*prev = false;
 		}
-		return ret;
+		ret
 	}
 
 	pub fn handle(&mut self) -> GarageChange {
@@ -138,7 +146,75 @@ impl Garage {
 			None => (),
 		}
 
-		return GarageChange::None;
+		GarageChange::None
+	}
+
+	/// This function could be triggered by state changes on GPIO, because the pins are connected with the olimex board
+	/// So we dont need to run it all few seconds.
+	pub async fn get_background_task(
+		mut garage: Garage,
+		command_sender: Sender<CommandToButtons>,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<Never, ModuleError> {
+		let mut interval = interval(Duration::from_millis(10));
+		loop {
+			match garage.handle() {
+				GarageChange::None => (),
+				GarageChange::PressedTasterEingangOben => {
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							false,
+							"💡 Pressed at entrance top switch. Switch lights in garage"
+								.to_string(),
+						))
+						.await?;
+				}
+				GarageChange::PressedTasterTorOben => {
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							true,
+							"💡 Pressed top switch at garage door. Switch lights in and out garage"
+								.to_string(),
+						))
+						.await?;
+				}
+				GarageChange::PressedTasterEingangUnten | GarageChange::PressedTasterTorUnten => {
+					command_sender.send(CommandToButtons::OpenDoor).await?;
+				}
+
+				GarageChange::ReachedTorEndposition => {
+					nextcloud_sender
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Door,
+							String::from("🔒 Open"),
+						))
+						.await?;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔒 Garage door closed."),
+						))
+						.await?;
+				}
+				GarageChange::LeftTorEndposition => {
+					nextcloud_sender
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Door,
+							String::from("🔓 Closed"),
+						))
+						.await?;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔓 Garage door open"),
+						))
+						.await?;
+				}
+			}
+			interval.tick().await;
+		}
 	}
 }
 
@@ -147,7 +223,7 @@ mod tests {
 	use super::*;
 	use std::{env, thread, time};
 
-	const CONFIG_PARENT: &'static str = "/sw/libelektra/opensesame/#0/current";
+	const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 
 	#[ignore] // remove and run with: cargo test print_events -- --nocapture
 	#[test]

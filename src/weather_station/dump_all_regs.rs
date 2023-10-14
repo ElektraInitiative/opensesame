@@ -3,7 +3,7 @@ extern crate libmodbus;
 use libmodbus::*;
 
 ///Constants
-const DEVICE: &'static str = "/dev/ttyS5";
+const DEVICE: &str = "/dev/ttyS5";
 const BAUDRATE: i32 = 9600;
 const PARITY: char = 'N';
 const DATA_BITS: i32 = 8;
@@ -11,7 +11,7 @@ const STOP_BITS: i32 = 1;
 const SLAVE_ID: u8 = 1;
 
 ///All 96 input registers
-const INPUT_REG: [(u16, &'static str, &'static str, i32, char); 96] = [
+const INPUT_REG: [(u16, &str, &str, i32, char); 96] = [
 	(0x7533, "Mittelwert Windgeschwindigkeit", "m/s", 10, 'u'),
 	(0x753B, "Maximalwert Windgeschwindigkeit (Böe) verfügbar wenn AV>=30", "m/s", 10, 'u'),
 	(0x75FB, "Mittelwert Windrichtung", "°", 10, 'u'),
@@ -111,7 +111,7 @@ const INPUT_REG: [(u16, &'static str, &'static str, i32, char); 96] = [
 ];
 
 ///All x hold registers
-const HOLD_REG: [(u16, &'static str, &'static str); 18] = [
+const HOLD_REG: [(u16, &str, &str); 18] = [
 	(40015, "Befehl AV", "Mittelungsintervall für Windgeschwindigkeit und Windrichtung. 0..6000 (x100ms)"),
 	(40031, "Befehl BP", "Parität, s. Befehl „BP“ Thies Format"),
 	(40005, "Befehl BR", "Baudrate, s. Befehl „BR“ Thies Format"),
@@ -138,8 +138,7 @@ fn conv_vec_to_value_s(vec: Vec<u16>) -> i32 {
 }
 
 fn conv_vec_to_value_u(vec: Vec<u16>) -> u32 {
-	let usign_val = (vec[0] as u32) << 16 | (vec[1] as u32);
-	usign_val
+	(vec[0] as u32) << 16 | (vec[1] as u32)
 }
 
 fn main() {
@@ -160,12 +159,11 @@ fn main() {
 		let mut data = vec![0u16; 2];
 		match ctx.read_input_registers(input_reg.0, 2, &mut data) {
 			Ok(_) => {
-				let conv_data: f32;
-				if input_reg.4 == 'u' {
-					conv_data = (conv_vec_to_value_u(data) as f32) / input_reg.3 as f32;
+				let conv_data = if input_reg.4 == 'u' {
+					(conv_vec_to_value_u(data) as f32) / input_reg.3 as f32
 				} else {
-					conv_data = (conv_vec_to_value_s(data) as f32) / input_reg.3 as f32;
-				}
+					(conv_vec_to_value_s(data) as f32) / input_reg.3 as f32
+				};
 				println!(
 					"{} - {} : {} {}",
 					input_reg.0, input_reg.1, conv_data, input_reg.2
@@ -174,9 +172,7 @@ fn main() {
 			Err(error) => {
 				eprintln!(
 					"{} - {} : [couldn't read data '{}']",
-					input_reg.0,
-					input_reg.1,
-					error.to_string()
+					input_reg.0, input_reg.1, error
 				);
 			}
 		}
@@ -208,10 +204,7 @@ fn main() {
 			Err(error) => {
 				eprintln!(
 					"{} - {} - {} : [couldn't read data '{}']",
-					hold_reg.0,
-					hold_reg.1,
-					hold_reg.2,
-					error.to_string()
+					hold_reg.0, hold_reg.1, hold_reg.2, error
 				);
 			}
 		}
