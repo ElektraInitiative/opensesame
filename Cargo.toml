@@ -77,3 +77,7 @@ libmodbus = {git = "https://github.com/ElektraInitiative/libmodbus-rs.git"}
 [[bin]]
 name = "weatherstation_dump"
 path = "src/weather_station/dump_all_regs.rs"
+
+[[bin]]
+name = "weatherstation_write"
+path = "src/weather_station/write_to_reg.rs"
