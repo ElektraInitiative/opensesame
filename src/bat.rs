@@ -12,6 +12,7 @@ use tokio::time::interval;
 
 use crate::nextcloud::NextcloudChat;
 use crate::nextcloud::NextcloudEvent;
+use crate::nextcloud::NextcloudStatus;
 use crate::types::ModuleError;
 
 const START_CAPACITY_THRESHOLD: u8 = 50;
@@ -24,7 +25,7 @@ pub struct Bat {
 impl Bat {
 	pub fn new() -> Self {
 		Self {
-			capacity: 0,
+			capacity: 100,
 			capacity_threshold: START_CAPACITY_THRESHOLD,
 		}
 	}
@@ -49,6 +50,12 @@ impl Bat {
 				self.capacity = new_capacity;
 				if self.capacity < self.capacity_threshold {
 					nextcloud_sender
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Online,
+							gettext!("🪫 ON {}", self.capacity),
+						))
+						.await?;
+					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
 							gettext!(
@@ -65,6 +72,12 @@ impl Bat {
 					}
 				} else if self.capacity == 100 {
 					self.capacity_threshold = START_CAPACITY_THRESHOLD;
+					nextcloud_sender
+						.send(NextcloudEvent::Status(
+							NextcloudStatus::Online,
+							gettext!("🔋 ON {}", self.capacity),
+						))
+						.await?;
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
