@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-25 09:40+0000\n"
+"POT-Creation-Date: 2023-10-16 07:55+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -19,232 +19,194 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Gtranslator 3.38.0\n"
 
-#: src/main.rs:65
-msgid "failed to execute process"
-msgstr "Ausführen des Prozesses fehlgeschlagen"
+#: src/audio.rs:75
+msgid "🔔 Ringing the Audio Bell "
+msgstr "🔔 Audio Glocke läutet "
 
-#: src/main.rs:75
+#: src/audio.rs:88
+msgid "🚨 Audio Fire Alarm!"
+msgstr "🚨 Audio Feueralarm"
+
+#: src/audio.rs:105
+msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
+msgstr "SIGUSR2 konnte nicht zu anderen Opensesame-Instanz gesendet werden: {}"
+
+#: src/bat.rs:58
+msgid "🪫 Battery Capacity is below {}% at {}%"
+msgstr "🪫 Batterieladung ist unter {}% auf {}%"
+
+#: src/bat.rs:74
+msgid "🔋 Battery Capacity is back to {}%"
+msgstr "🔋 Batterieladung ist zurück bei {}%"
+
+#: src/buttons.rs:493
 msgid "👋 Turned PWR_SWITCH off"
 msgstr "👋 PWR_SWITCH ausgeschalten"
 
-#: src/main.rs:81
+#: src/buttons.rs:502
 msgid "👋 Turned PWR_SWITCH on"
 msgstr "👋 PWR_SWITCH eingeschalten"
 
-#: src/main.rs:98
-msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
-msgstr ""
-"⚠️ Fehler {:#02b} beim Lesen vom Environment-Sensor! Status: {:#02b}. {}"
+#: src/buttons.rs:536
+msgid "{}. {}"
+msgstr "{}. {}"
 
-#: src/main.rs:105
-msgid "💨 Airquality is ok. {}"
-msgstr "💨 Luftqualität ist ok. {}"
-
-#: src/main.rs:108
-msgid "💩 Airquality is moderate. {}"
-msgstr "💩 Luftqualität ist moderat. {}"
-
-#: src/main.rs:112
-msgid "💩 Airquality is bad! {}"
-msgstr "💩 Luftqualität ist schlecht! {}"
-
-#: src/main.rs:121
-msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
-msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
-
-#: src/main.rs:138
-msgid "🚨 Possible fire alarm! (don't ring yet). {}"
-msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
-
-#: src/main.rs:187
-msgid "A panic occurred at {}:{}: {}"
-msgstr "Ein unbehebbarer Fehler ist bei {}:{}: {} passiert"
-
-#: src/main.rs:201
-msgid "👋 opensesame {} init {}"
-msgstr "👋 Opensesame {} init {}"
-
-#: src/main.rs:226
-msgid "⚠️ Failed to init libmodbus connection: {}"
-msgstr "⚠️ Initialisierung von libmodbus ist fehlgeschlagen: {}"
-
-#: src/main.rs:235 src/main.rs:238 src/main.rs:241
-msgid "⚠️ Failed to init ModIR: {}"
-msgstr "⚠️ Initialisierung von ModIR ist fehlgeschlagen: {}"
-
-#: src/main.rs:273
-msgid "🌡️ Temperature above {} °C, close the window"
-msgstr "🌡️ Es hat über {} °C, Fenster schließen"
-
-#: src/main.rs:279
-msgid "🌡️ Temperature above {} °C and no Wind"
-msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
-
-#: src/main.rs:285
-msgid "🌡️ Temperature above {} °C"
-msgstr "🌡️ Es hat über {} °C"
-
-#: src/main.rs:291
-msgid "🌡 Temperature again under {} °C, warning was removed"
-msgstr "🌡 Es hat unter {} °C, die Warnung wurde entfernt"
-
-#: src/main.rs:298
-msgid "⚠️ Error from weather station: {}"
-msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
-
-#: src/main.rs:308
-msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
-msgstr "🌡️🌡️ Beide ModIR Sensoren sind zu heiß! Ambient: {} °C, Objekt: {} °C"
-
-#: src/main.rs:315
-msgid "🌡️ ModIR ambient sensors too hot! Ambient: {} °C"
-msgstr "🌡️ ModIR Ambient Sensor ist zu heiß! Ambient: {} °C"
-
-#: src/main.rs:321
-msgid "🌡️ ModIR object sensors too hot! Object: {} °C"
-msgstr "🌡️ ModIR Objekt Sensor ist zu heiß! Objekt: {} °C"
-
-#: src/main.rs:327
-msgid "🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C"
-msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
-
-#: src/main.rs:335 src/main.rs:339 src/main.rs:345
-msgid "⚠️ Error while handling ModIR: {}"
-msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
-
-#: src/main.rs:372
-msgid "Fire Alarm {}"
-msgstr "Feueralarm {}"
-
-#: src/main.rs:380
-msgid "Fire Chat {}"
-msgstr "Feuerchat {}"
-
-#: src/main.rs:395
-msgid "👋 reloaded config&state in sensor mode for opensesame {} {}"
-msgstr "👋 config&state neu geladen im Sensor Modus für Opensesame {} {}"
-
-#: src/main.rs:412
-msgid "🪫 ON {}"
-msgstr "🪫 EIN {}"
-
-#: src/main.rs:421
-msgid "🚨 Received alarm"
-msgstr "🚨 Befehl für Alarm empfangen"
-
-#: src/main.rs:432
-msgid "🔔 Received bell"
-msgstr "🔔 Befehl für Glocke empfangen"
-
-#: src/main.rs:438
-msgid "👋reloading config&state for opensesame {} {}"
-msgstr "👋 config&state für Opensesame neu geladen {} {}"
-
-#: src/main.rs:449
-msgid "🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}"
-msgstr "🚨 Feueralarm! Feueralarm! FEUERALARM! ⏰. {}"
-
-#: src/main.rs:474
-msgid "👋 opensesame {} started {}"
-msgstr "👋 Opensesame {} startet {}"
-
-#: src/main.rs:479
-msgid "🔋 ON {}"
-msgstr "🔋 EIN {}"
-
-#: src/main.rs:504
-msgid "💡 Pressed at entrance top switch. Switch lights in garage. {}"
-msgstr "💡 Oberer Taster bei Tür gedrückt. Schalte Licht in Garage ein. {}"
-
-#: src/main.rs:510
-msgid ""
-"💡 Pressed top switch at garage door. Switch lights in and out garage. {}"
-msgstr ""
-"💡 Oberer Taster bei Tor gedrückt. Schalte Licht innen und außen bei Garage "
-"ein. {}"
-
-#: src/main.rs:519
-msgid "🔒 Open"
-msgstr "🔒 Offen"
-
-#: src/main.rs:521
-msgid "🔒 Garage door closed. {}"
-msgstr "🔒 Garagentor zu. {}"
-
-#: src/main.rs:526
-msgid "🔓 Closed"
-msgstr "🔓 Geschlossen"
-
-#: src/main.rs:527
-msgid "🔓 Garage door open. {}"
-msgstr "🔓 Garagentor offen. {}"
-
-#: src/main.rs:552
-msgid "🔔 Pressed button bell. {}"
+#: src/buttons.rs:556
+msgid "🔔 Pressed button bell."
 msgstr "🔔 Knopf für Glocke gedrückt. {}"
 
-#: src/main.rs:557
+#: src/buttons.rs:565
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/main.rs:562
-msgid "💡 Pressed switch inside. {}. {}"
+#: src/buttons.rs:577 
+msgid "💡 Pressed switch inside. {}."
 msgstr "💡 Taster innen gedrückt. {}. {}"
 
-#: src/main.rs:569
-msgid "💡 Pressed switch outside or light button. {}. {}"
+#: src/buttons.rs:588
+msgid "💡 Pressed switch outside or light button. {}."
 msgstr "💡 Taster oder Knopf außen gedrückt. {}. {}"
 
-#: src/main.rs:579
-msgid "🔔 Pressed switch bell. {}"
+#: src/buttons.rs:601
+msgid "🔔 Pressed switch bell."
 msgstr "🔔 Taster Glocke gedrückt. {}"
 
-#: src/main.rs:584
+#: src/buttons.rs:610
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/main.rs:592
-msgid "🕶️ Light was turned off. {}"
+#: src/buttons.rs:624
+msgid "🕶️ Light was turned off."
 msgstr "🕶️ Licht wurde abgeschalten. {}"
 
-#: src/main.rs:599
+#: src/buttons.rs:634
 msgid ""
-"⚠️ Error reading buttons of board {}. Environment: {}, Load average: {} {} "
-"{}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
+"⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: "
+"{}, Swap: {}, CPU temp: {}"
 msgstr ""
 "⚠️ Fehler beim Lesen der Knöpfe am Board {}. Environment: {}, Load average: "
 "{} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
 
-#: src/main.rs:608
+#: src/buttons.rs:649
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/main.rs:619
+#: src/buttons.rs:665
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/main.rs:624
+#: src/buttons.rs:675
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
 "Sonnenuntergang: {}"
 
-#: src/main.rs:636
+#: src/buttons.rs:691
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {}"
 
-#: src/main.rs:645
+#: src/buttons.rs:702
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
-#: src/main.rs:662
-msgid "📴 OFF"
-msgstr "📴 ABGESCHALTEN"
+#: src/clima_sensor_us.rs:424
+msgid "🌡️ Temperature above {} °C, close the window"
+msgstr "🌡️ Es hat über {} °C, Fenster schließen"
 
-#: src/main.rs:664
-msgid "👋 opensesame {} bye-bye {}"
-msgstr "👋 Opensesame {} auf Wiedersehen {}"
+#: src/clima_sensor_us.rs:428
+msgid "🌡️ Temperature above {} °C and no Wind"
+msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
 
-#~ msgid "🔓 Garage door closes automatically. {}"
-#~ msgstr "🔓 Garagentor schließt automatisch. {}"
+#: src/clima_sensor_us.rs:432
+msgid "🌡️ Temperature above {} °C"
+msgstr "🌡️ Es hat über {} °C"
+
+#: src/clima_sensor_us.rs:435
+msgid "🌡 Temperature again under {} °C, warning was removed"
+msgstr "🌡 Es hat unter {} °C, die Warnung wurde entfernt"
+
+#: src/clima_sensor_us.rs:448
+msgid "⚠️ Error from weather station: {}"
+msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
+
+#: src/environment.rs:394
+msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
+msgstr ""
+"⚠️ Fehler {:#02b} beim Lesen vom Environment-Sensor! Status: {:#02b}. {}"
+
+#: src/environment.rs:408
+msgid "💨 Airquality is ok. {}"
+msgstr "💨 Luftqualität ist ok. {}"
+
+#: src/environment.rs:416
+msgid "💩 Airquality is moderate. {}"
+msgstr "💩 Luftqualität ist moderat. {}"
+
+#: src/environment.rs:424
+msgid "💩 Airquality is bad! {}"
+msgstr "💩 Luftqualität ist schlecht! {}"
+
+#: src/environment.rs:437
+msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
+msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
+
+#: src/environment.rs:452
+msgid "🚨 Possible fire alarm! (don't ring yet). {}"
+msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
+
+#: src/mod_ir_temp.rs:202
+msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
+msgstr "🌡️🌡️ Beide ModIR Sensoren sind zu heiß! Ambient: {} °C, Objekt: {} °C"
+
+#: src/mod_ir_temp.rs:214
+msgid "🌡️ ModIR ambient sensors too hot! Ambient: {} °C"
+msgstr "🌡️ ModIR Ambient Sensor ist zu heiß! Ambient: {} °C"
+
+#: src/mod_ir_temp.rs:225
+msgid "🌡️ ModIR object sensors too hot! Object: {} °C"
+msgstr "🌡️ ModIR Objekt Sensor ist zu heiß! Objekt: {} °C"
+
+#: src/mod_ir_temp.rs:236
+msgid "🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C"
+msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
+
+#: src/mod_ir_temp.rs:249 src/mod_ir_temp.rs:257 src/mod_ir_temp.rs:265
+msgid "⚠️ Error while handling ModIR: {}"
+msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
+
+#: src/nextcloud.rs:242
+msgid "👋 Opensesame {} init {}"
+msgstr "👋 Opensesame {} init {}"
+
+#: src/ping.rs:63
+msgid ""
+"{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage "
+"{}, Swap {}, CPU temp {}, Startup {} Bat {}"
+msgstr ""
+"{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Speicherauslastung "
+"{}, Swap {}, CPU temp {}, Startup {} Bat {}"
+
+#: src/sensors.rs:273
+msgid "Fire Alarm {}"
+msgstr "Feueralarm {}"
+
+#: src/sensors.rs:288
+msgid "Fire Chat {}"
+msgstr "Feuerchat {}"
+
+#: src/signals.rs:87
+msgid "👋 reloading config&state for opensesame {} {}"
+msgstr "👋 config&state für Opensesame neu geladen {} {}"
+
+#: src/signals.rs:119
+msgid "🚨 Fire Alarm! Fire Alarm! Fire ALARM! ⏰. {}"
+msgstr "🚨 Feueralarm! Feueralarm! FEUERALARM! ⏰. {}"
+
+#: src/signals.rs:153
+msgid "🚨 Received alarm"
+msgstr "🚨 Befehl für Alarm empfangen"
+
+#: src/signals.rs:174
+msgid "🔔 Received bell"
+msgstr "🔔 Befehl für Glocke empfangen"

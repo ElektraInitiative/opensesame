@@ -13,6 +13,7 @@ use tokio::time::interval;
 use crate::nextcloud::NextcloudChat;
 use crate::nextcloud::NextcloudEvent;
 use crate::nextcloud::NextcloudStatus;
+use crate::ping::PingEvent;
 use crate::types::ModuleError;
 
 const START_CAPACITY_THRESHOLD: u8 = 50;
@@ -40,12 +41,14 @@ impl Bat {
 	pub async fn get_background_task(
 		mut self,
 		nextcloud_sender: Sender<NextcloudEvent>,
+		ping_sender: Sender<PingEvent>,
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_secs(600));
 		loop {
 			interval.tick().await;
 			let new_capacity = self.capacity();
-
+			ping_sender.send(PingEvent::UpdateBatCapacity(new_capacity)).await?;
+			
 			if new_capacity != self.capacity {
 				self.capacity = new_capacity;
 				if self.capacity < self.capacity_threshold {

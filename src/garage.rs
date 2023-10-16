@@ -188,7 +188,7 @@ impl Garage {
 					nextcloud_sender
 						.send(NextcloudEvent::Status(
 							NextcloudStatus::Door,
-							String::from("🔒 Open"),
+							String::from("🔒 Closed"),
 						))
 						.await?;
 					nextcloud_sender
@@ -202,7 +202,7 @@ impl Garage {
 					nextcloud_sender
 						.send(NextcloudEvent::Status(
 							NextcloudStatus::Door,
-							String::from("🔓 Closed"),
+							String::from("🔓 Open"),
 						))
 						.await?;
 					nextcloud_sender

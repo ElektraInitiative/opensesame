@@ -69,6 +69,7 @@ async fn main() -> Result<(), ModuleError> {
 		nextcloud_sender.clone(),
 		command_sender.clone(),
 		audio_sender.clone(),
+		startup_time.to_string(),
 	)));
 
 	if garage_enabled {
@@ -193,6 +194,7 @@ async fn main() -> Result<(), ModuleError> {
 		tasks.push(spawn(Bat::get_background_task(
 			Bat::new(),
 			nextcloud_sender.clone(),
+			ping_sender.clone(),
 		)));
 	}
 
