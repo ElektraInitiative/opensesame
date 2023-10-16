@@ -47,8 +47,10 @@ impl Bat {
 		loop {
 			interval.tick().await;
 			let new_capacity = self.capacity();
-			ping_sender.send(PingEvent::UpdateBatCapacity(new_capacity)).await?;
-			
+			ping_sender
+				.send(PingEvent::UpdateBatCapacity(new_capacity))
+				.await?;
+
 			if new_capacity != self.capacity {
 				self.capacity = new_capacity;
 				if self.capacity < self.capacity_threshold {

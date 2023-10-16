@@ -239,7 +239,12 @@ impl Nextcloud {
 		mut self,
 		mut nextcloud_receiver: Receiver<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
-		self.ping(gettext!("👋 Opensesame {} init {}", env!("CARGO_PKG_VERSION"), self.startup_time)).await;
+		self.ping(gettext!(
+			"👋 Opensesame {} init {}",
+			env!("CARGO_PKG_VERSION"),
+			self.startup_time
+		))
+		.await;
 		while let Some(event) = nextcloud_receiver.recv().await {
 			match event {
 				NextcloudEvent::Chat(chat, message) => match chat {
