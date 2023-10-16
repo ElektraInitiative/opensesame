@@ -1,4 +1,4 @@
-/*This programm does not work, with the thies-clima-weather-station, if configured with Modbus RTU*/
+/*This program does not work, with the thies-clima-weather-station, if configured with Modbus RTU*/
 
 use serialport::{DataBits, Parity, StopBits, Error};
 use std::io::{Read, Write};
@@ -28,8 +28,8 @@ fn main() -> Result<(), Error> {
         .open()?;
         
     // Send data over the serial interface
-    gpio_scl.set_value(true).expect("cant set gpio_scl to true");
-    gpio_ss.set_value(true).expect("cant set gpio_ss to true");
+    gpio_scl.set_value(true).expect("can't set gpio_scl to true");
+    gpio_ss.set_value(true).expect("can't set gpio_ss to true");
 
     let change_to_admin = b"00KY4711";
     port.write_all(change_to_admin)?;
@@ -39,8 +39,8 @@ fn main() -> Result<(), Error> {
 
     
     // Receive data from the serial interface
-    gpio_scl.set_value(false).expect("cant set gpio_scl to false");
-    gpio_ss.set_value(false).expect("cant set gpio_ss to false");
+    gpio_scl.set_value(false).expect("can't set gpio_scl to false");
+    gpio_ss.set_value(false).expect("can't set gpio_ss to false");
 
     let mut buffer = Vec::new();
     port.read_to_end(&mut buffer)?;

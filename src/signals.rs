@@ -69,7 +69,7 @@ impl<'a> Signals<'a> {
 	}
 
 	async fn sigterm(&mut self) -> Result<(), ModuleError> {
-		//send message to environment to remember_baseline ans ENV need to use a Mutex of State
+		//send message to environment to remember_baseline and ENV need to use a Mutex of State
 		//How to enable env to use message recv, if it waits one minute or more for the next loop iteration?
 		//Two different loops? but they then have different states if a restore baseline is called?
 		//And only execute if env is enabled, otherwise we get an error
