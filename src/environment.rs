@@ -174,7 +174,7 @@ impl<'a> Environment<'a> {
 				name: config.get::<String>("environment/name"),
 				state_mutex,
 			};
-			//if sending SW_RESET failes it disables ccs811
+			//if sending SW_RESET fails it disables ccs811
 			match s
 				.board5a
 				.as_mut()

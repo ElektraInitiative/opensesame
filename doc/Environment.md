@@ -12,7 +12,7 @@ These pins are the same as those used for UEXT1 on the [LIME2-SHIELD](https://ww
 ##### 3.1 For SCL, we used GPIO52 (PB20 on the A20-Chip) which is at pin `#32`.
 ##### 3.2 For SDA, we used GPIO53 (PB21 on the A20-Chip) which is at pin `#30`.
 ##### 3.3 For VDD, we used `3.3V`, which is at pin `#3`.
-##### 3.4 For GND, we coneccted it to pin `#2`.
+##### 3.4 For GND, we connected it to pin `#2`.
 
 #### 5. The address of the BME-280 is at `0x77`, so we need to use the `BME280::new_secondary(i2c_bus, Delay);` function.
 The following command reads the status register as a test:

@@ -1,6 +1,6 @@
 /*This connection-progam tries to start a connection with the thies-clima-weather-station
 
-importent: the SLAVE_ID for the inverter is 1;
+important: the SLAVE_ID for the inverter is 1;
 -> only execution of 'Holding Register' with the implemented function 'modbus_read_registers(...)'
 -> example registers are  Befehl AV (40015); Befehl (40031); from Page 40 of the doc which is linked in the thieclima-weatherstation.md file
 

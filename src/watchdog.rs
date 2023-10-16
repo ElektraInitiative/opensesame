@@ -41,6 +41,6 @@ impl Watchdog {
 				.await
 				.map_err(|_| ModuleError::new(String::from("could not write to watchdog")))?;
 		}
-		Err(ModuleError::new(String::from("doesnt run for loop")))
+		Err(ModuleError::new(String::from("doesn't run for loop")))
 	}
 }

@@ -35,7 +35,7 @@ Explanations of the parameters:
 - `--bind=/dev/ttyACM0` exposes your host system serial device `/dev/ttyACM0` into the chrooted A20 environment.
   This serial device is used in opensesame to read the sensor data.
   
-- `-b` advices systemd to act like it's booting the image, so it will run the `init` exectuable of the chrooted environment.
+- `-b` advices systemd to act like it's booting the image, so it will run the `init` executable of the chrooted environment.
 
 - `-D` specifies the root directory of the A20 image.
   Alternatively, you can use `-i` to specify the image directly, so you don't need to extract the contents of it.
