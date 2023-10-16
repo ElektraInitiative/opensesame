@@ -1,5 +1,5 @@
 # Testing Async
-This is the testreport of the async refector of opensesame. (`-`) means that the test failed, (`~`) something went wrong but it works and (`+`) means that everything went as expected. Here is a list of the modules which need to be tested.
+This is the testreport of the async refactor of opensesame. (`-`) means that the test failed, (`~`) something went wrong but it works and (`+`) means that everything went as expected. Here is a list of the modules which need to be tested.
 
 1. **Signals** 
 2. **Buttons (+Bell)**
@@ -88,7 +88,7 @@ sensors."#2".alarm = 5
 sensors."#2".chat = 3
 ...
 ```
-For simulating the sensors we used the methode with is described in [DevelopmentSetup](./DevelopmentSetup.md). With the following script:
+For simulating the sensors we used the method with is described in [DevelopmentSetup](./DevelopmentSetup.md). With the following script:
 ```bash
 COUNTER=0;
 while true; do
@@ -120,7 +120,7 @@ weatherstation.opensensemap.token = "7bbb014ffbf974255caef2f88525b0512bd0817d9d2
 ```
 ### (`+`): Works as expected, sends warning to Nextcloud and updates opensensemap.org
 
-## Buttons + Bell + PWR + Envirionment + Battery + Watchdog
+## Buttons + Bell + PWR + Environment + Battery + Watchdog
 ### Configuration
 ```toml
 nextcloud.chat = "<chat-default>"
@@ -215,7 +215,7 @@ environment.data.interval = 60
 
 | **Check Capacity** | **Result** |
 | ---------------- | ---------- |
-| Waring if capacity is below 50% | `+` |
+| Warning if capacity is below 50% | `+` |
 
 </center>
 
@@ -327,7 +327,7 @@ watchdog.interval = 10
 
 | **Check Capacity** | **Result** |
 | ---------------- | ---------- |
-| Waring if capacity is below 50% | `+` |
+| Warning if capacity is below 50% | `+` |
 
 </center>
 
@@ -465,7 +465,7 @@ done
 
 | **Check Capacity** | **Result** |
 | ---------------- | ---------- |
-| Waring if capacity is below 50% | `+` |
+| Warning if capacity is below 50% | `+` |
 
 </center>
 

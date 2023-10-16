@@ -5,7 +5,7 @@
 - **Scope:** Clima-Sensor-US Monitoring
 - **Level:** User Goal
 - **Actors** Thies-Clima-Sensor, Opensesame, Opensensemap, Nextcloud chat
-- **Brief:** The sensor informations are collected periodically and are published to Opensensemap
+- **Brief:** The sensor information are collected periodically and are published to Opensensemap
 - **Assignee:** Felix
 - **Status:** Assigned
 

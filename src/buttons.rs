@@ -636,8 +636,6 @@ impl Buttons {
 					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr).await?;
 				}
 			}
-			// Validation required	 Buttons
-			// Validation benötigt button, somit threads abhängig!!!; channel zwischen buttons und validator? damit validator nur getriggert ist wenn buttons sich ändert?
 			// Validation start
 			let sequence = self.sequence.to_vec();
 			match validator.validate(&mut self.sequence) {
