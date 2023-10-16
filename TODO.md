@@ -12,37 +12,20 @@ Assignee: Jannis
 
 create use case: allow to talk to opensesame via Nextcloud
 
-open door
-
 add/rem PIN code
-
-status
-
-lights on/off
 
 
 ## Env
 
 Assignee: Felix
 
-Implement "Alternative" Env HW with:
-
-MOD-BME280 and MOD-IR-TEMP
-https://www.olimex.com/Products/Modules/Sensors/MOD-BME280/open-source-hardware
-https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware
-
 Configurable corrections on Temperature
 
 warn on fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
 
-implement use case: warn on indoor temperatures
-
-
 ## Battery
 
 Assignee: Felix
-
-implement use case: low battery warning
 
 proper Bat impl https://github.com/svartalf/rust-battery/issues/96
 
@@ -57,8 +40,6 @@ publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki
 ## Code Smell
 
 Assignee: Jannis
-
-replace thread spawning and sighandling with async calls
 
 optional/to be discussed: make properly distributed, replace ssh code
 
@@ -96,8 +77,6 @@ Buttons and Environment without hardware (i.e. mock): https://github.com/rust-em
 ## Olimex
 
 Assignee: Felix
-
-Bring basic functionality running on hardware
 
 Write release/blog post about outcome of bachelor thesis
 
