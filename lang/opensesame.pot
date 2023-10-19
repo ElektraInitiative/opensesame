@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-16 07:55+0000\n"
+"POT-Creation-Date: 2023-10-19 16:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/audio.rs:75
-msgid "🔔 Ringing the Audio Bell "
+msgid "🔔 Ringing the Audio Bell"
 msgstr ""
 
 #: src/audio.rs:88
@@ -29,11 +29,19 @@ msgstr ""
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr ""
 
-#: src/bat.rs:58
+#: src/bat.rs:60
+msgid "🪫 ON {}"
+msgstr ""
+
+#: src/bat.rs:67
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr ""
 
-#: src/bat.rs:74
+#: src/bat.rs:83
+msgid "🔋 ON {}"
+msgstr ""
+
+#: src/bat.rs:89
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
@@ -81,23 +89,23 @@ msgstr ""
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:649
+#: src/buttons.rs:647
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:665
+#: src/buttons.rs:663
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:675
+#: src/buttons.rs:673
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:691
+#: src/buttons.rs:689
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:702
+#: src/buttons.rs:700
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
@@ -165,7 +173,7 @@ msgstr ""
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr ""
 
-#: src/nextcloud.rs:242
+#: src/nextcloud.rs:243
 msgid "👋 Opensesame {} init {}"
 msgstr ""
 
@@ -186,7 +194,7 @@ msgid "👋 reloading config&state for opensesame {} {}"
 msgstr ""
 
 #: src/signals.rs:107
-msgid "👋 reloaded config&state in sensor mode for opensesame {} {}"
+msgid "👋 reloaded config&state for opensesame {} {}"
 msgstr ""
 
 #: src/signals.rs:119

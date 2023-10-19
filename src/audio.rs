@@ -72,7 +72,7 @@ impl Audio {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							gettext("🔔 Ringing the Audio Bell "),
+							gettext("🔔 Ringing the Audio Bell"),
 						))
 						.await?;
 					spawn(play_audio_file(

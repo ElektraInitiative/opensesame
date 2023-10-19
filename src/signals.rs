@@ -100,6 +100,16 @@ impl<'a> Signals<'a> {
 				.send(EnvEvent::RestoreBaseline)
 				.await?;
 		}
+		self.nextcloud_sender
+			.send(NextcloudEvent::Chat(
+				NextcloudChat::Ping,
+				gettext!(
+					"👋 reloaded config&state for opensesame {} {}",
+					env!("CARGO_PKG_VERSION"),
+					self.startup_time
+				),
+			))
+			.await?;
 
 		if let Some(alarm) = state.get_option::<String>("alarm/fire") {
 			if self.alarm_not_active {

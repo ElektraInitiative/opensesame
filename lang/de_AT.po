@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-16 07:55+0000\n"
+"POT-Creation-Date: 2023-10-19 16:30+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -20,22 +20,30 @@ msgstr ""
 "X-Generator: Gtranslator 3.38.0\n"
 
 #: src/audio.rs:75
-msgid "🔔 Ringing the Audio Bell "
-msgstr "🔔 Audio Glocke läutet "
+msgid "🔔 Ringing the Audio Bell"
+msgstr "🔔 Audio Glocke läutet"
 
 #: src/audio.rs:88
 msgid "🚨 Audio Fire Alarm!"
-msgstr "🚨 Audio Feueralarm"
+msgstr "🚨 Audio Feueralarm!"
 
 #: src/audio.rs:105
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr "SIGUSR2 konnte nicht zu anderen Opensesame-Instanz gesendet werden: {}"
 
-#: src/bat.rs:58
+#: src/bat.rs:60
+msgid "🪫 ON {}"
+msgstr "🪫 An {}"
+
+#: src/bat.rs:67
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr "🪫 Batterieladung ist unter {}% auf {}%"
 
-#: src/bat.rs:74
+#: src/bat.rs:83
+msgid "🔋 ON {}"
+msgstr "🔋 An {}"
+
+#: src/bat.rs:89
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr "🔋 Batterieladung ist zurück bei {}%"
 
@@ -53,23 +61,23 @@ msgstr "{}. {}"
 
 #: src/buttons.rs:556
 msgid "🔔 Pressed button bell."
-msgstr "🔔 Knopf für Glocke gedrückt. {}"
+msgstr "🔔 Knopf für Glocke gedrückt."
 
 #: src/buttons.rs:565
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:577 
+#: src/buttons.rs:577
 msgid "💡 Pressed switch inside. {}."
-msgstr "💡 Taster innen gedrückt. {}. {}"
+msgstr "💡 Taster innen gedrückt. {}."
 
 #: src/buttons.rs:588
 msgid "💡 Pressed switch outside or light button. {}."
-msgstr "💡 Taster oder Knopf außen gedrückt. {}. {}"
+msgstr "💡 Taster oder Knopf außen gedrückt. {}."
 
 #: src/buttons.rs:601
 msgid "🔔 Pressed switch bell."
-msgstr "🔔 Taster Glocke gedrückt. {}"
+msgstr "🔔 Taster Glocke gedrückt."
 
 #: src/buttons.rs:610
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
@@ -78,35 +86,35 @@ msgstr ""
 
 #: src/buttons.rs:624
 msgid "🕶️ Light was turned off."
-msgstr "🕶️ Licht wurde abgeschalten. {}"
+msgstr "🕶️ Licht wurde abgeschalten."
 
 #: src/buttons.rs:634
 msgid ""
 "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: "
 "{}, Swap: {}, CPU temp: {}"
 msgstr ""
-"⚠️ Fehler beim Lesen der Knöpfe am Board {}. Environment: {}, Load average: "
-"{} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}, Bat: {}"
+"⚠️ Fehler beim Lesen der Knöpfe am Board {}. Load average: {} {} {}, Memory "
+"usage: {}, Swap: {}, CPU temp: {}"
 
-#: src/buttons.rs:649
+#: src/buttons.rs:647
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/buttons.rs:665
+#: src/buttons.rs:663
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/buttons.rs:675
+#: src/buttons.rs:673
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
 "Sonnenuntergang: {}"
 
-#: src/buttons.rs:691
+#: src/buttons.rs:689
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {}"
 
-#: src/buttons.rs:702
+#: src/buttons.rs:700
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
@@ -175,7 +183,7 @@ msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
 
-#: src/nextcloud.rs:242
+#: src/nextcloud.rs:243
 msgid "👋 Opensesame {} init {}"
 msgstr "👋 Opensesame {} init {}"
 
@@ -184,8 +192,8 @@ msgid ""
 "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage "
 "{}, Swap {}, CPU temp {}, Startup {} Bat {}"
 msgstr ""
-"{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Speicherauslastung "
-"{}, Swap {}, CPU temp {}, Startup {} Bat {}"
+"{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, "
+"Speicherauslastung {}, Swap {}, CPU temp {}, Startup {} Bat {}"
 
 #: src/sensors.rs:273
 msgid "Fire Alarm {}"
@@ -197,6 +205,10 @@ msgstr "Feuerchat {}"
 
 #: src/signals.rs:87
 msgid "👋 reloading config&state for opensesame {} {}"
+msgstr "👋 config&state für Opensesame wird neu geladen {} {}"
+
+#: src/signals.rs:107
+msgid "👋 reloaded config&state for opensesame {} {}"
 msgstr "👋 config&state für Opensesame neu geladen {} {}"
 
 #: src/signals.rs:119
