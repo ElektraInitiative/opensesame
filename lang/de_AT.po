@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-19 16:30+0000\n"
+"POT-Creation-Date: 2023-10-19 20:26+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -32,16 +32,16 @@ msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr "SIGUSR2 konnte nicht zu anderen Opensesame-Instanz gesendet werden: {}"
 
 #: src/bat.rs:60
-msgid "🪫 ON {}"
-msgstr "🪫 An {}"
+msgid "🪫 ON {}%"
+msgstr "🪫 An {}%"
 
 #: src/bat.rs:67
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr "🪫 Batterieladung ist unter {}% auf {}%"
 
 #: src/bat.rs:83
-msgid "🔋 ON {}"
-msgstr "🔋 An {}"
+msgid "🔋 ON {}%"
+msgstr "🔋 An {}%"
 
 #: src/bat.rs:89
 msgid "🔋 Battery Capacity is back to {}%"
@@ -118,23 +118,23 @@ msgstr "⌛ Timeout mit Sequenz {}"
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
-#: src/clima_sensor_us.rs:424
+#: src/clima_sensor_us.rs:425
 msgid "🌡️ Temperature above {} °C, close the window"
 msgstr "🌡️ Es hat über {} °C, Fenster schließen"
 
-#: src/clima_sensor_us.rs:428
+#: src/clima_sensor_us.rs:429
 msgid "🌡️ Temperature above {} °C and no Wind"
 msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
 
-#: src/clima_sensor_us.rs:432
+#: src/clima_sensor_us.rs:433
 msgid "🌡️ Temperature above {} °C"
 msgstr "🌡️ Es hat über {} °C"
 
-#: src/clima_sensor_us.rs:435
+#: src/clima_sensor_us.rs:436
 msgid "🌡 Temperature again under {} °C, warning was removed"
 msgstr "🌡 Es hat unter {} °C, die Warnung wurde entfernt"
 
-#: src/clima_sensor_us.rs:448
+#: src/clima_sensor_us.rs:449
 msgid "⚠️ Error from weather station: {}"
 msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
 

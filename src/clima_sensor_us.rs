@@ -15,8 +15,8 @@ use libmodbus::{Modbus, ModbusClient, ModbusRTU, RequestToSendMode, SerialMode};
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use serde::Serialize;
-use systemstat::Duration;
 use std::io;
+use systemstat::Duration;
 use tokio::sync::mpsc::Sender;
 use tokio::time::interval;
 

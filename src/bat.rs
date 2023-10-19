@@ -57,7 +57,7 @@ impl Bat {
 					nextcloud_sender
 						.send(NextcloudEvent::Status(
 							NextcloudStatus::Online,
-							gettext!("🪫 ON {}", self.capacity),
+							gettext!("🪫 ON {}%", self.capacity),
 						))
 						.await?;
 					nextcloud_sender
@@ -80,7 +80,7 @@ impl Bat {
 					nextcloud_sender
 						.send(NextcloudEvent::Status(
 							NextcloudStatus::Online,
-							gettext!("🔋 ON {}", self.capacity),
+							gettext!("🔋 ON {}%", self.capacity),
 						))
 						.await?;
 					nextcloud_sender

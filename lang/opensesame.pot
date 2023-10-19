@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-19 16:30+0000\n"
+"POT-Creation-Date: 2023-10-19 20:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,7 +30,7 @@ msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr ""
 
 #: src/bat.rs:60
-msgid "🪫 ON {}"
+msgid "🪫 ON {}%"
 msgstr ""
 
 #: src/bat.rs:67
@@ -38,7 +38,7 @@ msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr ""
 
 #: src/bat.rs:83
-msgid "🔋 ON {}"
+msgid "🔋 ON {}%"
 msgstr ""
 
 #: src/bat.rs:89
@@ -109,23 +109,23 @@ msgstr ""
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/clima_sensor_us.rs:424
+#: src/clima_sensor_us.rs:425
 msgid "🌡️ Temperature above {} °C, close the window"
 msgstr ""
 
-#: src/clima_sensor_us.rs:428
+#: src/clima_sensor_us.rs:429
 msgid "🌡️ Temperature above {} °C and no Wind"
 msgstr ""
 
-#: src/clima_sensor_us.rs:432
+#: src/clima_sensor_us.rs:433
 msgid "🌡️ Temperature above {} °C"
 msgstr ""
 
-#: src/clima_sensor_us.rs:435
+#: src/clima_sensor_us.rs:436
 msgid "🌡 Temperature again under {} °C, warning was removed"
 msgstr ""
 
-#: src/clima_sensor_us.rs:448
+#: src/clima_sensor_us.rs:449
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
