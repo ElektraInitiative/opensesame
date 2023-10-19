@@ -19,7 +19,7 @@
 - [Installation](Install.md)
 
 # Modules
-
+- [Modules Overview](Modules_Overview.md)
 - [GPIO](GPIO.md)
 - [I2C](I2C.md)
 - [MQ135](MQ135.md)
@@ -30,6 +30,15 @@
 - [Opensensemap](Opensensemap.md)
 - [Inverter](goodwe-inverter.md)
 - [Energy](Energy.md)
+- [Audio](Audio.md)
+- [Battery](Battery.md)
+- [IR-Temp](ModIR.md)
+- [Nextcloud](Nextcloud.md)
+- [Ping](Ping.md)
+- [Signals](Signals.md)
+- [Error-Types](Types.md)
+- [Watchdog](Watchdog.md)
+
 
 # Usecases
 
