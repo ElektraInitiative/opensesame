@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-20 05:37+0000\n"
+"POT-Creation-Date: 2023-10-20 06:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -109,27 +109,23 @@ msgstr ""
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/clima_sensor_us.rs:403
+#: src/clima_sensor_us.rs:404
 msgid "🌡️ Temperature above {} °C, close the window"
 msgstr ""
 
-#: src/clima_sensor_us.rs:407
-msgid "🌡️ Temperature above {} °C and no Wind"
-msgstr ""
-
-#: src/clima_sensor_us.rs:412
+#: src/clima_sensor_us.rs:409
 msgid "🌡️ Temperature above {} °C"
 msgstr ""
 
-#: src/clima_sensor_us.rs:417
+#: src/clima_sensor_us.rs:414
 msgid "🌡 Temperature below {} °C"
 msgstr ""
 
-#: src/clima_sensor_us.rs:420
+#: src/clima_sensor_us.rs:417
 msgid "༄ Strong Wind {} km/h"
 msgstr ""
 
-#: src/clima_sensor_us.rs:435
+#: src/clima_sensor_us.rs:432
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 

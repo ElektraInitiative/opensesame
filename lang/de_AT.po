@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-20 05:37+0000\n"
+"POT-Creation-Date: 2023-10-20 06:18+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -117,27 +117,23 @@ msgstr "⌛ Timeout mit Sequenz {}"
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
-#: src/clima_sensor_us.rs:403
+#: src/clima_sensor_us.rs:404
 msgid "🌡️ Temperature above {} °C, close the window"
 msgstr "🌡️ Es hat über {} °C, Fenster schließen"
 
-#: src/clima_sensor_us.rs:407
-msgid "🌡️ Temperature above {} °C and no Wind"
-msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
-
-#: src/clima_sensor_us.rs:412
+#: src/clima_sensor_us.rs:409
 msgid "🌡️ Temperature above {} °C"
 msgstr "🌡️ Es hat über {} °C"
 
-#: src/clima_sensor_us.rs:417
+#: src/clima_sensor_us.rs:414
 msgid "🌡 Temperature below {} °C"
 msgstr "🌡️ Es hat unter {} °C"
 
-#: src/clima_sensor_us.rs:420
+#: src/clima_sensor_us.rs:417
 msgid "༄ Strong Wind {} km/h"
 msgstr ""
 
-#: src/clima_sensor_us.rs:435
+#: src/clima_sensor_us.rs:432
 msgid "⚠️ Error from weather station: {}"
 msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
 
@@ -225,6 +221,9 @@ msgstr "🚨 Befehl für Alarm empfangen"
 #: src/signals.rs:174
 msgid "🔔 Received bell"
 msgstr "🔔 Befehl für Glocke empfangen"
+
+#~ msgid "🌡️ Temperature above {} °C and no Wind"
+#~ msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
 
 #~ msgid "🌡 Temperature again under {} °C, warning was removed"
 #~ msgstr "🌡 Es hat unter {} °C, die Warnung wurde entfernt"
