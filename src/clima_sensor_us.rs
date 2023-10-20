@@ -271,11 +271,7 @@ impl ClimaSensorUS {
 	}
 
 	/// This function is used to set the warning_active variable and compare it with the new value.
-	fn set_warning_active(
-		warning_active: &mut Warning,
-		temp: f32,
-		wind: f32,
-	) -> Option<Warning> {
+	fn set_warning_active(warning_active: &mut Warning, temp: f32, wind: f32) -> Option<Warning> {
 		let new_warning;
 
 		if temp > ClimaSensorUS::LOW_CANCEL_TEMP
@@ -295,10 +291,8 @@ impl ClimaSensorUS {
 		{
 			new_warning = Warning::HighTemp;
 		} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
-			&& !matches!(
-				warning_active,
-				Warning::LowTemp | Warning::HighTemp
-			) {
+			&& !matches!(warning_active, Warning::LowTemp | Warning::HighTemp)
+		{
 			new_warning = Warning::CloseWindow;
 		} else {
 			new_warning = *warning_active;
