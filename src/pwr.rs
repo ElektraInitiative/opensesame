@@ -1,5 +1,3 @@
-// PWR_SWITCH
-
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
 use crate::config::Config;
