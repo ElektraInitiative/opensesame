@@ -175,7 +175,7 @@ pub enum Warning {
 	HighTemp,
 	LowTemp,
 	StrongWind,
-	NoWarning,
+	None,
 }
 
 pub struct ClimaSensorUS {
@@ -209,7 +209,7 @@ impl ClimaSensorUS {
 	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
 		let opensensebox_id = config.get::<String>("weatherstation/opensensemap/id");
 		let opensense_access_token = config.get::<String>("weatherstation/opensensemap/token");
-		let warning_active = Warning::NoWarning;
+		let warning_active = Warning::None;
 
 		let client = Client::new();
 
@@ -282,7 +282,7 @@ impl ClimaSensorUS {
 			&& temp < ClimaSensorUS::HIGH_CANCEL_TEMP
 			&& wind < ClimaSensorUS::OK_WIND_SPEED
 		{
-			new_warning = Warning::NoWarning;
+			new_warning = Warning::None;
 		} else if wind > ClimaSensorUS::STRONG_WIND_SPEED {
 			new_warning = Warning::StrongWind;
 		} else if temp > ClimaSensorUS::HIGH_WARNING_TEMP {
@@ -416,7 +416,7 @@ impl ClimaSensorUS {
 						Warning::StrongWind => {
 							gettext!("༄ Strong Wind {} km/h", ClimaSensorUS::STRONG_WIND_SPEED)
 						}
-						Warning::NoWarning => {
+						Warning::None => {
 							"🌡 ༄ Temperature and Wind again ok, removed warning".to_string()
 						}
 					};
@@ -445,12 +445,12 @@ mod tests {
 
 	#[test]
 	fn test_set_warning_active() {
-		let mut warning_active = Warning::NoWarning;
+		let mut warning_active = Warning::None;
 
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1).is_none());
-		assert!(matches!(warning_active, Warning::NoWarning));
+		assert!(matches!(warning_active, Warning::None));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
-		assert!(matches!(warning_active, Warning::NoWarning));
+		assert!(matches!(warning_active, Warning::None));
 
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 0.1),
@@ -482,11 +482,11 @@ mod tests {
 		assert!(matches!(warning_active, Warning::HighTemp));
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1),
-			Warning::NoWarning
+			Warning::None
 		);
-		assert!(matches!(warning_active, Warning::NoWarning));
+		assert!(matches!(warning_active, Warning::None));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
-		assert!(matches!(warning_active, Warning::NoWarning));
+		assert!(matches!(warning_active, Warning::None));
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 40.5),
 			Warning::StrongWind
@@ -497,7 +497,7 @@ mod tests {
 		);
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 20.5),
-			Warning::NoWarning
+			Warning::None
 		);
 	}
 
