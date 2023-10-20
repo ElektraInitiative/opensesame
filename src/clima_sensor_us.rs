@@ -1,9 +1,3 @@
-/// Before using this module you need to configure Elektra with the following elements
-/// [weatherstation/enable], [weatherstation/opensensemap/id] and [weatherstation/opensensemap/token]
-/// For example:
-/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/enable 1
-/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/opensensemap/id "<opensensemap-box-id>"
-/// kdb set user:/sw/libelektra/opensesame/#0/current/weatherstation/opensensemap/token "<access-token>"
 extern crate libmodbus;
 
 use crate::config::Config;
@@ -176,25 +170,19 @@ fn conv_vec_to_value_u(vec: (u16, u16)) -> Result<u32, ()> {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum TempWarningStateChange {
-	ChangeToCloseWindow,
-	ChangeToWarningTempNoWind,
-	ChangeToWarningTemp,
-	ChangeToRemoveWarning,
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum TempWarning {
-	RemoveWarning,
+pub enum Warning {
 	CloseWindow,
-	WarningTempNoWind,
-	WarningTemp,
+	HighTempNoWind,
+	HighTemp,
+	LowTemp,
+	StrongWind,
+	NoWarning,
 }
 
 pub struct ClimaSensorUS {
 	ctx: Modbus,
 	opensensebox_id: String,
-	warning_active: Option<TempWarning>,
+	warning_active: Option<Warning>,
 	client: Client,
 	headers: HeaderMap,
 }
@@ -213,7 +201,9 @@ impl ClimaSensorUS {
 	pub const CLOSE_WINDOW_TEMP: f32 = 22.0;
 	pub const NO_WIND_TEMP: f32 = 30.0;
 	pub const NO_WIND_SPEED: f32 = 0.3;
-	pub const WARNING_TEMP: f32 = 35.0;
+	pub const HIGH_WARNING_TEMP: f32 = 35.0;
+	pub const LOW_WARNING_TEMP: f32 = 0.0;
+	pub const STRONG_WIND_SPEED: f32 = 30.0;
 
 	pub fn new(config: &mut Config) -> Result<Self, libmodbus::Error> {
 		let opensensebox_id = config.get::<String>("weatherstation/opensensemap/id");
@@ -251,7 +241,7 @@ impl ClimaSensorUS {
 	/// (Input Register - 0x04) wind-reg address 0x7533; typ U32; real_result = response_wind/10
 	/// The return value is bool on success, true if alarm is active and false is alarm is not active
 	/// If no ctx is configured the this function returns always false, so no warning is triggered
-	async fn handle(&mut self) -> Result<Option<TempWarningStateChange>, libmodbus::Error> {
+	async fn handle(&mut self) -> Result<Option<Warning>, libmodbus::Error> {
 		let mut response_temp = vec![0u16; 2];
 		let mut response_wind = vec![0u16; 2];
 
@@ -281,57 +271,45 @@ impl ClimaSensorUS {
 
 	/// This function is used to set the warning_active variable and compare it with the new value.
 	fn set_warning_active(
-		warning_active: &mut Option<TempWarning>,
+		warning_active: &mut Option<Warning>,
 		temp: f32,
 		wind: f32,
-	) -> Option<TempWarningStateChange> {
+	) -> Option<Warning> {
 		let new_warning;
-		let mut result: Option<TempWarningStateChange> = Option::None;
 
-		if temp > ClimaSensorUS::WARNING_TEMP {
-			new_warning = Some(TempWarning::WarningTemp);
+		if wind > ClimaSensorUS::STRONG_WIND_SPEED {
+			new_warning = Some(Warning::StrongWind);
+		} else if temp > ClimaSensorUS::HIGH_WARNING_TEMP {
+			new_warning = Some(Warning::HighTemp);
+		} else if temp < ClimaSensorUS::LOW_WARNING_TEMP {
+			new_warning = Some(Warning::LowTemp);
 		} else if temp > ClimaSensorUS::NO_WIND_TEMP
 			&& wind < ClimaSensorUS::NO_WIND_SPEED
-			&& !matches!(warning_active, Option::Some(TempWarning::WarningTemp))
+			&& !matches!(warning_active, Option::Some(Warning::HighTemp))
 		{
-			new_warning = Some(TempWarning::WarningTempNoWind);
+			new_warning = Some(Warning::HighTempNoWind);
 		} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
 			&& !matches!(
 				warning_active,
-				Option::Some(TempWarning::WarningTemp)
-					| Option::Some(TempWarning::WarningTempNoWind)
+				Option::Some(Warning::LowTemp) | Option::Some(Warning::HighTempNoWind)
 			) {
-			new_warning = Some(TempWarning::CloseWindow);
+			new_warning = Some(Warning::CloseWindow);
 		} else if !matches!(
 			warning_active,
-			Option::None | Option::Some(TempWarning::RemoveWarning)
-		) && temp < ClimaSensorUS::CANCLE_TEMP
-		{
-			new_warning = Some(TempWarning::RemoveWarning);
+			Option::None | Option::Some(Warning::NoWarning)
+		) {
+			new_warning = Some(Warning::NoWarning);
 		} else {
-			new_warning = *warning_active;
+			new_warning = *warning_active
 		}
 
-		// compaire old and new value of TempWarning
+		// compare old and new value of Warning
 		if *warning_active != new_warning {
-			result = match new_warning {
-				Some(TempWarning::RemoveWarning) => {
-					Option::Some(TempWarningStateChange::ChangeToRemoveWarning)
-				}
-				Some(TempWarning::CloseWindow) => {
-					Option::Some(TempWarningStateChange::ChangeToCloseWindow)
-				}
-				Some(TempWarning::WarningTempNoWind) => {
-					Option::Some(TempWarningStateChange::ChangeToWarningTempNoWind)
-				}
-				Some(TempWarning::WarningTemp) => {
-					Option::Some(TempWarningStateChange::ChangeToWarningTemp)
-				}
-				Option::None => Option::None,
-			};
 			*warning_active = new_warning;
+			new_warning
+		} else {
+			Option::None
 		}
-		result
 	}
 
 	/// This method creates a json payload out of the array `OPENSENSE_CLIMA_DATA` and the data from the weather station
@@ -421,21 +399,29 @@ impl ClimaSensorUS {
 			match self.handle().await {
 				Ok(Some(temp_warning)) => {
 					let message = match temp_warning {
-						TempWarningStateChange::ChangeToCloseWindow => gettext!(
+						Warning::CloseWindow => gettext!(
 							"🌡️ Temperature above {} °C, close the window",
 							ClimaSensorUS::CLOSE_WINDOW_TEMP
 						),
-						TempWarningStateChange::ChangeToWarningTempNoWind => gettext!(
+						Warning::HighTempNoWind => gettext!(
 							"🌡️ Temperature above {} °C and no Wind",
 							ClimaSensorUS::NO_WIND_TEMP
 						),
-						TempWarningStateChange::ChangeToWarningTemp => {
-							gettext!("🌡️ Temperature above {} °C", ClimaSensorUS::WARNING_TEMP)
+						Warning::HighTemp => {
+							gettext!(
+								"🌡️ Temperature above {} °C",
+								ClimaSensorUS::HIGH_WARNING_TEMP
+							)
 						}
-						TempWarningStateChange::ChangeToRemoveWarning => gettext!(
-							"🌡 Temperature again under {} °C, warning was removed",
-							ClimaSensorUS::CANCLE_TEMP
-						),
+						Warning::LowTemp => {
+							gettext!("🌡 Temperature below {} °C", ClimaSensorUS::LOW_WARNING_TEMP)
+						}
+						Warning::StrongWind => {
+							gettext!("༄ Strong Wind {} km/h", ClimaSensorUS::STRONG_WIND_SPEED)
+						}
+						Warning::NoWarning => {
+							"🌡 ༄ Temperature and Wind again ok, removed warning".to_string()
+						}
 					};
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(NextcloudChat::Default, message))
@@ -468,17 +454,17 @@ mod tests {
 			ClimaSensorUS::new(&mut config).expect("Failed to init libmodbus connection");
 
 		match weatherstation.handle().await {
-			Ok(Some(TempWarningStateChange::ChangeToCloseWindow)) => {
-				println!("ChangeToCloseWindow")
+			Ok(Some(Warning::CloseWindow)) => {
+				println!("CloseWindow")
 			}
-			Ok(Some(TempWarningStateChange::ChangeToWarningTempNoWind)) => {
-				println!("ChangeToWarningTempNoWind")
+			Ok(Some(Warning::HighTempNoWind)) => {
+				println!("HighTempNoWind")
 			}
-			Ok(Some(TempWarningStateChange::ChangeToWarningTemp)) => {
-				println!("ChangeToWarningTemp")
+			Ok(Some(Warning::WarningTemp)) => {
+				println!("WarningTemp")
 			}
-			Ok(Some(TempWarningStateChange::ChangeToRemoveWarning)) => {
-				println!("ChangeToRemoveWarning")
+			Ok(Some(Warning::NoWarning)) => {
+				println!("NoWarning")
 			}
 			Ok(Option::None) => println!("None"),
 			Err(_error) => println!("Error"),
@@ -496,42 +482,36 @@ mod tests {
 
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 0.1)
-				== Some(TempWarningStateChange::ChangeToCloseWindow)
+				== Some(Warning::CloseWindow)
 		);
-		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
+		assert!(matches!(warning_active, Some(Warning::CloseWindow)));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 3.5).is_none());
-		assert!(matches!(warning_active, Some(TempWarning::CloseWindow)));
+		assert!(matches!(warning_active, Some(Warning::CloseWindow)));
 
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 0.1)
-				== Some(TempWarningStateChange::ChangeToWarningTempNoWind)
+				== Some(Warning::HighTempNoWind)
 		);
-		assert!(matches!(
-			warning_active,
-			Some(TempWarning::WarningTempNoWind)
-		));
+		assert!(matches!(warning_active, Some(Warning::HighTempNoWind)));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 3.5).is_none());
-		assert!(matches!(
-			warning_active,
-			Some(TempWarning::WarningTempNoWind)
-		));
+		assert!(matches!(warning_active, Some(Warning::HighTempNoWind)));
 
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 0.1)
-				== Some(TempWarningStateChange::ChangeToWarningTemp)
+				== Some(Warning::WarningTemp)
 		);
-		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
+		assert!(matches!(warning_active, Some(Warning::WarningTemp)));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 36.0, 3.5).is_none());
-		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
+		assert!(matches!(warning_active, Some(Warning::WarningTemp)));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.3, 3.4).is_none());
-		assert!(matches!(warning_active, Some(TempWarning::WarningTemp)));
+		assert!(matches!(warning_active, Some(Warning::WarningTemp)));
 		assert!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1)
-				== Some(TempWarningStateChange::ChangeToRemoveWarning)
+				== Some(Warning::NoWarning)
 		);
-		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
+		assert!(matches!(warning_active, Some(Warning::NoWarning)));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
-		assert!(matches!(warning_active, Some(TempWarning::RemoveWarning)));
+		assert!(matches!(warning_active, Some(Warning::NoWarning)));
 	}
 
 	#[test]
