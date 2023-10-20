@@ -1,7 +1,7 @@
 # Get Translation Strings
 ```bash
 cargo install xtr
-~/.cargo/bin/xtr src/main.rs -o lang/opensesame.pot
+~/.cargo/bin/xtr src/lib.rs -o lang/opensesame.pot
 ```
 # Start a new Translation
 ```bash

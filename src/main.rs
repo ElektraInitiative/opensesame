@@ -69,6 +69,7 @@ async fn main() -> Result<(), ModuleError> {
 		nextcloud_sender.clone(),
 		command_sender.clone(),
 		audio_sender.clone(),
+		startup_time.to_string(),
 	)));
 
 	if garage_enabled {
@@ -167,14 +168,10 @@ async fn main() -> Result<(), ModuleError> {
 
 	if weatherstation_enabled {
 		let clima_sensor_result = ClimaSensorUS::new(&mut config);
-		let interval = interval(Duration::from_secs(
-			config.get::<u64>("weatherstation/data/interval"),
-		));
 		match clima_sensor_result {
 			Ok(clima_sensor) => {
 				tasks.push(spawn(ClimaSensorUS::get_background_task(
 					clima_sensor,
-					interval,
 					nextcloud_sender.clone(),
 				)));
 			}
@@ -193,6 +190,7 @@ async fn main() -> Result<(), ModuleError> {
 		tasks.push(spawn(Bat::get_background_task(
 			Bat::new(),
 			nextcloud_sender.clone(),
+			ping_sender.clone(),
 		)));
 	}
 
@@ -227,7 +225,7 @@ async fn main() -> Result<(), ModuleError> {
 	tasks.push(spawn(signals.get_background_task()));
 
 	nextcloud_sender.send(
-		NextcloudEvent::Chat(NextcloudChat::Default,
+		NextcloudEvent::Chat(NextcloudChat::Ping,
 			gettext!("Enabled Modules: \nButtons: {},\n Garage: {},\n Sensors: {},\n ModIR: {},\n Environment: {},\n Weatherstation: {},\n Battery: {},\n Watchdog: {},\n Ping: {}\n",
 	buttons_enabled,
 	garage_enabled,

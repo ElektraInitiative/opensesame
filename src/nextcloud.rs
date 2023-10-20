@@ -1,5 +1,6 @@
 use crate::{audio::AudioEvent, buttons::CommandToButtons, config::Config, types::ModuleError};
 use futures::{never::Never, try_join};
+use gettextrs::gettext;
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},
 	Client,
@@ -42,6 +43,7 @@ pub struct Nextcloud {
 	info_online: String,
 	client: Client,
 	headers: HeaderMap,
+	startup_time: String,
 }
 
 impl Nextcloud {
@@ -64,6 +66,7 @@ impl Nextcloud {
 			info_online: String::new(),
 			client,
 			headers,
+			startup_time: String::new(),
 		}
 	}
 
@@ -215,12 +218,14 @@ impl Nextcloud {
 	}
 
 	pub async fn get_background_task(
-		self,
+		mut self,
 		nextcloud_receiver: Receiver<NextcloudEvent>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
 		audio_sender: Sender<AudioEvent>,
+		startup_time: String,
 	) -> Result<Never, ModuleError> {
+		self.startup_time = startup_time;
 		try_join!(
 			self.clone().message_sender_loop(nextcloud_receiver),
 			self.command_loop(nextcloud_sender, command_sender, audio_sender)
@@ -234,7 +239,12 @@ impl Nextcloud {
 		mut self,
 		mut nextcloud_receiver: Receiver<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
-		self.send_message(String::from("Nextcloud stated...")).await;
+		self.ping(gettext!(
+			"👋 Opensesame {} init {}",
+			env!("CARGO_PKG_VERSION"),
+			self.startup_time
+		))
+		.await;
 		while let Some(event) = nextcloud_receiver.recv().await {
 			match event {
 				NextcloudEvent::Chat(chat, message) => match chat {

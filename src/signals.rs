@@ -104,7 +104,7 @@ impl<'a> Signals<'a> {
 			.send(NextcloudEvent::Chat(
 				NextcloudChat::Ping,
 				gettext!(
-					"👋 reloaded config&state in sensor mode for opensesame {} {}",
+					"👋 reloaded config&state for opensesame {} {}",
 					env!("CARGO_PKG_VERSION"),
 					self.startup_time
 				),

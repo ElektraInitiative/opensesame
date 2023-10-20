@@ -16,8 +16,9 @@ use reqwest::header::HeaderMap;
 use reqwest::Client;
 use serde::Serialize;
 use std::io;
+use systemstat::Duration;
 use tokio::sync::mpsc::Sender;
-use tokio::time::Interval;
+use tokio::time::interval;
 
 ///Constants
 const DEVICE: &str = "/dev/ttyS5";
@@ -413,9 +414,9 @@ impl ClimaSensorUS {
 
 	pub async fn get_background_task(
 		mut self,
-		mut interval: Interval,
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
+		let mut interval = interval(Duration::from_secs(60));
 		loop {
 			match self.handle().await {
 				Ok(Some(temp_warning)) => {
