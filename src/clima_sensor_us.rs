@@ -448,7 +448,7 @@ mod tests {
 
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 0.1),
-			Warning::CloseWindow
+			Some(Warning::CloseWindow)
 		);
 		assert!(matches!(warning_active, Warning::CloseWindow));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.0, 3.5).is_none());
@@ -456,7 +456,7 @@ mod tests {
 
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 33.0, 0.1),
-			Warning::HighTemp
+			Some(Warning::HighTemp)
 		);
 		assert!(matches!(warning_active, Warning::HighTemp));
 		assert_eq!(
@@ -474,16 +474,16 @@ mod tests {
 		assert!(matches!(warning_active, Warning::HighTemp));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 25.3, 3.4).is_none());
 		assert!(matches!(warning_active, Warning::HighTemp));
-		assert!(
+		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 0.1),
-			Warning::None
+			Some(Warning::None)
 		);
 		assert!(matches!(warning_active, Warning::None));
 		assert!(ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 3.5).is_none());
 		assert!(matches!(warning_active, Warning::None));
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 40.5),
-			Warning::StrongWind
+			Some(Warning::StrongWind)
 		);
 		assert_eq!(
 			ClimaSensorUS::set_warning_active(&mut warning_active, 15.0, 33.5),
