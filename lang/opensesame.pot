@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-19 20:26+0000\n"
+"POT-Creation-Date: 2023-10-20 05:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -109,23 +109,27 @@ msgstr ""
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/clima_sensor_us.rs:425
+#: src/clima_sensor_us.rs:403
 msgid "🌡️ Temperature above {} °C, close the window"
 msgstr ""
 
-#: src/clima_sensor_us.rs:429
+#: src/clima_sensor_us.rs:407
 msgid "🌡️ Temperature above {} °C and no Wind"
 msgstr ""
 
-#: src/clima_sensor_us.rs:433
+#: src/clima_sensor_us.rs:412
 msgid "🌡️ Temperature above {} °C"
 msgstr ""
 
-#: src/clima_sensor_us.rs:436
-msgid "🌡 Temperature again under {} °C, warning was removed"
+#: src/clima_sensor_us.rs:417
+msgid "🌡 Temperature below {} °C"
 msgstr ""
 
-#: src/clima_sensor_us.rs:449
+#: src/clima_sensor_us.rs:420
+msgid "༄ Strong Wind {} km/h"
+msgstr ""
+
+#: src/clima_sensor_us.rs:435
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
@@ -153,23 +157,23 @@ msgstr ""
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr ""
 
-#: src/mod_ir_temp.rs:202
+#: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:214
+#: src/mod_ir_temp.rs:211
 msgid "🌡️ ModIR ambient sensors too hot! Ambient: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:225
+#: src/mod_ir_temp.rs:222
 msgid "🌡️ ModIR object sensors too hot! Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:236
+#: src/mod_ir_temp.rs:233
 msgid "🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:249 src/mod_ir_temp.rs:257 src/mod_ir_temp.rs:265
+#: src/mod_ir_temp.rs:246 src/mod_ir_temp.rs:254 src/mod_ir_temp.rs:262
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr ""
 
