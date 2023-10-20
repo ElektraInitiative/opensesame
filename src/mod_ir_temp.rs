@@ -1,8 +1,3 @@
-/// This module implements the functions "ambient temperature" and "object temperature" of the [MOD-IR-TEMP](https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware) sensor.
-/// Before using this module, you need to configure it with Elektra. The following configurations are necessary: [ir/enable], [ir/device], and [ir/data/interval].
-/// A description of these configuration parameters can be found in the file "opensesame.spec".
-/// You can also modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
-/// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 use crate::config::Config;
 use crate::nextcloud::{NextcloudChat, NextcloudEvent};
 use crate::types::ModuleError;
@@ -16,6 +11,8 @@ use mlx9061x::{Error, Mlx9061x, SlaveAddr};
 use tokio::sync::mpsc::Sender;
 use tokio::time::Interval;
 
+// You can modify the 'THRESHOLD_AMBIENT' and 'THRESHOLD_OBJECT' values. These two thresholds trigger the IrTempStateChange.
+// For instance, if 'THRESHOLD_AMBIENT' < 'ambient_temp', then 'ChangedToAmbientTooHot' is triggered.
 const THRESHOLD_AMBIENT: f32 = 22.0;
 const THRESHOLD_OBJECT: f32 = 44.0;
 
