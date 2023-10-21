@@ -1,4 +1,4 @@
-// workaround until https://github.com/svartalf/rust-battery/issues/96 is solved
+// TODO uses workaround for fetching battery until https://github.com/svartalf/rust-battery/issues/96 is solved
 
 const CAPACITY_FILE: &str = "/sys/class/power_supply/axp20x-battery/capacity";
 
@@ -16,7 +16,7 @@ use crate::nextcloud::NextcloudStatus;
 use crate::ping::PingEvent;
 use crate::types::ModuleError;
 
-const START_CAPACITY_THRESHOLD: u8 = 50;
+const START_CAPACITY_THRESHOLD: u8 = 80;
 
 pub struct Bat {
 	capacity: u8,

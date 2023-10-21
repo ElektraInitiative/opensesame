@@ -1,6 +1,6 @@
 # TODO
 
-This file contains what is to be done in August.
+This file contains ideas to be done.
 Before working on something, issues must be created to clarify details.
 
 This file is ordered by priority.
@@ -10,14 +10,11 @@ After something is done, remove it from here.
 
 Assignee: Jannis
 
-create use case: allow to talk to opensesame via Nextcloud
+allow to talk to opensesame via Nextcloud
 
 add/rem PIN code
 
-
 ## Env
-
-Assignee: Felix
 
 Configurable corrections on Temperature
 
@@ -25,47 +22,27 @@ warn on fast raising values, next to MQ135 (temperature, CO2, VOC, Pressure)
 
 ## Battery
 
-Assignee: Felix
-
 proper Bat impl https://github.com/svartalf/rust-battery/issues/96
-
 
 ## Nextcloud Analytics
 
-Assignee: Markus
-
 publishing data to [Nextcloud analytics](https://github.com/Rello/analytics/wiki/API#data-add)
-
 
 ## Code Smell
 
-Assignee: Jannis
-
-optional/to be discussed: make properly distributed, replace ssh code
-
-ping should be always on the same time
-
-also end alarm mode (instead of ogg123 invocation)
-
 better error handling
 
+replace ssh code
 
 ## PV
 
-Assignee: Markus
-
 implement all error codes
-
-dump all registers
 
 warn if battery `< 30%`
 
 switching off heat pump if no sunshine (MOD-2 relay)
 
-
 ## Robustness
-
-Assignee: Felix
 
 Writing to SD-Card should be reduced as much as possible, read-only as much as possible
 
@@ -73,27 +50,13 @@ close garage door on reboots (needs up to 2x 10 sec wait)
 
 Buttons and Environment without hardware (i.e. mock): https://github.com/rust-embedded/rust-i2cdev/blob/master/examples/nunchuck.rs
 
-
-## Olimex
-
-Assignee: Felix
-
-Write release/blog post about outcome of bachelor thesis
-
-
 ## Elektrification Improve Spec
-
-Assignee: Florian
 
 cmd-line arguments, env variables in `files/opensesame.spec`
 
 make nice TOML sections in config files (set via spec)
 
-
-
 ## Improve Elektra Binding
-
-Assignee: Jannis
 
 allow async
 
@@ -101,19 +64,11 @@ allow generic serialization with specializations (e.g. for bool) maybe using ser
 
 important tasks of https://github.com/ElektraInitiative/libelektra/issues/4411 (to be prioritized)
 
-(optional, effort to be discussed:
-	better support for arrays in TOML https://github.com/ElektraInitiative/libelektra/issues/4988
-	fix hanging bug: https://github.com/ElektraInitiative/libelektra/issues/4981
-	)
+better support for arrays in TOML https://github.com/ElektraInitiative/libelektra/issues/4988
 
+fix hanging bug: https://github.com/ElektraInitiative/libelektra/issues/4981
 
 ## Ansible
-
-Assignee: Max/Jannis
-
-put ~/.config into git
-
-default editor not working
 
 also install opensesame (via repo)
 
@@ -122,10 +77,3 @@ also install opensesame (via repo)
 	"pcm.front cards.pcm.front" must be updated to "pcm.front cards.pcm.default"
 	see also https://forums.raspberrypi.com/viewtopic.php?t=136974
 
-/etc/default/keyboard (dpkg-reconfigure keyboard-configuration) not correct
-
-	  # keyboard-configuration  keyboard-configuration/layoutcode       string  at
-	  # keyboard-configuration  keyboard-configuration/modelcode        string  pc105
-	  # keyboard-configuration  keyboard-configuration/model    select  Generic 105-key PC (intl.
-
-add public gpg keys for login

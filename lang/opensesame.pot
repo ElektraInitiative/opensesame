@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-19 20:26+0000\n"
+"POT-Creation-Date: 2023-10-21 04:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -109,23 +109,27 @@ msgstr ""
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
-#: src/clima_sensor_us.rs:425
-msgid "🌡️ Temperature above {} °C, close the window"
+#: src/clima_sensor_us.rs:304
+msgid "🌡️ High Temperature {} °C, close the window (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:429
-msgid "🌡️ Temperature above {} °C and no Wind"
+#: src/clima_sensor_us.rs:309
+msgid "🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:433
-msgid "🌡️ Temperature above {} °C"
+#: src/clima_sensor_us.rs:314
+msgid "🌡 Freezing Temperature, yield is in danger (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:436
-msgid "🌡 Temperature again under {} °C, warning was removed"
+#: src/clima_sensor_us.rs:317
+msgid "༄ Strong Wind {} m/s (Temperature: {} °C)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:449
+#: src/clima_sensor_us.rs:320
+msgid "🌡 ༄ Temperature {} °C and Wind {} m/s are moderate again, no warning present"
+msgstr ""
+
+#: src/clima_sensor_us.rs:424
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
@@ -153,23 +157,23 @@ msgstr ""
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr ""
 
-#: src/mod_ir_temp.rs:202
+#: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:214
+#: src/mod_ir_temp.rs:211
 msgid "🌡️ ModIR ambient sensors too hot! Ambient: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:225
+#: src/mod_ir_temp.rs:222
 msgid "🌡️ ModIR object sensors too hot! Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:236
+#: src/mod_ir_temp.rs:233
 msgid "🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C"
 msgstr ""
 
-#: src/mod_ir_temp.rs:249 src/mod_ir_temp.rs:257 src/mod_ir_temp.rs:265
+#: src/mod_ir_temp.rs:246 src/mod_ir_temp.rs:254 src/mod_ir_temp.rs:262
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr ""
 

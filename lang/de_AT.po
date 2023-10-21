@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-19 20:26+0000\n"
+"POT-Creation-Date: 2023-10-21 04:51+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -81,8 +81,7 @@ msgstr "🔔 Taster Glocke gedrückt."
 
 #: src/buttons.rs:610
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
-msgstr ""
-"🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
+msgstr "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
 #: src/buttons.rs:624
 msgid "🕶️ Light was turned off."
@@ -118,23 +117,30 @@ msgstr "⌛ Timeout mit Sequenz {}"
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
-#: src/clima_sensor_us.rs:425
-msgid "🌡️ Temperature above {} °C, close the window"
-msgstr "🌡️ Es hat über {} °C, Fenster schließen"
+#: src/clima_sensor_us.rs:304
+msgid "🌡️ High Temperature {} °C, close the window (Wind {} m/s)"
+msgstr "🌡️ Hohe Temperatur {} °C, Fenster schließen (Wind {} m/s)"
 
-#: src/clima_sensor_us.rs:429
-msgid "🌡️ Temperature above {} °C and no Wind"
-msgstr "🌡️ Es hat über {} °C und es geht kein Wind"
+#: src/clima_sensor_us.rs:309
+msgid "🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)"
+msgstr "🌡️ Hitzewarnung {} °C, PV Kühlung einschalten (Wind {} m/s)"
 
-#: src/clima_sensor_us.rs:433
-msgid "🌡️ Temperature above {} °C"
-msgstr "🌡️ Es hat über {} °C"
+#: src/clima_sensor_us.rs:314
+msgid "🌡 Freezing Temperature, yield is in danger (Wind {} m/s)"
+msgstr "🌡 Gefrierpunkt, Ernte in Gefahr (Wind {} m/s)"
 
-#: src/clima_sensor_us.rs:436
-msgid "🌡 Temperature again under {} °C, warning was removed"
-msgstr "🌡 Es hat unter {} °C, die Warnung wurde entfernt"
+#: src/clima_sensor_us.rs:317
+msgid "༄ Strong Wind {} m/s (Temperature: {} °C)"
+msgstr "༄  Starker Wind {} m/s (Temperatur: {} °C)"
 
-#: src/clima_sensor_us.rs:449
+#: src/clima_sensor_us.rs:320
+msgid ""
+"🌡 ༄ Temperature {} °C and Wind {} m/s are moderate again, no warning present"
+msgstr ""
+"🌡 ༄ Temperatur {} °C und Wind {} m/s sind wieder moderat, Warnungen sind "
+"aufgehoben"
+
+#: src/clima_sensor_us.rs:424
 msgid "⚠️ Error from weather station: {}"
 msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
 
@@ -163,23 +169,23 @@ msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
 
-#: src/mod_ir_temp.rs:202
+#: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
 msgstr "🌡️🌡️ Beide ModIR Sensoren sind zu heiß! Ambient: {} °C, Objekt: {} °C"
 
-#: src/mod_ir_temp.rs:214
+#: src/mod_ir_temp.rs:211
 msgid "🌡️ ModIR ambient sensors too hot! Ambient: {} °C"
 msgstr "🌡️ ModIR Ambient Sensor ist zu heiß! Ambient: {} °C"
 
-#: src/mod_ir_temp.rs:225
+#: src/mod_ir_temp.rs:222
 msgid "🌡️ ModIR object sensors too hot! Object: {} °C"
 msgstr "🌡️ ModIR Objekt Sensor ist zu heiß! Objekt: {} °C"
 
-#: src/mod_ir_temp.rs:236
+#: src/mod_ir_temp.rs:233
 msgid "🌡 ModIR cancelled warning! Ambient: {} °C, Object: {} °C"
 msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
 
-#: src/mod_ir_temp.rs:249 src/mod_ir_temp.rs:257 src/mod_ir_temp.rs:265
+#: src/mod_ir_temp.rs:246 src/mod_ir_temp.rs:254 src/mod_ir_temp.rs:262
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
 
