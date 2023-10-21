@@ -1,10 +1,10 @@
-# Nextcloud chat commands to Opensesame 
+# Talk With Nextcloud
 
 ## Summary
 
 - **Scope:** Nextcloud Talk
 - **Level:** User Goal
-- **Actors** System, Nextcloud chat
+- **Actors** User, chat (Nextcloud Talk)
 - **Brief:** Allow configuration of system via Nextcloud talk
 - **Assignee:** Jannis
 - **Status:** Assigned
@@ -14,12 +14,12 @@
 - **Precondition:** 
 	- The device is on grid.
 - **Main Success Scenario:** 
-    - It is possible to trigger the actions Open door and light on/off via the Nextcloud talk chat.
-    - The user can ask about enabled/disabled modules in the chat. 
-	- The PIN code can be reconfigured in the chat.
+    - The user triggers opens door and switches light on/off via the chat.
+    - The user asks about status (is door open?) and enabled/disabled modules in the chat. 
+    - The user reconfigures the PIN codes in the chat.
 - **Error scenario:**
 	- The communication with Nextcloud doesn't work.
 - **Postcondition:**
 	- Bidirectional connection with Nextcloud talk chat.
 - **Further Requirements:**
-	- Module is extenable such that new chat commands can be introduced later.
+	- Module is extensible such that new chat commands can be introduced later.
