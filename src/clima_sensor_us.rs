@@ -302,16 +302,22 @@ impl ClimaSensorUS {
 			Some(match new_warning {
 				Warning::CloseWindow => gettext!(
 					"🌡️ High Temperature {} °C, close the window (Wind {} m/s)",
-					temp, wind
+					temp,
+					wind
 				),
 				Warning::HighTemp => {
 					gettext!(
 						"🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)",
-						temp, wind
+						temp,
+						wind
 					)
 				}
 				Warning::LowTemp => {
-					gettext!("🌡 Freezing Temperature, yield is in danger (Wind {} m/s)", temp, wind)
+					gettext!(
+						"🌡 Freezing Temperature, yield is in danger (Wind {} m/s)",
+						temp,
+						wind
+					)
 				}
 				Warning::StrongWind => {
 					gettext!("༄ Strong Wind {} m/s (Temperature: {} °C)", wind, temp)
