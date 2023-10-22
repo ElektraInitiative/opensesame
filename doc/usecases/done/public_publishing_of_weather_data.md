@@ -7,7 +7,6 @@
 - **Actors** Thies-Clima-Sensor, Opensesame, Opensensemap, Nextcloud chat
 - **Brief:** The sensor information are collected periodically and are published to Opensensemap
 - **Assignee:** Felix
-- **Status:** Assigned
 
 ## Scenarios
 
