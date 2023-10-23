@@ -39,6 +39,14 @@ default = 24
 description = URL to be used for sending messages.
 required =
 
+[nextcloud/user]
+description = Username for login to Nextcloud.
+required =
+
+[nextcloud/pass]
+description = Passwort for login to Nextcloud.
+required =
+
 [nextcloud/chat]
 description = which chat to use for sending messages.
 required =
