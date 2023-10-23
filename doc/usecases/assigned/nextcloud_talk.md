@@ -23,7 +23,8 @@
   - The user writes `indoor climate?` (or `Innenklima?`) and the indoor environment data gets reported.
   - The user writes `status?` (or `Status?`) and opensesame reports the user's nextcloud status into the chat.
   - The user writes `sensors?` (or `Sensoren?`) and the current sensor data gets reported.
-  - The user writes `alarm!` (or `Alarm!`) and a bell alarm gets triggered or canceled.
+  - The user writes `alarm!` (or `Alarm!`) and a bell alarm gets triggered.
+  - The user writes `all clear!` (or `entwarnen!`) and all states (alarms, audio, bell, etc.) get canceled.
   - The user writes `bell!` (or `Glocke!`) and a bell is ringed.
   - The user writes `quit!` (or `beenden!`) and opensesame quits (and automatically restarts).
   - The user writes `time?` (or `Uhrzeit?`) and opensesame report their current time.
@@ -40,3 +41,4 @@
 - **Further Requirements:**
   - Module is extensible such that new chat commands can be introduced later.
   - Commands are case-insensitive.
+  - Shortcuts with only writing the first letters of commands should work, too.
