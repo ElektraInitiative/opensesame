@@ -32,8 +32,9 @@
   - The user writes `code?` and gets a list of names and codes.
   - The user writes `code add <name> <pin>!`, `code del <name>!` or `code set <name> <pin>!` (or `pin hinzufügen/löschen/ändern!`) in the chat and new validator codes are added or removed.
 - **Alternate Scenario:** 
-  - The user pre- or postfixes one of the commands with `@user` and only the specific opensesame instance with `user` as Nextcloud user responds to the question.
-    Example: `@garage öffnen!`
+  - The user may prefix any command with `@<username>`.
+    Opensesame only reacts if `<username>` matches its configured Nextcloud user name.
+    Example: Given the configuration `nextcloud.user=garage` opensesame will open the garage on `@garage öffnen!`.
 - **Error scenario:**
   - The communication with Nextcloud doesn't work.
 - **Postcondition:**
