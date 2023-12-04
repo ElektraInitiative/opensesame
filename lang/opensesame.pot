@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-21 04:51+0000\n"
+"POT-Creation-Date: 2023-12-04 15:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -113,23 +113,23 @@ msgstr ""
 msgid "🌡️ High Temperature {} °C, close the window (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:309
+#: src/clima_sensor_us.rs:310
 msgid "🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:314
-msgid "🌡 Freezing Temperature, yield is in danger (Wind {} m/s)"
+#: src/clima_sensor_us.rs:317
+msgid "🌡 Freezing Temperature {} °C, yield is in danger (Wind {} m/s)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:317
+#: src/clima_sensor_us.rs:323
 msgid "༄ Strong Wind {} m/s (Temperature: {} °C)"
 msgstr ""
 
-#: src/clima_sensor_us.rs:320
+#: src/clima_sensor_us.rs:326
 msgid "🌡 ༄ Temperature {} °C and Wind {} m/s are moderate again, no warning present"
 msgstr ""
 
-#: src/clima_sensor_us.rs:424
+#: src/clima_sensor_us.rs:430
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
