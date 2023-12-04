@@ -55,7 +55,8 @@ pub struct Buttons {
 	pub bell_timeout: u32,
 	pub bell_timeout_init: u32,
 	pub bell_counter: u32,
-	failed_counter: u8,
+
+	failed_counter: u8, // counts up how many failures occur
 	wrong_input_timeout: u8,
 
 	board20: LinuxI2CDevice,
@@ -77,7 +78,6 @@ pub enum CommandToButtons {
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
 
-const FAILED_COUNTER: u8 = 20; // = 200ms how long to wait after failure before resetting (*10ms)
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
 
 const SET_TRIS: u8 = 0x01; // Set GPIO direction
@@ -298,35 +298,32 @@ impl Buttons {
 		}
 	}
 
-	/// to be periodically called, e.g. every 10 ms
-	pub fn handle(&mut self) -> Result<StateChange, LinuxI2CError> {
-		// wait for recover
-		if self.failed_counter > 1 {
-			self.failed_counter -= 1;
-			return Ok(StateChange::None);
-		// try to recover
-		} else if self.failed_counter == 1 {
-			self.pins1 = PINS1_INIT;
-			self.pins2 = PINS2_INIT;
-			self.init();
-			self.failed_counter = 0;
-			return Ok(StateChange::None);
-		}
-
+	/// to be periodically called every 10 ms
+	/// ignores i2c read errors to be more robust against spurious errors
+	/// except of 3x in a row
+	pub fn handle(&mut self) -> Result<StateChange, String> {
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins1 {
-			self.failed_counter = FAILED_COUNTER;
-			self.led1 = true;
-			self.led2 = true;
-			return Err(error);
+			if self.failed_counter > 3 {
+				self.pins1 = PINS1_INIT;
+				self.pins2 = PINS2_INIT;
+				self.init();
+				return Err(format!("Board 20 with error {}", error));
+			}
+			self.failed_counter += 1;
+			return Ok(StateChange::None);
 		}
 
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins2 {
-			self.failed_counter = FAILED_COUNTER;
-			self.led1 = true;
-			self.led3 = true;
-			return Err(error);
+			if self.failed_counter > 3 {
+				self.pins1 = PINS1_INIT;
+				self.pins2 = PINS2_INIT;
+				self.init();
+				return Err(format!("Board 21 with error {}", error));
+			}
+			self.failed_counter += 1;
+			return Ok(StateChange::None);
 		}
 
 		let mut pins1 = epins1.unwrap() & ALL_BUTTONS;
