@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-04 15:57+0000\n"
+"POT-Creation-Date: 2023-12-05 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,67 +45,67 @@ msgstr ""
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
-#: src/buttons.rs:493
+#: src/buttons.rs:496
 msgid "👋 Turned PWR_SWITCH off"
 msgstr ""
 
-#: src/buttons.rs:502
+#: src/buttons.rs:505
 msgid "👋 Turned PWR_SWITCH on"
 msgstr ""
 
-#: src/buttons.rs:536
-msgid "{}. {}"
+#: src/buttons.rs:539
+msgid "{}"
 msgstr ""
 
-#: src/buttons.rs:556
+#: src/buttons.rs:559
 msgid "🔔 Pressed button bell."
 msgstr ""
 
-#: src/buttons.rs:565
+#: src/buttons.rs:568
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:577
+#: src/buttons.rs:580
 msgid "💡 Pressed switch inside. {}."
 msgstr ""
 
-#: src/buttons.rs:588
+#: src/buttons.rs:591
 msgid "💡 Pressed switch outside or light button. {}."
 msgstr ""
 
-#: src/buttons.rs:601
+#: src/buttons.rs:604
 msgid "🔔 Pressed switch bell."
 msgstr ""
 
-#: src/buttons.rs:610
+#: src/buttons.rs:613
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:624
+#: src/buttons.rs:627
 msgid "🕶️ Light was turned off."
 msgstr ""
 
-#: src/buttons.rs:634
+#: src/buttons.rs:637
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:647
+#: src/buttons.rs:650
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:663
+#: src/buttons.rs:666
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:673
+#: src/buttons.rs:676
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:689
+#: src/buttons.rs:692
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:700
+#: src/buttons.rs:703
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
