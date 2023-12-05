@@ -444,6 +444,14 @@ impl Buttons {
 			"logic error, at least one must be switched on!"
 		);
 
+		let which = if inside && outside {
+			"in and out"
+		} else if inside {
+			"in"
+		} else {
+			"out"
+		};
+
 		let init_light_timeout = if outside {
 			self.init_light_timeout + 10
 		} else {
@@ -454,19 +462,17 @@ impl Buttons {
 		if self.light_permanent {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
-			return "Light not permanent anymore".to_string();
+			return format!("Light {} not permanent anymore", which);
 		} else if inside && self.light_timeout > init_light_timeout - 200 {
-			// make permanent
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
 		} else if self.light_timeout > 1 {
-			// extend
 			self.light_timeout = init_light_timeout;
 			ret = "Time extended.".to_string();
 		} else {
 			self.light_timeout = init_light_timeout;
 			self.led_light = true;
-			ret = "Light switched on.".to_string();
+			ret = format!("Light {} switched on", which);
 		}
 
 		// now actually switch on (might also extend light if it was only outside before)
@@ -526,11 +532,11 @@ impl Buttons {
 					CommandToButtons::RingBell(period, counter) => {
 						self.ring_bell(period, counter);
 					}
-					CommandToButtons::SwitchLights(inside, outside, text) => {
+					CommandToButtons::SwitchLights(inside, outside, _text) => {
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
-								gettext!("{}. {}", text, self.switch_lights(inside, outside)),
+								gettext!("{}", self.switch_lights(inside, outside)),
 							))
 							.await?;
 					}
