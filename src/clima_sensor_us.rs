@@ -314,7 +314,7 @@ impl ClimaSensorUS {
 				}
 				Warning::LowTemp => {
 					gettext!(
-						"🌡 Freezing Temperature, yield is in danger (Wind {} m/s)",
+						"🌡 Freezing Temperature {} °C, yield is in danger (Wind {} m/s)",
 						temp,
 						wind
 					)

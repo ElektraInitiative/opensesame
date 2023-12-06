@@ -55,7 +55,8 @@ pub struct Buttons {
 	pub bell_timeout: u32,
 	pub bell_timeout_init: u32,
 	pub bell_counter: u32,
-	failed_counter: u8,
+
+	failed_counter: u8, // counts up how many failures occur
 	wrong_input_timeout: u8,
 
 	board20: LinuxI2CDevice,
@@ -77,7 +78,6 @@ pub enum CommandToButtons {
 	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
 }
 
-const FAILED_COUNTER: u8 = 20; // = 200ms how long to wait after failure before resetting (*10ms)
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
 
 const SET_TRIS: u8 = 0x01; // Set GPIO direction
@@ -108,7 +108,7 @@ const RELAY_LICHT_AUSSEN: u8 = 0x01 << 1;
 
 const ALL_RELAYS: u8 = RELAY_DOOR | RELAY_LICHT_AUSSEN;
 
-const PINS1_INIT: u8 = 15;
+const PINS1_INIT: u8 = 0b01100000;
 
 // board 21
 
@@ -298,35 +298,32 @@ impl Buttons {
 		}
 	}
 
-	/// to be periodically called, e.g. every 10 ms
-	pub fn handle(&mut self) -> Result<StateChange, LinuxI2CError> {
-		// wait for recover
-		if self.failed_counter > 1 {
-			self.failed_counter -= 1;
-			return Ok(StateChange::None);
-		// try to recover
-		} else if self.failed_counter == 1 {
-			self.pins1 = PINS1_INIT;
-			self.pins2 = PINS2_INIT;
-			self.init();
-			self.failed_counter = 0;
-			return Ok(StateChange::None);
-		}
-
+	/// to be periodically called every 10 ms
+	/// ignores i2c read errors to be more robust against spurious errors
+	/// except of 3x in a row
+	pub fn handle(&mut self) -> Result<StateChange, String> {
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins1 {
-			self.failed_counter = FAILED_COUNTER;
-			self.led1 = true;
-			self.led2 = true;
-			return Err(error);
+			if self.failed_counter > 3 {
+				self.pins1 = PINS1_INIT;
+				self.pins2 = PINS2_INIT;
+				self.init();
+				return Err(format!("Board 20 with error {}", error));
+			}
+			self.failed_counter += 1;
+			return Ok(StateChange::None);
 		}
 
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins2 {
-			self.failed_counter = FAILED_COUNTER;
-			self.led1 = true;
-			self.led3 = true;
-			return Err(error);
+			if self.failed_counter > 3 {
+				self.pins1 = PINS1_INIT;
+				self.pins2 = PINS2_INIT;
+				self.init();
+				return Err(format!("Board 21 with error {}", error));
+			}
+			self.failed_counter += 1;
+			return Ok(StateChange::None);
 		}
 
 		let mut pins1 = epins1.unwrap() & ALL_BUTTONS;
@@ -447,6 +444,14 @@ impl Buttons {
 			"logic error, at least one must be switched on!"
 		);
 
+		let which = if inside && outside {
+			"in and out"
+		} else if inside {
+			"in"
+		} else {
+			"out"
+		};
+
 		let init_light_timeout = if outside {
 			self.init_light_timeout + 10
 		} else {
@@ -457,19 +462,17 @@ impl Buttons {
 		if self.light_permanent {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
-			return "Light not permanent anymore".to_string();
+			return format!("Light {} not permanent anymore", which);
 		} else if inside && self.light_timeout > init_light_timeout - 200 {
-			// make permanent
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
 		} else if self.light_timeout > 1 {
-			// extend
 			self.light_timeout = init_light_timeout;
 			ret = "Time extended.".to_string();
 		} else {
 			self.light_timeout = init_light_timeout;
 			self.led_light = true;
-			ret = "Light switched on.".to_string();
+			ret = format!("Light {} switched on", which);
 		}
 
 		// now actually switch on (might also extend light if it was only outside before)
@@ -529,11 +532,11 @@ impl Buttons {
 					CommandToButtons::RingBell(period, counter) => {
 						self.ring_bell(period, counter);
 					}
-					CommandToButtons::SwitchLights(inside, outside, text) => {
+					CommandToButtons::SwitchLights(inside, outside, _text) => {
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
-								gettext!("{}. {}", text, self.switch_lights(inside, outside)),
+								gettext!("{}", self.switch_lights(inside, outside)),
 							))
 							.await?;
 					}
