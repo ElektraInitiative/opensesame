@@ -66,7 +66,7 @@ impl Haustuer {
 		self.set_relay(pins).unwrap();
 
 		if pins & 1 == 1 {
-			if ! self.light_outdoor {
+			if !self.light_outdoor {
 				self.light_outdoor = true;
 				return HaustuerChange::LightOutdoor;
 			}
@@ -75,7 +75,7 @@ impl Haustuer {
 		}
 
 		if pins & 1 == 1 {
-			if ! self.light_outdoor {
+			if !self.light_outdoor {
 				self.light_outdoor = true;
 				return HaustuerChange::LightOutdoor;
 			}
@@ -84,7 +84,7 @@ impl Haustuer {
 		}
 
 		if pins & 2 == 2 {
-			if ! self.light_far_outdoor {
+			if !self.light_far_outdoor {
 				self.light_far_outdoor = true;
 				return HaustuerChange::LightFarOutdoor;
 			}
@@ -93,7 +93,7 @@ impl Haustuer {
 		}
 
 		if pins & 4 == 4 {
-			if ! self.bell_far_outdoor {
+			if !self.bell_far_outdoor {
 				self.bell_far_outdoor = true;
 				return HaustuerChange::BellFarOutdoor;
 			}
@@ -102,7 +102,7 @@ impl Haustuer {
 		}
 
 		if pins & 8 == 8 {
-			if ! self.light_indoor {
+			if !self.light_indoor {
 				self.light_indoor = true;
 				return HaustuerChange::LightIndoor;
 			}
