@@ -16,6 +16,7 @@ use opensesame::clima_sensor_us::ClimaSensorUS;
 use opensesame::config::Config;
 use opensesame::environment::{EnvEvent, Environment};
 use opensesame::garage::Garage;
+use opensesame::haustuer::Haustuer;
 use opensesame::mod_ir_temp::ModIR;
 use opensesame::nextcloud::{Nextcloud, NextcloudChat, NextcloudEvent};
 use opensesame::ping::{Ping, PingEvent};
@@ -53,6 +54,7 @@ async fn main() -> Result<(), ModuleError> {
 
 	let buttons_enabled = config.get_bool("buttons/enable");
 	let garage_enabled = config.get_bool("garage/enable");
+	let haustuer_enabled = config.get_bool("haustuer/enable");
 	let sensors_enabled = config.get_bool("sensors/enable");
 	let modir_enabled = config.get_bool("ir/enable");
 	let env_enabled = config.get_bool("environment/enable");
@@ -78,6 +80,19 @@ async fn main() -> Result<(), ModuleError> {
 		}
 		tasks.push(spawn(Garage::get_background_task(
 			Garage::new(&mut config),
+			command_sender.clone(),
+			nextcloud_sender.clone(),
+		)));
+	}
+
+	if haustuer_enabled {
+		/* TODO, allow for now
+		if !buttons_enabled {
+			panic!("Haustuer depends on buttons!");
+		}
+		*/
+		tasks.push(spawn(Haustuer::get_background_task(
+			Haustuer::new(&mut config),
 			command_sender.clone(),
 			nextcloud_sender.clone(),
 		)));

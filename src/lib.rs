@@ -5,6 +5,7 @@ pub mod clima_sensor_us;
 pub mod config;
 pub mod environment;
 pub mod garage;
+pub mod haustuer;
 pub mod mod_ir_temp;
 pub mod nextcloud;
 pub mod ping;
