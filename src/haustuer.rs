@@ -20,10 +20,10 @@ const READ_COMMAND_FOR_IO_OPTO_PINS: u8 = 0x20;
 pub enum HaustuerChange {
 	None,
 
-	LightOutdoor,
-	LightFarOutdoor,
-	BellFarOutdoor,
-	LightIndoor,
+	LightOutdoor,    // IN1
+	LightFarOutdoor, // IN2
+	BellFarOutdoor,  // IN3
+	LightIndoor,     // IN4
 
 	Err(String),
 }
@@ -49,7 +49,7 @@ impl Haustuer {
 		}
 	}
 
-	fn set_relay(&mut self, which: u8) -> Result<(), LinuxI2CError> {
+	fn _set_relay(&mut self, which: u8) -> Result<(), LinuxI2CError> {
 		self.board.smbus_write_byte_data(0x10, which)?;
 		Ok(())
 	}
@@ -63,7 +63,7 @@ impl Haustuer {
 		}
 
 		let pins = epins.unwrap();
-		self.set_relay(pins).unwrap();
+		// self.set_relay(pins).unwrap();
 
 		if pins & 1 == 1 {
 			if !self.light_outdoor {
