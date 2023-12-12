@@ -1,15 +1,15 @@
 use futures::never::Never;
-use systemstat::Duration;
-use tokio::{sync::mpsc::Sender, time::interval};
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
+use systemstat::Duration;
+use tokio::{sync::mpsc::Sender, time::interval};
 
 use crate::{
 	buttons::CommandToButtons,
 	config::Config,
 	nextcloud::NextcloudEvent,
-// 	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
+	// 	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
 	types::ModuleError,
 };
 
@@ -17,14 +17,13 @@ const MOD_IO_I2C_ADDR: u16 = 0x58;
 
 const READ_COMMAND_FOR_IO_OPTO_PINS: u8 = 0x20;
 
-
 #[derive(PartialEq, Debug)]
 pub enum HaustuerChange {
 	None,
 
 	Pressed(u8),
 
-	Err (String),
+	Err(String),
 }
 
 pub struct Haustuer {
@@ -34,7 +33,7 @@ pub struct Haustuer {
 impl Haustuer {
 	pub fn new(_config: &mut Config) -> Self {
 		Self {
-			board: LinuxI2CDevice::new("/dev/i2c-2", MOD_IO_I2C_ADDR).unwrap()
+			board: LinuxI2CDevice::new("/dev/i2c-2", MOD_IO_I2C_ADDR).unwrap(),
 		}
 	}
 
@@ -44,13 +43,15 @@ impl Haustuer {
 	}
 
 	pub fn handle(&mut self) -> HaustuerChange {
-		let epins = self.board.smbus_read_byte_data(READ_COMMAND_FOR_IO_OPTO_PINS);
+		let epins = self
+			.board
+			.smbus_read_byte_data(READ_COMMAND_FOR_IO_OPTO_PINS);
 		if let Err(error) = epins {
 			return HaustuerChange::Err(format!("Board 58 with error {}", error));
 		}
 
 		let pins = epins.unwrap();
-		self.set_relay (pins).unwrap();
+		self.set_relay(pins).unwrap();
 
 		if pins != 0 {
 			return HaustuerChange::Pressed(pins);
