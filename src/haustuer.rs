@@ -8,8 +8,7 @@ use tokio::{sync::mpsc::Sender, time::interval};
 use crate::{
 	buttons::CommandToButtons,
 	config::Config,
-	nextcloud::NextcloudEvent,
-	// 	nextcloud::{NextcloudChat, NextcloudEvent, NextcloudStatus},
+	nextcloud::{NextcloudChat, NextcloudEvent},
 	types::ModuleError,
 };
 
@@ -21,19 +20,32 @@ const READ_COMMAND_FOR_IO_OPTO_PINS: u8 = 0x20;
 pub enum HaustuerChange {
 	None,
 
-	Pressed(u8),
+	LightOutdoor,
+	LightFarOutdoor,
+	BellFarOutdoor,
+	LightIndoor,
 
 	Err(String),
 }
 
 pub struct Haustuer {
 	board: LinuxI2CDevice,
+
+	light_outdoor: bool,
+	light_far_outdoor: bool,
+	bell_far_outdoor: bool,
+	light_indoor: bool,
 }
 
 impl Haustuer {
 	pub fn new(_config: &mut Config) -> Self {
 		Self {
 			board: LinuxI2CDevice::new("/dev/i2c-2", MOD_IO_I2C_ADDR).unwrap(),
+
+			light_outdoor: false,
+			light_far_outdoor: false,
+			bell_far_outdoor: false,
+			light_indoor: false,
 		}
 	}
 
@@ -53,8 +65,49 @@ impl Haustuer {
 		let pins = epins.unwrap();
 		self.set_relay(pins).unwrap();
 
-		if pins != 0 {
-			return HaustuerChange::Pressed(pins);
+		if pins & 1 == 1 {
+			if ! self.light_outdoor {
+				self.light_outdoor = true;
+				return HaustuerChange::LightOutdoor;
+			}
+		} else {
+			self.light_outdoor = false;
+		}
+
+		if pins & 1 == 1 {
+			if ! self.light_outdoor {
+				self.light_outdoor = true;
+				return HaustuerChange::LightOutdoor;
+			}
+		} else {
+			self.light_outdoor = false;
+		}
+
+		if pins & 2 == 2 {
+			if ! self.light_far_outdoor {
+				self.light_far_outdoor = true;
+				return HaustuerChange::LightFarOutdoor;
+			}
+		} else {
+			self.light_far_outdoor = false;
+		}
+
+		if pins & 4 == 4 {
+			if ! self.bell_far_outdoor {
+				self.bell_far_outdoor = true;
+				return HaustuerChange::BellFarOutdoor;
+			}
+		} else {
+			self.bell_far_outdoor = false;
+		}
+
+		if pins & 8 == 8 {
+			if ! self.light_indoor {
+				self.light_indoor = true;
+				return HaustuerChange::LightIndoor;
+			}
+		} else {
+			self.light_indoor = false;
 		}
 
 		HaustuerChange::None
@@ -63,17 +116,32 @@ impl Haustuer {
 	pub async fn get_background_task(
 		mut haustuer: Haustuer,
 		_command_sender: Sender<CommandToButtons>,
-		_nextcloud_sender: Sender<NextcloudEvent>,
+		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(1000));
 		loop {
 			match haustuer.handle() {
 				HaustuerChange::None => (),
-				HaustuerChange::Pressed(epins) => {
-					println!("Pressed {}", epins);
+				HaustuerChange::LightOutdoor => {
+					println!("LightOutdoor Pressed");
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔒 LightOutdoor pressed."),
+						))
+						.await?;
+				}
+				HaustuerChange::LightFarOutdoor => {
+					println!("LightFarOutdoor Pressed");
+				}
+				HaustuerChange::BellFarOutdoor => {
+					println!("BellFarOutdoor Pressed");
+				}
+				HaustuerChange::LightIndoor => {
+					println!("LightIndoor Pressed");
 				}
 				HaustuerChange::Err(err) => {
-					println!("Pressed {}", err);
+					println!("Error {}", err);
 				}
 			}
 			interval.tick().await;
