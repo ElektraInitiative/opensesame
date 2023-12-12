@@ -1,8 +1,0 @@
-all:
-  hosts:
-    192.168.0.10
-
-olimex_dev_boards:
-  hosts:
-    192.168.0.10:
-      ansible_user: olimex
