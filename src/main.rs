@@ -241,9 +241,11 @@ async fn main() -> Result<(), ModuleError> {
 
 	nextcloud_sender.send(
 		NextcloudEvent::Chat(NextcloudChat::Ping,
-			gettext!("Enabled Modules: \nButtons: {},\n Garage: {},\n Sensors: {},\n ModIR: {},\n Environment: {},\n Weatherstation: {},\n Battery: {},\n Watchdog: {},\n Ping: {}\n",
+			gettext!("Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
 	buttons_enabled,
 	garage_enabled,
+	haustuer_enabled,
+	pwr.enabled(),
 	sensors_enabled,
 	modir_enabled,
 	env_enabled,
