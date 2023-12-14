@@ -1,4 +1,5 @@
 # Get Translation Strings
+
 ```bash
 cargo install xtr
 ~/.cargo/bin/xtr src/lib.rs -o lang/opensesame.pot

@@ -1,4 +1,5 @@
 # Opensensemap
+
 After you've setup your account and logged in on [opensensemap.org](https://www.opensensemap.org/), you need to do following steps:
 
 ## 1. Adding a senseBox

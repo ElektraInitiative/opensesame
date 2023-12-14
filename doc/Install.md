@@ -1,6 +1,8 @@
 # boot with A20-Debian-Server-SD
+
 # latest A20-Debian-Server-SD images at:
-# http://images.olimex.com/release/a20/
+
+http://images.olimex.com/release/a20/
 
 ``` bash
 $ wget https://images.olimex.com/release/a20/A20-OLinuXino-bullseye-minimal-20230515-130040.img.7z

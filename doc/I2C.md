@@ -2,6 +2,7 @@
 
 - larger AC loads (>>10W) might need snubber circuits
 - larger DC loads might need a diode
+- inputs that are somehow near AC/DC loads must be via opto-coppling (Mod_IO)
 - avoid switching relays faster than every ~200ms
 - avoid snubber parallel to switch on small loads
 - avoid multiple appliances that might create interferences on the same board (i.e. connect larger loads to different mod-io2)

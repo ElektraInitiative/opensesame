@@ -10,7 +10,6 @@
 - [Translations](Translations.md)
 - [Benchmark](Benchmark.md)
 - [Debugging](Debugging.md)
-- [Troubles libmodbus](libmodbus-troubles.md)
 - [Troubleshooting](Troubleshooting.md)
 
 # Using
@@ -18,25 +17,30 @@
 - [Ansible](Ansible.md)
 - [Installation](Install.md)
 
-# Modules
-- [Modules Overview](Modules_Overview.md)
-- [GPIO](GPIO.md)
+# HW-Hacking
+
 - [I2C](I2C.md)
+- [Troubles libmodbus](libmodbus-troubles.md)
 - [MQ135](MQ135.md)
+- [GPIO](GPIO.md)
+- [Energy](Energy.md)
+
+# Modules
+
+- [Modules Overview](Modules_Overview.md)
+- [Nextcloud](Nextcloud.md)
+- [Ping](Ping.md)
+- [Signals](Signals.md)
+- [Error-Types](Types.md)
 - [Garage](Garage.md)
 - [Environment](Environment.md)
 - [Front door](Haustüre.md)
 - [Weather station](thiesclima-weatherstation.md)
 - [Opensensemap](Opensensemap.md)
 - [Inverter](goodwe-inverter.md)
-- [Energy](Energy.md)
 - [Audio](Audio.md)
 - [Battery](Battery.md)
 - [IR-Temp](ModIR.md)
-- [Nextcloud](Nextcloud.md)
-- [Ping](Ping.md)
-- [Signals](Signals.md)
-- [Error-Types](Types.md)
 - [Watchdog](Watchdog.md)
 
 
