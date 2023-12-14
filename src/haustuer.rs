@@ -3,7 +3,7 @@ use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
 use systemstat::Duration;
-use tokio::{sync::mpsc::Sender, time::interval};
+use tokio::{sync::mpsc::Sender, time::interval, time::sleep};
 
 use crate::{
 	buttons::CommandToButtons,
@@ -151,6 +151,7 @@ impl Haustuer {
 				}
 				HaustuerChange::Err(err) => {
 					println!("Error on {}", err);
+					sleep(Duration::from_millis(1000)).await;
 				}
 			}
 			interval.tick().await;
