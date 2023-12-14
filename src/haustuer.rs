@@ -131,7 +131,7 @@ impl Haustuer {
 						))
 						.await?;
 					command_sender
-						.send(CommandToButtons::RingBell(20, 0))
+						.send(CommandToButtons::RingBell(5, 5))
 						.await?;
 				}
 				HaustuerChange::LightIndoor => {
