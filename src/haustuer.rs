@@ -117,8 +117,8 @@ impl Haustuer {
 						.await?;
 					command_sender
 						.send(CommandToButtons::SwitchLights(
-							true,
 							false,
+							true,
 							"💡 Pressed at entrance top switch. Switch lights".to_string(),
 						))
 						.await?;
