@@ -14,17 +14,14 @@ use systemstat::{Platform, System};
 
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
-use tokio::time::sleep;
 
 use crate::audio::AudioEvent;
 use crate::config::Config;
 use crate::nextcloud::NextcloudChat;
 use crate::nextcloud::NextcloudEvent;
-use crate::pwr::Pwr;
 
 use crate::types::ModuleError;
 use crate::validator::{Validation, Validator};
-use crate::watchdog;
 
 pub struct Buttons {
 	pub sequence: Vec<u8>,
@@ -306,9 +303,7 @@ impl Buttons {
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins1 {
 			if self.failed_counter > 3 {
-				self.pins1 = PINS1_INIT;
-				self.pins2 = PINS2_INIT;
-				self.init();
+				self.do_reset();
 				return Err(format!("Board 20 with error {}", error));
 			}
 			self.failed_counter += 1;
@@ -318,9 +313,7 @@ impl Buttons {
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins2 {
 			if self.failed_counter > 3 {
-				self.pins1 = PINS1_INIT;
-				self.pins2 = PINS2_INIT;
-				self.init();
+				self.do_reset();
 				return Err(format!("Board 21 with error {}", error));
 			}
 			self.failed_counter += 1;
@@ -485,36 +478,16 @@ impl Buttons {
 		ret
 	}
 
-	async fn do_reset(
-		nextcloud_sender: Sender<NextcloudEvent>,
-		pwr: &mut Pwr,
-	) -> Result<(), ModuleError> {
-		if pwr.enabled() {
-			pwr.switch(false);
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(
-					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH off"),
-				))
-				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
-
-			pwr.switch(true);
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(
-					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH on"),
-				))
-				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
-		}
-		Ok(())
+	fn do_reset(&mut self) {
+		self.pins1 = PINS1_INIT;
+		self.pins2 = PINS2_INIT;
+		self.init();
+		// communication hopefully works again
 	}
 
 	pub async fn get_background_task(
 		mut self,
 		mut validator: Validator,
-		mut pwr: Pwr,
 		time_format: String,
 		mut command_receiver: Receiver<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
@@ -637,7 +610,6 @@ impl Buttons {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
 						.await?;
-					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr).await?;
 				}
 			}
 			// Validation start

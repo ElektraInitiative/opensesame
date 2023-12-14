@@ -1,6 +1,16 @@
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
+use systemstat::Duration;
+use tokio::sync::mpsc::Sender;
+use tokio::time::sleep;
+
+use crate::nextcloud::NextcloudChat;
+use crate::nextcloud::NextcloudEvent;
+use gettextrs::gettext;
+
 use crate::config::Config;
+use crate::types::ModuleError;
+use crate::watchdog;
 
 const GPIO_PWR_LINE: u32 = 202;
 
@@ -49,5 +59,31 @@ impl Pwr {
 			None => (),
 		}
 		self.state = state;
+	}
+
+	pub async fn do_reset(
+		&mut self,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<(), ModuleError> {
+		if self.enabled() {
+			self.switch(false);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH off"),
+				))
+				.await?;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+
+			self.switch(true);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR_SWITCH on"),
+				))
+				.await?;
+			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+		}
+		Ok(())
 	}
 }

@@ -74,6 +74,9 @@ async fn main() -> Result<(), ModuleError> {
 		startup_time.to_string(),
 	)));
 
+	let mut pwr = Pwr::new(&mut config);
+	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
+
 	if garage_enabled {
 		if !buttons_enabled {
 			panic!("Garage depends on buttons!");
@@ -103,7 +106,6 @@ async fn main() -> Result<(), ModuleError> {
 		tasks.push(spawn(Buttons::get_background_task(
 			Buttons::new(&mut config),
 			Validator::new(&mut config),
-			Pwr::new(&mut config),
 			time_format.to_string(),
 			command_receiver,
 			nextcloud_sender.clone(),
