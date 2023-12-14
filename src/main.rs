@@ -81,6 +81,34 @@ async fn main() -> Result<(), ModuleError> {
 	ping_enabled,
 ))).await?;
 
+	// use std::ops::Deref;
+	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
+	// // Alternative: https://github.com/sfackler/rust-log-panics
+	// panic::set_hook(Box::new(|panic_info| {
+	// 			let (filename, line) = panic_info
+	// 			.location()
+	// 			.map(|loc| (loc.file(), loc.line()))
+	// 			.unwrap_or(("<unknown>", 0));
+	// 			let cause = panic_info
+	// 			.payload()
+	// 			.downcast_ref::<String>()
+	// 			.map(String::deref);
+	// 			let cause = cause.unwrap_or_else(|| {
+	// 					panic_info
+	// 					.payload()
+	// 					.downcast_ref::<&str>()
+	// 					.map(|s| *s)
+	// 					.unwrap_or("<cause unknown>")
+	// 					});
+	// 			let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
+	// 			nextcloud_sender // <--- Doesn't live long enough
+	// 				.send(NextcloudEvent::Chat(
+	// 					NextcloudChat::Ping,
+	// 					text.clone(),
+	// 				));
+	// 			eprintln!("{}", text);
+	// 			}));
+
 	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
 
 	let mut tasks = vec![];
