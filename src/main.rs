@@ -63,6 +63,26 @@ async fn main() -> Result<(), ModuleError> {
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 	let ping_enabled = config.get_bool("ping/enable");
 
+	let mut pwr = Pwr::new(&mut config);
+
+	nextcloud_sender.send(
+		NextcloudEvent::Chat(NextcloudChat::Ping,
+			gettext!("Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
+	buttons_enabled,
+	garage_enabled,
+	haustuer_enabled,
+	pwr.enabled(),
+	sensors_enabled,
+	modir_enabled,
+	env_enabled,
+	weatherstation_enabled,
+	bat_enabled,
+	watchdog_enabled,
+	ping_enabled,
+))).await?;
+
+	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
+
 	let mut tasks = vec![];
 
 	tasks.push(spawn(Nextcloud::get_background_task(
@@ -73,9 +93,6 @@ async fn main() -> Result<(), ModuleError> {
 		audio_sender.clone(),
 		startup_time.to_string(),
 	)));
-
-	let mut pwr = Pwr::new(&mut config);
-	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
 
 	if garage_enabled {
 		if !buttons_enabled {
@@ -239,21 +256,12 @@ async fn main() -> Result<(), ModuleError> {
 
 	tasks.push(spawn(signals.get_background_task()));
 
-	nextcloud_sender.send(
-		NextcloudEvent::Chat(NextcloudChat::Ping,
-			gettext!("Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
-	buttons_enabled,
-	garage_enabled,
-	haustuer_enabled,
-	pwr.enabled(),
-	sensors_enabled,
-	modir_enabled,
-	env_enabled,
-	weatherstation_enabled,
-	bat_enabled,
-	watchdog_enabled,
-	ping_enabled,
-))).await?;
+	nextcloud_sender
+		.send(NextcloudEvent::Chat(
+			NextcloudChat::Ping,
+			gettext!("⚠️ Startup Complete"),
+		))
+		.await?;
 
 	join_all(tasks).await;
 	Ok(())
