@@ -259,7 +259,7 @@ async fn main() -> Result<(), ModuleError> {
 	nextcloud_sender
 		.send(NextcloudEvent::Chat(
 			NextcloudChat::Ping,
-			gettext!("⚠️ Startup Complete"),
+			gettext("⚠️ Startup Complete"),
 		))
 		.await?;
 
