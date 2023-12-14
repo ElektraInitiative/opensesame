@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-05 08:57+0000\n"
+"POT-Creation-Date: 2023-12-14 08:22+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -47,47 +47,39 @@ msgstr "🔋 An {}%"
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr "🔋 Batterieladung ist zurück bei {}%"
 
-#: src/buttons.rs:496
-msgid "👋 Turned PWR_SWITCH off"
-msgstr "👋 PWR_SWITCH ausgeschalten"
+#: src/buttons.rs:513
+msgid "{} {}"
+msgstr ""
 
-#: src/buttons.rs:505
-msgid "👋 Turned PWR_SWITCH on"
-msgstr "👋 PWR_SWITCH eingeschalten"
-
-#: src/buttons.rs:539
-msgid "{}"
-msgstr "{}"
-
-#: src/buttons.rs:559
+#: src/buttons.rs:533
 msgid "🔔 Pressed button bell."
 msgstr "🔔 Knopf für Glocke gedrückt."
 
-#: src/buttons.rs:568
+#: src/buttons.rs:542
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:580
+#: src/buttons.rs:554
 msgid "💡 Pressed switch inside. {}."
 msgstr "💡 Taster innen gedrückt. {}."
 
-#: src/buttons.rs:591
-msgid "💡 Pressed switch outside or light button. {}."
-msgstr "💡 Taster oder Knopf außen gedrückt. {}."
+#: src/buttons.rs:565
+msgid "💡 Pressed light button. {}."
+msgstr "💡 Licht-Knopf außen gedrückt. {}."
 
-#: src/buttons.rs:604
+#: src/buttons.rs:578
 msgid "🔔 Pressed switch bell."
 msgstr "🔔 Taster Glocke gedrückt."
 
-#: src/buttons.rs:613
+#: src/buttons.rs:587
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:627
+#: src/buttons.rs:601
 msgid "🕶️ Light was turned off."
 msgstr "🕶️ Licht wurde abgeschalten."
 
-#: src/buttons.rs:637
+#: src/buttons.rs:611
 msgid ""
 "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: "
 "{}, Swap: {}, CPU temp: {}"
@@ -95,25 +87,25 @@ msgstr ""
 "⚠️ Fehler beim Lesen der Knöpfe am Board {}. Load average: {} {} {}, Memory "
 "usage: {}, Swap: {}, CPU temp: {}"
 
-#: src/buttons.rs:650
+#: src/buttons.rs:623
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/buttons.rs:666
+#: src/buttons.rs:639
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/buttons.rs:676
+#: src/buttons.rs:649
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
 "Sonnenuntergang: {}"
 
-#: src/buttons.rs:692
+#: src/buttons.rs:665
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {}"
 
-#: src/buttons.rs:703
+#: src/buttons.rs:676
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
@@ -126,7 +118,6 @@ msgid "🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)"
 msgstr "🌡️ Hitzewarnung {} °C, PV Kühlung einschalten (Wind {} m/s)"
 
 #: src/clima_sensor_us.rs:317
-#, fuzzy
 msgid "🌡 Freezing Temperature {} °C, yield is in danger (Wind {} m/s)"
 msgstr "🌡 Gefrierpunkt um {} °C unterschritten, Ernte in Gefahr (Wind {} m/s)"
 
@@ -202,6 +193,14 @@ msgstr ""
 "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, "
 "Speicherauslastung {}, Swap {}, CPU temp {}, Startup {} Bat {}"
 
+#: src/pwr.rs:73
+msgid "👋 Turned PWR switch OFF"
+msgstr "👋 PWR switch AUS geschalten"
+
+#: src/pwr.rs:82
+msgid "👋 Turned PWR switch ON"
+msgstr "👋 PWR switch EIN geschalten"
+
 #: src/sensors.rs:273
 msgid "Fire Alarm {}"
 msgstr "Feueralarm {}"
@@ -229,6 +228,12 @@ msgstr "🚨 Befehl für Alarm empfangen"
 #: src/signals.rs:174
 msgid "🔔 Received bell"
 msgstr "🔔 Befehl für Glocke empfangen"
+
+#~ msgid "👋 Turned PWR_SWITCH off"
+#~ msgstr "👋 PWR_SWITCH ausgeschalten"
+
+#~ msgid "{}"
+#~ msgstr "{}"
 
 #~ msgid "{}. {}"
 #~ msgstr "{}. {}"

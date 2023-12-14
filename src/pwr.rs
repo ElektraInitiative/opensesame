@@ -70,7 +70,7 @@ impl Pwr {
 			nextcloud_sender
 				.send(NextcloudEvent::Chat(
 					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH off"),
+					gettext("👋 Turned PWR switch OFF"),
 				))
 				.await?;
 			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
@@ -79,7 +79,7 @@ impl Pwr {
 			nextcloud_sender
 				.send(NextcloudEvent::Chat(
 					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH on"),
+					gettext("👋 Turned PWR switch ON"),
 				))
 				.await?;
 			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
