@@ -104,7 +104,7 @@ impl Haustuer {
 		command_sender: Sender<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
-		let mut interval = interval(Duration::from_millis(1000));
+		let mut interval = interval(Duration::from_millis(10));
 		loop {
 			match haustuer.handle() {
 				HaustuerChange::None => (),
