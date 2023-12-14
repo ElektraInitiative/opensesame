@@ -141,6 +141,7 @@ impl Haustuer {
 							String::from("🔒 LightIndoor pressed."),
 						))
 						.await?;
+					/*
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							true,
@@ -148,6 +149,7 @@ impl Haustuer {
 							"💡 Pressed in entrance. Switch all lights".to_string(),
 						))
 						.await?;
+					*/
 				}
 				HaustuerChange::Err(err) => {
 					println!("Error on {}", err);
