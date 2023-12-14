@@ -75,7 +75,7 @@ pub enum CommandToButtons {
 	OpenDoor,
 	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
-	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
+	SwitchLights(bool, bool, String),
 }
 
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
@@ -533,11 +533,11 @@ impl Buttons {
 					CommandToButtons::RingBell(period, counter) => {
 						self.ring_bell(period, counter);
 					}
-					CommandToButtons::SwitchLights(inside, outside, _text) => {
+					CommandToButtons::SwitchLights(inside, outside, text) => {
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
-								gettext!("{}", self.switch_lights(inside, outside)),
+								gettext!("{} {}", self.switch_lights(inside, outside), text),
 							))
 							.await?;
 					}

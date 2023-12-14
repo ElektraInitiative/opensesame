@@ -99,7 +99,7 @@ impl Nextcloud {
 		match result {
 			Ok(..) => (),
 			Err(error) => {
-				eprintln!("Couldn't post to licht {} because {}", message, error);
+				eprintln!("Couldn't post to light {} because {}", message, error);
 			}
 		};
 	}
@@ -325,7 +325,7 @@ impl Nextcloud {
 											.send(CommandToButtons::SwitchLights(
 												inner_light,
 												outer_light,
-												String::from("Switch lights {} {}"),
+												String::from("Switch light"),
 											))
 											.await?;
 									}
