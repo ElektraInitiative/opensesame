@@ -67,7 +67,7 @@ async fn main() -> Result<(), ModuleError> {
 
 	nextcloud_sender.send(
 		NextcloudEvent::Chat(NextcloudChat::Ping,
-			gettext!("Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
+			gettext!("👋 Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
 	buttons_enabled,
 	garage_enabled,
 	haustuer_enabled,
@@ -83,7 +83,6 @@ async fn main() -> Result<(), ModuleError> {
 
 	// use std::ops::Deref;
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
-	// // Alternative: https://github.com/sfackler/rust-log-panics
 	// panic::set_hook(Box::new(|panic_info| {
 	// 			let (filename, line) = panic_info
 	// 			.location()
@@ -124,7 +123,7 @@ async fn main() -> Result<(), ModuleError> {
 
 	if garage_enabled {
 		if !buttons_enabled {
-			panic!("Garage depends on buttons!");
+			panic!("⚠️ Garage depends on buttons!");
 		}
 		tasks.push(spawn(Garage::get_background_task(
 			Garage::new(&mut config),
@@ -135,7 +134,7 @@ async fn main() -> Result<(), ModuleError> {
 
 	if haustuer_enabled {
 		if !buttons_enabled {
-			panic!("Haustuer depends on buttons!");
+			panic!("⚠️ Haustuer depends on buttons!");
 		}
 		tasks.push(spawn(Haustuer::get_background_task(
 			Haustuer::new(&mut config),
@@ -287,7 +286,7 @@ async fn main() -> Result<(), ModuleError> {
 	nextcloud_sender
 		.send(NextcloudEvent::Chat(
 			NextcloudChat::Ping,
-			gettext("⚠️ Startup Complete"),
+			gettext("👋Startup Complete"),
 		))
 		.await?;
 
