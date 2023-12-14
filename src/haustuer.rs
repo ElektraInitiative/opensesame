@@ -16,14 +16,18 @@ const MOD_IO_I2C_ADDR: u16 = 0x58;
 
 const READ_COMMAND_FOR_IO_OPTO_PINS: u8 = 0x20;
 
+const IN1: u8 = 0x1;
+const IN3: u8 = 0x4;
+const IN4: u8 = 0x8;
+
 #[derive(PartialEq, Debug)]
 pub enum HaustuerChange {
 	None,
 
-	LightOutdoor,    // IN1
-	LightFarOutdoor, // IN2
-	BellFarOutdoor,  // IN3
-	LightIndoor,     // IN4
+	LightFarOutdoor, // IN1
+	// IN2 unused
+	BellFarOutdoor, // IN3
+	LightIndoor,    // IN4
 
 	Err(String),
 }
@@ -31,7 +35,6 @@ pub enum HaustuerChange {
 pub struct Haustuer {
 	board: LinuxI2CDevice,
 
-	light_outdoor: bool,
 	light_far_outdoor: bool,
 	bell_far_outdoor: bool,
 	light_indoor: bool,
@@ -42,7 +45,6 @@ impl Haustuer {
 		Self {
 			board: LinuxI2CDevice::new("/dev/i2c-2", MOD_IO_I2C_ADDR).unwrap(),
 
-			light_outdoor: false,
 			light_far_outdoor: false,
 			bell_far_outdoor: false,
 			light_indoor: false,
@@ -65,25 +67,7 @@ impl Haustuer {
 		let pins = epins.unwrap();
 		// self.set_relay(pins).unwrap();
 
-		if pins & 1 == 1 {
-			if !self.light_outdoor {
-				self.light_outdoor = true;
-				return HaustuerChange::LightOutdoor;
-			}
-		} else {
-			self.light_outdoor = false;
-		}
-
-		if pins & 1 == 1 {
-			if !self.light_outdoor {
-				self.light_outdoor = true;
-				return HaustuerChange::LightOutdoor;
-			}
-		} else {
-			self.light_outdoor = false;
-		}
-
-		if pins & 2 == 2 {
+		if pins & IN1 == IN1 {
 			if !self.light_far_outdoor {
 				self.light_far_outdoor = true;
 				return HaustuerChange::LightFarOutdoor;
@@ -92,7 +76,9 @@ impl Haustuer {
 			self.light_far_outdoor = false;
 		}
 
-		if pins & 4 == 4 {
+		// IN2 unused
+
+		if pins & IN3 == IN3 {
 			if !self.bell_far_outdoor {
 				self.bell_far_outdoor = true;
 				return HaustuerChange::BellFarOutdoor;
@@ -101,7 +87,7 @@ impl Haustuer {
 			self.bell_far_outdoor = false;
 		}
 
-		if pins & 8 == 8 {
+		if pins & IN4 == IN4 {
 			if !self.light_indoor {
 				self.light_indoor = true;
 				return HaustuerChange::LightIndoor;
@@ -115,30 +101,53 @@ impl Haustuer {
 
 	pub async fn get_background_task(
 		mut haustuer: Haustuer,
-		_command_sender: Sender<CommandToButtons>,
+		command_sender: Sender<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(1000));
 		loop {
 			match haustuer.handle() {
 				HaustuerChange::None => (),
-				HaustuerChange::LightOutdoor => {
-					println!("LightOutdoor Pressed");
+				HaustuerChange::LightFarOutdoor => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							String::from("🔒 LightOutdoor pressed."),
+							String::from("💡 LightFarOutdoor pressed."),
+						))
+						.await?;
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							false,
+							"💡 Pressed at entrance top switch. Switch lights".to_string(),
 						))
 						.await?;
 				}
-				HaustuerChange::LightFarOutdoor => {
-					println!("LightFarOutdoor Pressed");
-				}
 				HaustuerChange::BellFarOutdoor => {
-					println!("BellFarOutdoor Pressed");
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔒 BellFarOutdoor pressed."),
+						))
+						.await?;
+					command_sender
+						.send(CommandToButtons::RingBell(20, 0))
+						.await?;
 				}
 				HaustuerChange::LightIndoor => {
-					println!("LightIndoor Pressed");
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							String::from("🔒 LightIndoor pressed."),
+						))
+						.await?;
+					command_sender
+						.send(CommandToButtons::SwitchLights(
+							true,
+							true,
+							"💡 Pressed in entrance. Switch all lights".to_string(),
+						))
+						.await?;
 				}
 				HaustuerChange::Err(err) => {
 					println!("Error {}", err);

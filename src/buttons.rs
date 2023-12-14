@@ -118,6 +118,7 @@ pub const BUTTON_LIGHT: u8 = 0x01;
 pub const BUTTON_BELL: u8 = 0x01 << 1;
 
 pub const TASTER_AUSSEN: u8 = BUTTON_LIGHT;
+// don't exist anymore, are now in haustuer.rs
 pub const TASTER_INNEN: u8 = 0x01 << 2;
 pub const TASTER_GLOCKE: u8 = 0x01 << 3; // = GPIO3 with external pull-up
 
@@ -588,7 +589,7 @@ impl Buttons {
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
 								gettext!(
-									"💡 Pressed switch outside or light button. {}.",
+									"💡 Pressed light button. {}.",
 									self.switch_lights(false, true),
 								),
 							))

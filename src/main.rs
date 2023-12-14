@@ -86,11 +86,9 @@ async fn main() -> Result<(), ModuleError> {
 	}
 
 	if haustuer_enabled {
-		/* TODO, allow for now
 		if !buttons_enabled {
 			panic!("Haustuer depends on buttons!");
 		}
-		*/
 		tasks.push(spawn(Haustuer::get_background_task(
 			Haustuer::new(&mut config),
 			command_sender.clone(),
