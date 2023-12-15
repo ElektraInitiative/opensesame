@@ -114,7 +114,7 @@ impl Haustuer {
 				HaustuerChange::LightFarOutdoor => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
-							NextcloudChat::Default,
+							NextcloudChat::Licht,
 							gettext("💡 Light far outdoor pressed."),
 						))
 						.await?;
@@ -140,7 +140,7 @@ impl Haustuer {
 				HaustuerChange::LightIndoor => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
-							NextcloudChat::Default,
+							NextcloudChat::Licht,
 							gettext("💡 Indoor light pressed."),
 						))
 						.await?;
@@ -148,22 +148,22 @@ impl Haustuer {
 						.send(CommandToButtons::SwitchLights(
 							true,
 							true,
-							gettext("💡 Pressed in entrance. Switch all lights"),
+							gettext("💡 Pressed in entrance. Switch all lights."),
 						))
 						.await?;
 				}
 				HaustuerChange::Err(err) => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
-							NextcloudChat::Default,
-							gettext!("⚠️ Error on {}", err),
+							NextcloudChat::Ping,
+							gettext!("⚠️ Error on {}, will do reset.", err),
 						))
 						.await?;
 					rst.do_reset().await?;
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Ping,
-							gettext("👋 RST MOD-IO done"),
+							gettext("👋 RST of MOD-IO done."),
 						))
 						.await?;
 				}
