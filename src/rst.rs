@@ -35,9 +35,7 @@ impl Rst {
 		self.state = state;
 	}
 
-	pub async fn do_reset(
-		&mut self
-	) -> Result<(), ModuleError> {
+	pub async fn do_reset(&mut self) -> Result<(), ModuleError> {
 		self.switch(false);
 		sleep(Duration::from_millis(10)).await;
 

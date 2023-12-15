@@ -97,3 +97,25 @@ Sensor Mod-ENV
 24V 0.5A for relais
 6V~ 0.3A for bell
 5V  2.0A for A20
+
+## Kabeln
+
+von links nach rechts:
+
+1. nicht verwendet: blau, Nullleiter Vorraum, 1-polig
+2. nicht verwendet: grau, 14 polig, no shield, vermutlich von Haustüre kommend (geht quer über alle Sicherung)
+3. Taster Eingang Innen: schwarz, 2 polig, no shield, Board21 GPIO2 (Schlauch 1)
+4. Türöffner: weiss, 2 polig, no shield, 12 V (geht quer über alle Sicherung)
+5. Medi-Sensor: weiss, 4? polig, paar-weise geshielded, Verwendung: i2C Environment (Schlauch nach oben, mit Stromdrähten)
+6. Hauptkabel zu Türöffner, geshielded (geht quer über alle Sicherung)
+7. Taster bei Glocke, orange/weiss, Board 21 GPIO 0 (Schlauch mit fetten anderen Kabel, evtl wärmepumpe)
+8. Netzwerkkabel 1
+9. Netzwerkkabel 2
+10. Glocke Taster aussen, weiss klein dünn, Board 21 GPIO 3 (Schlauch 1)
+11. Anschlusskabel grüne Relais (HIMA), 4 polig, with shield;
+	grün: linke Relay 4
+	gelb: rechts Relay 4,
+	weiß: rechts Relay 2 (GND)
+	braun: linken Relay 2 (GND)
+	shield: GND
+12. Glocke: 2 polig, no shield 16V (eigener Schlauch)

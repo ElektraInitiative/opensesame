@@ -7,10 +7,10 @@ use systemstat::Duration;
 use tokio::{sync::mpsc::Sender, time::interval};
 
 use crate::{
-	rst::Rst,
 	buttons::CommandToButtons,
 	config::Config,
 	nextcloud::{NextcloudChat, NextcloudEvent},
+	rst::Rst,
 	types::ModuleError,
 };
 
