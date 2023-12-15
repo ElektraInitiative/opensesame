@@ -12,6 +12,12 @@ pub struct Rst {
 	rst_line: LineHandle,
 }
 
+impl Default for Rst {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Rst {
 	pub fn new() -> Self {
 		let mut chip = Chip::new("/dev/gpiochip0").unwrap();
