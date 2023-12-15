@@ -1,4 +1,5 @@
 use futures::never::Never;
+use gettextrs::*;
 use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
@@ -152,8 +153,13 @@ impl Haustuer {
 					*/
 				}
 				HaustuerChange::Err(err) => {
-					println!("Error on {}", err);
-					sleep(Duration::from_millis(1000)).await;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Default,
+							gettext!("⚠️ Error on {}", err),
+						))
+						.await?;
+					sleep(Duration::from_millis(3000)).await;
 				}
 			}
 			interval.tick().await;
