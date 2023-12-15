@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-14 08:22+0000\n"
+"POT-Creation-Date: 2023-12-15 07:19+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -160,6 +160,30 @@ msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
 #: src/environment.rs:452
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
+
+#: src/haustuer.rs:65
+msgid "Board 58 with error {}"
+msgstr "Brett 58 mit Fehler {}"
+
+#: src/haustuer.rs:116
+msgid "💡 Light far outdoor pressed."
+msgstr "💡 Licht am Vorgartenzaun gedrückt."
+
+#: src/haustuer.rs:123
+msgid "💡 Pressed at entrance switch. Switch lights."
+msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
+
+#: src/haustuer.rs:131
+msgid "🔔 Bell far outdoor pressed."
+msgstr "🔔 Taste für Glocke Vorgarten gedrückt."
+
+#: src/haustuer.rs:142
+msgid "💡 Indoor light pressed."
+msgstr "💡 Taster Licht innen gedrückt."
+
+#: src/haustuer.rs:159
+msgid "⚠️ Error on {}"
+msgstr "⚠️ Ein Fehler auf {} ist aufgetreten"
 
 #: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"

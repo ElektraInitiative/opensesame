@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-14 08:22+0000\n"
+"POT-Creation-Date: 2023-12-15 07:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -147,6 +147,30 @@ msgstr ""
 
 #: src/environment.rs:452
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
+msgstr ""
+
+#: src/haustuer.rs:65
+msgid "Board 58 with error {}"
+msgstr ""
+
+#: src/haustuer.rs:116
+msgid "💡 Light far outdoor pressed."
+msgstr ""
+
+#: src/haustuer.rs:123
+msgid "💡 Pressed at entrance switch. Switch lights."
+msgstr ""
+
+#: src/haustuer.rs:131
+msgid "🔔 Bell far outdoor pressed."
+msgstr ""
+
+#: src/haustuer.rs:142
+msgid "💡 Indoor light pressed."
+msgstr ""
+
+#: src/haustuer.rs:159
+msgid "⚠️ Error on {}"
 msgstr ""
 
 #: src/mod_ir_temp.rs:199

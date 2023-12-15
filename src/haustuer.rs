@@ -62,7 +62,7 @@ impl Haustuer {
 			.board
 			.smbus_read_byte_data(READ_COMMAND_FOR_IO_OPTO_PINS);
 		if let Err(error) = epins {
-			return HaustuerChange::Err(format!("Board 58 with error {}", error));
+			return HaustuerChange::Err(gettext!("Board 58 with error {}", error));
 		}
 
 		let pins = epins.unwrap();
@@ -113,14 +113,14 @@ impl Haustuer {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							String::from("💡 LightFarOutdoor pressed."),
+							gettext("💡 Light far outdoor pressed."),
 						))
 						.await?;
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							false,
 							true,
-							"💡 Pressed at entrance top switch. Switch lights".to_string(),
+							gettext("💡 Pressed at entrance switch. Switch lights."),
 						))
 						.await?;
 				}
@@ -128,7 +128,7 @@ impl Haustuer {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							String::from("🔒 BellFarOutdoor pressed."),
+							gettext("🔔 Bell far outdoor pressed."),
 						))
 						.await?;
 					command_sender
@@ -139,15 +139,15 @@ impl Haustuer {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Default,
-							String::from("🔒 LightIndoor pressed."),
+							gettext("💡 Indoor light pressed."),
 						))
 						.await?;
-					/*
+					/* TODO, reinclude
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							true,
 							true,
-							"💡 Pressed in entrance. Switch all lights".to_string(),
+							gettext("💡 Pressed in entrance. Switch all lights"),
 						))
 						.await?;
 					*/
