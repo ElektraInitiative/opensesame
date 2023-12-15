@@ -142,7 +142,6 @@ impl Haustuer {
 							gettext("💡 Indoor light pressed."),
 						))
 						.await?;
-					/* TODO, reinclude
 					command_sender
 						.send(CommandToButtons::SwitchLights(
 							true,
@@ -150,7 +149,6 @@ impl Haustuer {
 							gettext("💡 Pressed in entrance. Switch all lights"),
 						))
 						.await?;
-					*/
 				}
 				HaustuerChange::Err(err) => {
 					nextcloud_sender
