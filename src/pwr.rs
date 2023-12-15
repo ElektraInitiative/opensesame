@@ -1,3 +1,5 @@
+// needs UEXT PIN 3 connected with PWR-SWITCH https://www.olimex.com/Products/Duino/Shields/PWR-SWITCH/
+
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
 use systemstat::Duration;
@@ -12,7 +14,7 @@ use crate::config::Config;
 use crate::types::ModuleError;
 use crate::watchdog;
 
-const GPIO_PWR_LINE: u32 = 202;
+const GPIO_PWR_LINE: u32 = 202; // UEXT1 (e.g. LIME-2 Shield) UART4-TX GPIO202 PG10
 
 pub struct Pwr {
 	state: bool,

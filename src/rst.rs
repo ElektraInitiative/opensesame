@@ -1,3 +1,5 @@
+// Needs UEXT1 PIN 4 connected with RST of MOD-IO's JTAG PIN 6 (RST)
+
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
 use systemstat::Duration;
@@ -5,7 +7,7 @@ use tokio::time::sleep;
 
 use crate::types::ModuleError;
 
-const GPIO_RST_LINE: u32 = 203;
+const GPIO_RST_LINE: u32 = 203; // UEXT1 (e.g. LIME-2 Shield) UART4-RX GPIO203 PG11
 
 pub struct Rst {
 	state: bool,
