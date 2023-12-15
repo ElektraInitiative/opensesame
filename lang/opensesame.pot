@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-15 07:19+0000\n"
+"POT-Creation-Date: 2023-12-15 13:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,19 +29,19 @@ msgstr ""
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr ""
 
-#: src/bat.rs:60
+#: src/bat.rs:66
 msgid "🪫 ON {}%"
 msgstr ""
 
-#: src/bat.rs:67
+#: src/bat.rs:73
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr ""
 
-#: src/bat.rs:83
+#: src/bat.rs:89
 msgid "🔋 ON {}%"
 msgstr ""
 
-#: src/bat.rs:89
+#: src/bat.rs:95
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
@@ -149,28 +149,36 @@ msgstr ""
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr ""
 
-#: src/haustuer.rs:65
+#: src/haustuer.rs:66
 msgid "Board 58 with error {}"
 msgstr ""
 
-#: src/haustuer.rs:116
+#: src/haustuer.rs:118
 msgid "💡 Light far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:123
+#: src/haustuer.rs:125
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr ""
 
-#: src/haustuer.rs:131
+#: src/haustuer.rs:133
 msgid "🔔 Bell far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:142
+#: src/haustuer.rs:144
 msgid "💡 Indoor light pressed."
 msgstr ""
 
+#: src/haustuer.rs:151
+msgid "💡 Pressed in entrance. Switch all lights."
+msgstr ""
+
 #: src/haustuer.rs:159
-msgid "⚠️ Error on {}"
+msgid "⚠️ Error on {}, will do reset."
+msgstr ""
+
+#: src/haustuer.rs:166
+msgid "👋 RST of MOD-IO done."
 msgstr ""
 
 #: src/mod_ir_temp.rs:199
@@ -201,11 +209,11 @@ msgstr ""
 msgid "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}"
 msgstr ""
 
-#: src/pwr.rs:73
+#: src/pwr.rs:75
 msgid "👋 Turned PWR switch OFF"
 msgstr ""
 
-#: src/pwr.rs:82
+#: src/pwr.rs:84
 msgid "👋 Turned PWR switch ON"
 msgstr ""
 

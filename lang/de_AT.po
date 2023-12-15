@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-15 07:19+0000\n"
+"POT-Creation-Date: 2023-12-15 13:48+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -31,19 +31,19 @@ msgstr "🚨 Audio Feueralarm!"
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr "SIGUSR2 konnte nicht zu anderen Opensesame-Instanz gesendet werden: {}"
 
-#: src/bat.rs:60
+#: src/bat.rs:66
 msgid "🪫 ON {}%"
 msgstr "🪫 An {}%"
 
-#: src/bat.rs:67
+#: src/bat.rs:73
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr "🪫 Batterieladung ist unter {}% auf {}%"
 
-#: src/bat.rs:83
+#: src/bat.rs:89
 msgid "🔋 ON {}%"
 msgstr "🔋 An {}%"
 
-#: src/bat.rs:89
+#: src/bat.rs:95
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr "🔋 Batterieladung ist zurück bei {}%"
 
@@ -161,29 +161,37 @@ msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
 
-#: src/haustuer.rs:65
+#: src/haustuer.rs:66
 msgid "Board 58 with error {}"
 msgstr "Brett 58 mit Fehler {}"
 
-#: src/haustuer.rs:116
+#: src/haustuer.rs:118
 msgid "💡 Light far outdoor pressed."
 msgstr "💡 Licht am Vorgartenzaun gedrückt."
 
-#: src/haustuer.rs:123
+#: src/haustuer.rs:125
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
 
-#: src/haustuer.rs:131
+#: src/haustuer.rs:133
 msgid "🔔 Bell far outdoor pressed."
 msgstr "🔔 Taste für Glocke Vorgarten gedrückt."
 
-#: src/haustuer.rs:142
+#: src/haustuer.rs:144
 msgid "💡 Indoor light pressed."
 msgstr "💡 Taster Licht innen gedrückt."
 
+#: src/haustuer.rs:151
+msgid "💡 Pressed in entrance. Switch all lights."
+msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
+
 #: src/haustuer.rs:159
-msgid "⚠️ Error on {}"
+msgid "⚠️ Error on {}, will do reset."
 msgstr "⚠️ Ein Fehler auf {} ist aufgetreten"
+
+#: src/haustuer.rs:166
+msgid "👋 RST of MOD-IO done."
+msgstr "👋 RST von MOD-IO durchgeführt."
 
 #: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
@@ -217,11 +225,11 @@ msgstr ""
 "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, "
 "Speicherauslastung {}, Swap {}, CPU temp {}, Startup {} Bat {}"
 
-#: src/pwr.rs:73
+#: src/pwr.rs:75
 msgid "👋 Turned PWR switch OFF"
 msgstr "👋 PWR switch AUS geschalten"
 
-#: src/pwr.rs:82
+#: src/pwr.rs:84
 msgid "👋 Turned PWR switch ON"
 msgstr "👋 PWR switch EIN geschalten"
 
