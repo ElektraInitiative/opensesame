@@ -13,9 +13,9 @@ pub struct Rst {
 }
 
 impl Default for Rst {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl Rst {

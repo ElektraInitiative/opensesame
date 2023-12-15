@@ -24,9 +24,9 @@ pub struct Bat {
 }
 
 impl Default for Bat {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl Bat {
