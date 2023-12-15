@@ -10,6 +10,7 @@ pub mod mod_ir_temp;
 pub mod nextcloud;
 pub mod ping;
 pub mod pwr;
+pub mod rst;
 pub mod sensors;
 pub mod signals;
 pub mod ssh;

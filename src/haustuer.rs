@@ -4,9 +4,10 @@ use i2cdev::core::*;
 use i2cdev::linux::LinuxI2CDevice;
 use i2cdev::linux::LinuxI2CError;
 use systemstat::Duration;
-use tokio::{sync::mpsc::Sender, time::interval, time::sleep};
+use tokio::{sync::mpsc::Sender, time::interval};
 
 use crate::{
+	rst::Rst,
 	buttons::CommandToButtons,
 	config::Config,
 	nextcloud::{NextcloudChat, NextcloudEvent},
@@ -106,6 +107,7 @@ impl Haustuer {
 		nextcloud_sender: Sender<NextcloudEvent>,
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(30));
+		let mut rst = Rst::new();
 		loop {
 			match haustuer.handle() {
 				HaustuerChange::None => (),
@@ -157,7 +159,13 @@ impl Haustuer {
 							gettext!("⚠️ Error on {}", err),
 						))
 						.await?;
-					sleep(Duration::from_millis(3000)).await;
+					rst.do_reset().await?;
+					nextcloud_sender
+						.send(NextcloudEvent::Chat(
+							NextcloudChat::Ping,
+							gettext("👋 RST MOD-IO done"),
+						))
+						.await?;
 				}
 			}
 			interval.tick().await;
