@@ -45,10 +45,10 @@ impl Rst {
 
 	pub async fn do_reset(&mut self) -> Result<(), ModuleError> {
 		self.switch(false);
-		sleep(Duration::from_millis(10)).await;
+		sleep(Duration::from_millis(100)).await;
 
 		self.switch(true);
-		sleep(Duration::from_millis(10)).await;
+		sleep(Duration::from_millis(100)).await;
 		Ok(())
 	}
 }
