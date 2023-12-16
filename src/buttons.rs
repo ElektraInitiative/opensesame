@@ -105,7 +105,7 @@ const RELAY_LICHT_AUSSEN: u8 = 0x01 << 1;
 
 const ALL_RELAYS: u8 = RELAY_DOOR | RELAY_LICHT_AUSSEN;
 
-const PINS1_INIT: u8 = 0b01100000;
+const PINS1_INIT: u8 = 0b01100000 + 15; // add 15 to avoid "⌛ Timeout mit Sequenz [15]" error
 
 // board 21
 
