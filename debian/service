@@ -12,7 +12,7 @@ NoNewPrivileges=true
 ProtectSystem=full
 
 Nice=-20
-CPUSchedulingPriority=80
+CPUSchedulingPriority=49
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
 
