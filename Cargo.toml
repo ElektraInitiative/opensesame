@@ -36,7 +36,6 @@ assets = [
     ["doc/*", "usr/share/doc/opensesame/", "644"],
 ]
 
-
 [dependencies]
 gpio-cdev = { version = "0.5.1", features = ["async-tokio"]}
 
@@ -59,7 +58,7 @@ chrono = "0.4.19"
 signal-hook = "0.3.14"
 signal-hook-tokio = "0.3.1"
 
-tokio = { version = "1.15.0", features = ["full"] }
+tokio = { version = "1.35.0", features = ["full"] }
 tokio-util = "0.6.9"
 async-ssh2-tokio = "0.7.1"
 futures = "0.3.19"

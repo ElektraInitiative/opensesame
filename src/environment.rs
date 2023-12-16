@@ -316,7 +316,13 @@ impl<'a> Environment<'a> {
 			Some(board5a) => {
 				// check if we get new data
 				if !self.first_time {
-					let measurement = self.bme280.as_mut().unwrap().measure().unwrap();
+					let measurement = self
+						.bme280
+						.as_mut()
+						.unwrap()
+						.measure()
+						.expect("Communication to Mod-ENV/BME280 does not work");
+					// Info: typical point to trigger shutdown via panic
 					set_env_data_ccs811(board5a, measurement.temperature, measurement.humidity);
 					self.temperature = measurement.temperature;
 					self.humidity = measurement.humidity;

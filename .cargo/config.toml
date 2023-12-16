@@ -4,3 +4,7 @@ linker = "arm-linux-gnueabihf-gcc"
 
 [env]
 GETTEXT_SYSTEM = "1"
+
+[build]
+rustflags = ["--cfg", "tokio_unstable"]
+

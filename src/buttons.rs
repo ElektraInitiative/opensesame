@@ -166,6 +166,7 @@ impl Buttons {
 		self.board20
 			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
 			.expect("I2C Communication to Buttons does not work");
+		// Info: typical point to trigger shutdown via panic
 		self.board21
 			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
 			.unwrap();

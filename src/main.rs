@@ -5,9 +5,10 @@ use mlx9061x::Error as MlxError;
 use std::panic;
 use std::sync::Arc;
 use systemstat::Duration;
+use tokio::runtime::UnhandledPanic;
 use tokio::spawn;
 use tokio::sync::{mpsc, Mutex};
-use tokio::time::interval;
+use tokio::time::interval; // https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.unhandled_panic
 
 use opensesame::audio::{Audio, AudioEvent};
 use opensesame::bat::Bat;
@@ -30,10 +31,20 @@ use opensesame::watchdog::Watchdog;
 const CONFIG_PARENT: &str = "/sw/libelektra/opensesame/#0/current";
 const STATE_PARENT: &str = "/state/libelektra/opensesame/#0/current";
 
-#[tokio::main]
-async fn main() -> Result<(), ModuleError> {
+fn main() {
 	TextDomain::new("opensesame").init().unwrap();
+	tokio::runtime::Builder::new_multi_thread()
+		.unhandled_panic(UnhandledPanic::ShutdownRuntime)
+		.worker_threads(2)
+		.enable_all()
+		.build()
+		.unwrap()
+		.block_on(async {
+			let _ = start().await;
+		})
+}
 
+async fn start() -> Result<(), ModuleError> {
 	let mut config = Config::new(CONFIG_PARENT);
 	let config_mutex = Arc::new(Mutex::new(Config::new(CONFIG_PARENT)));
 	let state_mutex = Arc::new(Mutex::new(Config::new(STATE_PARENT)));
@@ -108,9 +119,15 @@ async fn main() -> Result<(), ModuleError> {
 	// 			eprintln!("{}", text);
 	// 			}));
 
-	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
-
 	let mut tasks = vec![];
+
+	if watchdog_enabled {
+		let interval = interval(Duration::from_secs(config.get::<u64>("watchdog/interval")));
+		let path = config.get::<String>("watchdog/path");
+		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
+	}
+
+	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
 
 	tasks.push(spawn(Nextcloud::get_background_task(
 		Nextcloud::new(&mut config),
@@ -251,12 +268,6 @@ async fn main() -> Result<(), ModuleError> {
 			nextcloud_sender.clone(),
 			ping_sender.clone(),
 		)));
-	}
-
-	if watchdog_enabled {
-		let interval = interval(Duration::from_secs(config.get::<u64>("watchdog/interval")));
-		let path = config.get::<String>("watchdog/path");
-		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
 	}
 
 	if ping_enabled {
