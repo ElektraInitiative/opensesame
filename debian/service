@@ -13,6 +13,7 @@ ProtectSystem=full
 
 Nice=-20
 CPUSchedulingPriority=49
+CPUSchedulingPolicy=rr
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
 
