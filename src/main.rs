@@ -74,24 +74,6 @@ async fn start() -> Result<(), ModuleError> {
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 	let ping_enabled = config.get_bool("ping/enable");
 
-	let mut pwr = Pwr::new(&mut config);
-
-	nextcloud_sender.send(
-		NextcloudEvent::Chat(NextcloudChat::Ping,
-			gettext!("👋 Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
-	buttons_enabled,
-	garage_enabled,
-	haustuer_enabled,
-	pwr.enabled(),
-	sensors_enabled,
-	modir_enabled,
-	env_enabled,
-	weatherstation_enabled,
-	bat_enabled,
-	watchdog_enabled,
-	ping_enabled,
-))).await?;
-
 	// use std::ops::Deref;
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
 	// panic::set_hook(Box::new(|panic_info| {
@@ -121,14 +103,7 @@ async fn start() -> Result<(), ModuleError> {
 
 	let mut tasks = vec![];
 
-	if watchdog_enabled {
-		let interval = interval(Duration::from_secs(config.get::<u64>("watchdog/interval")));
-		let path = config.get::<String>("watchdog/path");
-		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
-	}
-
-	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
-
+	// Step 1: NC
 	tasks.push(spawn(Nextcloud::get_background_task(
 		Nextcloud::new(&mut config),
 		nextcloud_receiver,
@@ -138,6 +113,34 @@ async fn start() -> Result<(), ModuleError> {
 		startup_time.to_string(),
 	)));
 
+	nextcloud_sender.send(
+			NextcloudEvent::Chat(NextcloudChat::Ping,
+				gettext!("👋 Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
+					buttons_enabled,
+					garage_enabled,
+					haustuer_enabled,
+					pwr.enabled(),
+					sensors_enabled,
+					modir_enabled,
+					env_enabled,
+					weatherstation_enabled,
+					bat_enabled,
+					watchdog_enabled,
+					ping_enabled,
+					))).await?;
+
+	// Step 2: Watchdog
+	if watchdog_enabled {
+		let interval = interval(Duration::from_secs(config.get::<u64>("watchdog/interval")));
+		let path = config.get::<String>("watchdog/path");
+		tasks.push(spawn(Watchdog::get_background_task(path, interval)));
+	}
+
+	// Step 3: PWR Reset
+	let mut pwr = Pwr::new(&mut config);
+	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
+
+	// Step 4: Button module (as others require it)
 	if buttons_enabled {
 		let time_format = config.get::<String>("nextcloud/format/time");
 		let location_latitude = config.get::<f64>("location/latitude");
@@ -154,6 +157,7 @@ async fn start() -> Result<(), ModuleError> {
 		)));
 	}
 
+	// Step 5: now other modules, that might communicate with Buttons
 	if garage_enabled {
 		if !buttons_enabled {
 			panic!("⚠️ Garage depends on buttons!");
