@@ -138,6 +138,22 @@ async fn start() -> Result<(), ModuleError> {
 		startup_time.to_string(),
 	)));
 
+	if buttons_enabled {
+		let time_format = config.get::<String>("nextcloud/format/time");
+		let location_latitude = config.get::<f64>("location/latitude");
+		let location_longitude = config.get::<f64>("location/longitude");
+		tasks.push(spawn(Buttons::get_background_task(
+			Buttons::new(&mut config),
+			Validator::new(&mut config),
+			time_format.to_string(),
+			command_receiver,
+			nextcloud_sender.clone(),
+			audio_sender.clone(),
+			location_latitude,
+			location_longitude,
+		)));
+	}
+
 	if garage_enabled {
 		if !buttons_enabled {
 			panic!("⚠️ Garage depends on buttons!");
@@ -157,22 +173,6 @@ async fn start() -> Result<(), ModuleError> {
 			Haustuer::new(&mut config),
 			command_sender.clone(),
 			nextcloud_sender.clone(),
-		)));
-	}
-
-	if buttons_enabled {
-		let time_format = config.get::<String>("nextcloud/format/time");
-		let location_latitude = config.get::<f64>("location/latitude");
-		let location_longitude = config.get::<f64>("location/longitude");
-		tasks.push(spawn(Buttons::get_background_task(
-			Buttons::new(&mut config),
-			Validator::new(&mut config),
-			time_format.to_string(),
-			command_receiver,
-			nextcloud_sender.clone(),
-			audio_sender.clone(),
-			location_latitude,
-			location_longitude,
 		)));
 	}
 
@@ -232,7 +232,6 @@ async fn start() -> Result<(), ModuleError> {
 		)));
 	}
 
-	// if env_enabled || buttons_enabled {
 	let audio_bell = config.get::<String>("audio/bell");
 	let audio_alarm = config.get::<String>("audio/alarm");
 	tasks.push(spawn(Audio::get_background_task(
@@ -240,7 +239,6 @@ async fn start() -> Result<(), ModuleError> {
 		audio_receiver,
 		nextcloud_sender.clone(),
 	)));
-	// }
 
 	if weatherstation_enabled {
 		let clima_sensor_result = ClimaSensorUS::new(&mut config);
