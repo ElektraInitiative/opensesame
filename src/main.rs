@@ -35,9 +35,9 @@ const STATE_PARENT: &str = "/state/libelektra/opensesame/#0/current";
 fn main() {
 	TextDomain::new("opensesame").init().unwrap();
 	tokio::runtime::Builder::new_multi_thread()
-		.unhandled_panic(UnhandledPanic::ShutdownRuntime)
-		.worker_threads(2)
 		.enable_all()
+		.worker_threads(2)
+		.unhandled_panic(UnhandledPanic::ShutdownRuntime)
 		.build()
 		.unwrap()
 		.block_on(async {
