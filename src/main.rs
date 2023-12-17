@@ -2,6 +2,7 @@ use chrono::Local;
 use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
+use std::env;
 use std::panic;
 use std::sync::Arc;
 use systemstat::Duration;
@@ -46,6 +47,8 @@ fn main() {
 
 async fn start() -> Result<(), ModuleError> {
 	let mut config = Config::new(CONFIG_PARENT);
+	env::set_var("RUST_BACKTRACE", config.get::<String>("debug/backtrace"));
+
 	let config_mutex = Arc::new(Mutex::new(Config::new(CONFIG_PARENT)));
 	let state_mutex = Arc::new(Mutex::new(Config::new(STATE_PARENT)));
 
@@ -113,6 +116,7 @@ async fn start() -> Result<(), ModuleError> {
 		startup_time.to_string(),
 	)));
 
+	let mut pwr = Pwr::new(&mut config);
 	nextcloud_sender.send(
 			NextcloudEvent::Chat(NextcloudChat::Ping,
 				gettext!("👋 Enabled Modules:\n\tButtons: {},\n\tGarage: {},\n\tHaustür: {},\n\tPWR: {},\n\tSensors: {},\n\tModIR: {},\n\tEnvironment: {},\n\tWeatherstation: {},\n\tBattery: {},\n\tWatchdog: {},\n\tPing: {}\n",
@@ -137,7 +141,6 @@ async fn start() -> Result<(), ModuleError> {
 	}
 
 	// Step 3: PWR Reset
-	let mut pwr = Pwr::new(&mut config);
 	let _ = pwr.do_reset(nextcloud_sender.clone()).await;
 
 	// Step 4: Button module (as others require it)
