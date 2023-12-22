@@ -81,6 +81,14 @@ async fn start() -> Result<(), ModuleError> {
 
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
 	panic::set_hook(Box::new(|panic_info| {
+		struct Exit;
+		impl Drop for Exit {
+			fn drop(&mut self) {
+				process::exit(0x0100);
+			}
+		}
+		let _exit = Exit;
+
 		let (filename, line) = panic_info
 			.location()
 			.map(|loc| (loc.file(), loc.line()))
@@ -97,15 +105,12 @@ async fn start() -> Result<(), ModuleError> {
 				.unwrap_or("<cause unknown>")
 		});
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-		/*
-		nextcloud_sender // <--- Doesn't live long enough
-			.send(NextcloudEvent::Chat(
-				NextcloudChat::Ping,
-				text.clone(),
-			));
-		*/
 		eprintln!("{}", text);
-		process::exit(0x0100);
+		let mut config = Config::new(CONFIG_PARENT);
+		let nextcloud = Nextcloud::new(&mut config);
+		futures::executor::block_on(async {
+			nextcloud.ping(text.clone()).await;
+		});
 	}));
 
 	let mut tasks = vec![];

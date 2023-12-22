@@ -104,7 +104,7 @@ impl Nextcloud {
 		};
 	}
 
-	async fn ping(&self, message: String) {
+	pub async fn ping(&self, message: String) {
 		let result = self.send_message_once(&message, &self.chat_ping).await;
 
 		match result {
