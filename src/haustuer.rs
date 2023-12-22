@@ -40,6 +40,8 @@ pub struct Haustuer {
 	light_far_outdoor: bool,
 	bell_far_outdoor: bool,
 	light_indoor: bool,
+
+	how_many_err: u8,
 }
 
 impl Haustuer {
@@ -50,6 +52,8 @@ impl Haustuer {
 			light_far_outdoor: false,
 			bell_far_outdoor: false,
 			light_indoor: false,
+
+			how_many_err: 0,
 		}
 	}
 
@@ -63,8 +67,13 @@ impl Haustuer {
 			.board
 			.smbus_read_byte_data(READ_COMMAND_FOR_IO_OPTO_PINS);
 		if let Err(error) = epins {
+			self.how_many_err += 1;
+			if self.how_many_err >= 58 {
+				panic!("58 errors reached, giving up, last error {}", error)
+			}
 			return HaustuerChange::Err(gettext!("Board 58 with error {}", error));
 		}
+		self.how_many_err = 0;
 
 		let pins = epins.unwrap();
 		// self.set_relay(pins).unwrap();
