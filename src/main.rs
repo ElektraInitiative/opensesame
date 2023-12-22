@@ -3,7 +3,9 @@ use futures::future::join_all;
 use gettextrs::*;
 use mlx9061x::Error as MlxError;
 use std::env;
+use std::ops::Deref;
 use std::panic;
+use std::process;
 use std::sync::Arc;
 use systemstat::Duration;
 use tokio::runtime::UnhandledPanic;
@@ -77,32 +79,34 @@ async fn start() -> Result<(), ModuleError> {
 	let watchdog_enabled = config.get_bool("watchdog/enable");
 	let ping_enabled = config.get_bool("ping/enable");
 
-	// use std::ops::Deref;
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
-	// panic::set_hook(Box::new(|panic_info| {
-	// 			let (filename, line) = panic_info
-	// 			.location()
-	// 			.map(|loc| (loc.file(), loc.line()))
-	// 			.unwrap_or(("<unknown>", 0));
-	// 			let cause = panic_info
-	// 			.payload()
-	// 			.downcast_ref::<String>()
-	// 			.map(String::deref);
-	// 			let cause = cause.unwrap_or_else(|| {
-	// 					panic_info
-	// 					.payload()
-	// 					.downcast_ref::<&str>()
-	// 					.map(|s| *s)
-	// 					.unwrap_or("<cause unknown>")
-	// 					});
-	// 			let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-	// 			nextcloud_sender // <--- Doesn't live long enough
-	// 				.send(NextcloudEvent::Chat(
-	// 					NextcloudChat::Ping,
-	// 					text.clone(),
-	// 				));
-	// 			eprintln!("{}", text);
-	// 			}));
+	panic::set_hook(Box::new(|panic_info| {
+		let (filename, line) = panic_info
+			.location()
+			.map(|loc| (loc.file(), loc.line()))
+			.unwrap_or(("<unknown>", 0));
+		let cause = panic_info
+			.payload()
+			.downcast_ref::<String>()
+			.map(String::deref);
+		let cause = cause.unwrap_or_else(|| {
+			panic_info
+				.payload()
+				.downcast_ref::<&str>()
+				.map(|s| *s)
+				.unwrap_or("<cause unknown>")
+		});
+		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
+		/*
+		nextcloud_sender // <--- Doesn't live long enough
+			.send(NextcloudEvent::Chat(
+				NextcloudChat::Ping,
+				text.clone(),
+			));
+		*/
+		eprintln!("{}", text);
+		process::exit(0x0100);
+	}));
 
 	let mut tasks = vec![];
 
