@@ -43,7 +43,7 @@ i2cdev = "0.5.1"
 
 elektra = { version = "0.11.0", features = ["pkg-config"] }
 
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "blocking"] }
 
 bme280 = "0.3.0"
 mlx9061x = "0.2.1"

@@ -22,7 +22,7 @@ use opensesame::environment::{EnvEvent, Environment};
 use opensesame::garage::Garage;
 use opensesame::haustuer::Haustuer;
 use opensesame::mod_ir_temp::ModIR;
-use opensesame::nextcloud::{Nextcloud, NextcloudChat, NextcloudEvent};
+use opensesame::nextcloud::{try_ping, Nextcloud, NextcloudChat, NextcloudEvent};
 use opensesame::ping::{Ping, PingEvent};
 use opensesame::pwr::Pwr;
 use opensesame::sensors::Sensors;
@@ -107,15 +107,14 @@ async fn start() -> Result<(), ModuleError> {
 				.unwrap_or("<cause unknown>")
 		});
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-		eprintln!("{}", text);
+		// eprintln!("{}", text);
 		let mut config = Config::new(CONFIG_PARENT);
-		let nextcloud = Nextcloud::new(&mut config);
-		futures::executor::block_on(async {
-			eprintln!("Before Ping");
-			nextcloud.ping(text.clone()).await;
-			eprintln!("After Ping");
-			process::exit(2);
-		});
+		match try_ping(&mut config, text.clone()) {
+			Ok(_response) => (),
+			Err(error) => {
+				eprintln!("Couldn't set status message {} because {}", text, error);
+			}
+		}
 	}));
 
 	let mut tasks = vec![];

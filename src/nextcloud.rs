@@ -46,6 +46,36 @@ pub struct Nextcloud {
 	startup_time: String,
 }
 
+fn get_headers() -> HeaderMap {
+	let mut headers = HeaderMap::new();
+	headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+	headers.insert(ACCEPT, "application/json".parse().unwrap());
+	headers.insert("OCS-APIRequest", "true".parse().unwrap());
+	return headers;
+}
+
+pub fn try_ping(
+	config: &mut Config,
+	message: String,
+) -> Result<reqwest::blocking::Response, reqwest::Error> {
+	let mut payload = HashMap::new();
+	payload.insert("token", config.get::<String>("nextcloud/chat/ping"));
+	payload.insert("message", message);
+	reqwest::blocking::Client::new()
+		.post(format!(
+			"{}/ocs/v2.php/apps/spreed/api/v1/chat/{}",
+			config.get::<String>("nextcloud/url"),
+			config.get::<String>("nextcloud/chat/ping")
+		))
+		.basic_auth(
+			config.get::<String>("nextcloud/user"),
+			Some(config.get::<String>("nextcloud/pass")),
+		)
+		.headers(get_headers())
+		.json(&payload)
+		.send()
+}
+
 impl Nextcloud {
 	pub fn new(config: &mut Config) -> Self {
 		let mut headers = HeaderMap::new();
@@ -65,7 +95,7 @@ impl Nextcloud {
 			info_environment: String::new(),
 			info_online: String::new(),
 			client,
-			headers,
+			headers: get_headers(),
 			startup_time: String::new(),
 		}
 	}
