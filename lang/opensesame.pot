@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-15 13:48+0000\n"
+"POT-Creation-Date: 2023-12-23 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,59 +45,59 @@ msgstr ""
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
-#: src/buttons.rs:513
+#: src/buttons.rs:514
 msgid "{} {}"
 msgstr ""
 
-#: src/buttons.rs:533
+#: src/buttons.rs:534
 msgid "🔔 Pressed button bell."
 msgstr ""
 
-#: src/buttons.rs:542
+#: src/buttons.rs:543
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:554
+#: src/buttons.rs:555
 msgid "💡 Pressed switch inside. {}."
 msgstr ""
 
-#: src/buttons.rs:565
+#: src/buttons.rs:566
 msgid "💡 Pressed light button. {}."
 msgstr ""
 
-#: src/buttons.rs:578
+#: src/buttons.rs:579
 msgid "🔔 Pressed switch bell."
 msgstr ""
 
-#: src/buttons.rs:587
+#: src/buttons.rs:588
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:601
+#: src/buttons.rs:602
 msgid "🕶️ Light was turned off."
 msgstr ""
 
-#: src/buttons.rs:611
+#: src/buttons.rs:612
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:623
+#: src/buttons.rs:624
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:639
+#: src/buttons.rs:640
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:649
+#: src/buttons.rs:650
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:665
+#: src/buttons.rs:666
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:676
+#: src/buttons.rs:677
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
@@ -125,59 +125,59 @@ msgstr ""
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
-#: src/environment.rs:394
+#: src/environment.rs:400
 msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
 msgstr ""
 
-#: src/environment.rs:408
+#: src/environment.rs:414
 msgid "💨 Airquality is ok. {}"
 msgstr ""
 
-#: src/environment.rs:416
+#: src/environment.rs:422
 msgid "💩 Airquality is moderate. {}"
 msgstr ""
 
-#: src/environment.rs:424
+#: src/environment.rs:430
 msgid "💩 Airquality is bad! {}"
 msgstr ""
 
-#: src/environment.rs:437
+#: src/environment.rs:443
 msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
 msgstr ""
 
-#: src/environment.rs:452
+#: src/environment.rs:458
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr ""
 
-#: src/haustuer.rs:66
+#: src/haustuer.rs:74
 msgid "Board 58 with error {}"
 msgstr ""
 
-#: src/haustuer.rs:118
+#: src/haustuer.rs:127
 msgid "💡 Light far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:125
+#: src/haustuer.rs:134
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr ""
 
-#: src/haustuer.rs:133
+#: src/haustuer.rs:142
 msgid "🔔 Bell far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:144
+#: src/haustuer.rs:153
 msgid "💡 Indoor light pressed."
 msgstr ""
 
-#: src/haustuer.rs:151
+#: src/haustuer.rs:160
 msgid "💡 Pressed in entrance. Switch all lights."
 msgstr ""
 
-#: src/haustuer.rs:159
+#: src/haustuer.rs:168
 msgid "⚠️ Error on {}, will do reset."
 msgstr ""
 
-#: src/haustuer.rs:166
+#: src/haustuer.rs:175
 msgid "👋 RST of MOD-IO done."
 msgstr ""
 
