@@ -81,9 +81,11 @@ async fn start() -> Result<(), ModuleError> {
 
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
 	panic::set_hook(Box::new(|panic_info| {
+		eprintln!("Enter Panic Hook");
 		struct Exit;
 		impl Drop for Exit {
 			fn drop(&mut self) {
+				eprintln!("Exit Panic Hook");
 				process::exit(0x0100);
 			}
 		}
