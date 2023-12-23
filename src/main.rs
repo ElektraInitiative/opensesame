@@ -111,7 +111,9 @@ async fn start() -> Result<(), ModuleError> {
 		let mut config = Config::new(CONFIG_PARENT);
 		let nextcloud = Nextcloud::new(&mut config);
 		futures::executor::block_on(async {
+			eprintln!("Before Ping");
 			nextcloud.ping(text.clone()).await;
+			eprintln!("After Ping");
 			process::exit(2);
 		});
 	}));
