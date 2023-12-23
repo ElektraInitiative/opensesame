@@ -81,11 +81,9 @@ async fn start() -> Result<(), ModuleError> {
 
 	// // https://stackoverflow.com/questions/42456497/stdresultresult-panic-to-log
 	panic::set_hook(Box::new(|panic_info| {
-		eprintln!("Enter Panic Hook");
 		struct Exit;
 		impl Drop for Exit {
 			fn drop(&mut self) {
-				eprintln!("Exit Panic Hook");
 				process::exit(1);
 			}
 		}
@@ -107,7 +105,6 @@ async fn start() -> Result<(), ModuleError> {
 				.unwrap_or("<cause unknown>")
 		});
 		let text = gettext!("A panic occurred at {}:{}: {}", filename, line, cause);
-		// eprintln!("{}", text);
 		let mut config = Config::new(CONFIG_PARENT);
 		match try_ping(&mut config, text.clone()) {
 			Ok(_response) => (),
