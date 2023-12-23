@@ -86,7 +86,7 @@ async fn start() -> Result<(), ModuleError> {
 		impl Drop for Exit {
 			fn drop(&mut self) {
 				eprintln!("Exit Panic Hook");
-				process::exit(0x0100);
+				process::exit(1);
 			}
 		}
 		let _exit = Exit;
@@ -112,6 +112,7 @@ async fn start() -> Result<(), ModuleError> {
 		let nextcloud = Nextcloud::new(&mut config);
 		futures::executor::block_on(async {
 			nextcloud.ping(text.clone()).await;
+			process::exit(2);
 		});
 	}));
 
