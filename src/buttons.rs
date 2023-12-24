@@ -72,7 +72,7 @@ pub enum CommandToButtons {
 	OpenDoor,
 	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
-	SwitchLights(bool, bool, String), // inside, outside, message
+	SwitchLights(bool, bool, bool, String), // inside, outside, permanent, message
 }
 
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
@@ -432,8 +432,8 @@ impl Buttons {
 
 	/// returns what was done
 	/// usually extends light time
-	/// on double press event (on true) -> make light permanent on (until next press event)
-	pub fn switch_lights(&mut self, inside: bool, outside: bool) -> String {
+	/// if permanent==true: on double press event (on true) -> make light permanent on (until next press event)
+	pub fn switch_lights(&mut self, inside: bool, outside: bool, permanent: bool) -> String {
 		assert!(
 			inside || outside,
 			"logic error, at least one must be switched on!"
@@ -458,7 +458,7 @@ impl Buttons {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
 			return format!("Light {} not permanent anymore", which);
-		} else if inside && self.light_timeout > init_light_timeout - 200 {
+		} else if permanent && self.light_timeout > init_light_timeout - 200 {
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
 		} else if self.light_timeout > 1 {
@@ -507,11 +507,15 @@ impl Buttons {
 					CommandToButtons::RingBell(period, counter) => {
 						self.ring_bell(period, counter);
 					}
-					CommandToButtons::SwitchLights(inside, outside, text) => {
+					CommandToButtons::SwitchLights(inside, outside, permanent, text) => {
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
-								gettext!("{} {}", self.switch_lights(inside, outside), text),
+								gettext!(
+									"{} {}",
+									self.switch_lights(inside, outside, permanent),
+									text
+								),
 							))
 							.await?;
 					}
@@ -553,7 +557,7 @@ impl Buttons {
 								NextcloudChat::Licht,
 								gettext!(
 									"💡 Pressed switch inside. {}.",
-									self.switch_lights(true, true)
+									self.switch_lights(true, true, true)
 								),
 							))
 							.await?;
@@ -564,7 +568,7 @@ impl Buttons {
 								NextcloudChat::Licht,
 								gettext!(
 									"💡 Pressed light button. {}.",
-									self.switch_lights(false, true),
+									self.switch_lights(false, true, false),
 								),
 							))
 							.await?;
@@ -638,7 +642,7 @@ impl Buttons {
 								NextcloudChat::Licht,
 								gettext!(
 									"💡 Switch lights in and out. {}",
-									self.switch_lights(true, true)
+									self.switch_lights(true, true, false)
 								),
 							))
 							.await?;

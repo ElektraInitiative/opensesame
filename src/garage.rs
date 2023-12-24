@@ -165,6 +165,7 @@ impl Garage {
 						.send(CommandToButtons::SwitchLights(
 							true,
 							false,
+							true,
 							"💡 Pressed at entrance top switch. Switch lights in garage"
 								.to_string(),
 						))
@@ -173,6 +174,7 @@ impl Garage {
 				GarageChange::PressedTasterTorOben => {
 					command_sender
 						.send(CommandToButtons::SwitchLights(
+							true,
 							true,
 							true,
 							"💡 Pressed top switch at garage door. Switch lights in and out garage"

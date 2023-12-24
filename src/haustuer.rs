@@ -133,6 +133,7 @@ impl Haustuer {
 						.send(CommandToButtons::SwitchLights(
 							false,
 							true,
+							false,
 							gettext("💡 Pressed at entrance switch. Switch lights."),
 						))
 						.await?;
@@ -161,6 +162,7 @@ impl Haustuer {
 							.send(CommandToButtons::SwitchLights(
 								true,
 								true,
+								false,
 								gettext("💡 Multi-Press in entrance. Switch all lights."),
 							))
 							.await?;
@@ -169,6 +171,7 @@ impl Haustuer {
 						command_sender
 							.send(CommandToButtons::SwitchLights(
 								true,
+								false,
 								false,
 								gettext("💡 Pressed in entrance. Switch indoor lights."),
 							))

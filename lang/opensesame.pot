@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-24 06:00+0000\n"
+"POT-Creation-Date: 2023-12-24 06:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,59 +45,59 @@ msgstr ""
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
-#: src/buttons.rs:514
+#: src/buttons.rs:515
 msgid "{} {}"
 msgstr ""
 
-#: src/buttons.rs:534
+#: src/buttons.rs:538
 msgid "🔔 Pressed button bell."
 msgstr ""
 
-#: src/buttons.rs:543
+#: src/buttons.rs:547
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:555
+#: src/buttons.rs:559
 msgid "💡 Pressed switch inside. {}."
 msgstr ""
 
-#: src/buttons.rs:566
+#: src/buttons.rs:570
 msgid "💡 Pressed light button. {}."
 msgstr ""
 
-#: src/buttons.rs:579
+#: src/buttons.rs:583
 msgid "🔔 Pressed switch bell."
 msgstr ""
 
-#: src/buttons.rs:588
+#: src/buttons.rs:592
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:602
+#: src/buttons.rs:606
 msgid "🕶️ Light was turned off."
 msgstr ""
 
-#: src/buttons.rs:612
+#: src/buttons.rs:616
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:624
+#: src/buttons.rs:628
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:640
+#: src/buttons.rs:644
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:650
+#: src/buttons.rs:654
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:666
+#: src/buttons.rs:670
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:677
+#: src/buttons.rs:681
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
@@ -157,31 +157,31 @@ msgstr ""
 msgid "💡 Light far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:136
+#: src/haustuer.rs:137
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr ""
 
-#: src/haustuer.rs:144
+#: src/haustuer.rs:145
 msgid "🔔 Bell far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:155
+#: src/haustuer.rs:156
 msgid "💡 Indoor light pressed."
 msgstr ""
 
-#: src/haustuer.rs:164
+#: src/haustuer.rs:166
 msgid "💡 Multi-Press in entrance. Switch all lights."
 msgstr ""
 
-#: src/haustuer.rs:173
+#: src/haustuer.rs:176
 msgid "💡 Pressed in entrance. Switch indoor lights."
 msgstr ""
 
-#: src/haustuer.rs:183
+#: src/haustuer.rs:186
 msgid "⚠️ Error on {}, will do reset."
 msgstr ""
 
-#: src/haustuer.rs:190
+#: src/haustuer.rs:193
 msgid "👋 RST of MOD-IO done."
 msgstr ""
 

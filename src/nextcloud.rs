@@ -355,6 +355,7 @@ impl Nextcloud {
 											.send(CommandToButtons::SwitchLights(
 												inner_light,
 												outer_light,
+												false, // TODO: should be also an argument of switchlights
 												String::from("Switch light"),
 											))
 											.await?;
