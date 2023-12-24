@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-24 06:35+0000\n"
+"POT-Creation-Date: 2023-12-24 06:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,59 +45,59 @@ msgstr ""
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
-#: src/buttons.rs:515
+#: src/buttons.rs:519
 msgid "{} {}"
 msgstr ""
 
-#: src/buttons.rs:538
+#: src/buttons.rs:542
 msgid "🔔 Pressed button bell."
 msgstr ""
 
-#: src/buttons.rs:547
+#: src/buttons.rs:551
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:559
+#: src/buttons.rs:563
 msgid "💡 Pressed switch inside. {}."
 msgstr ""
 
-#: src/buttons.rs:570
+#: src/buttons.rs:574
 msgid "💡 Pressed light button. {}."
 msgstr ""
 
-#: src/buttons.rs:583
+#: src/buttons.rs:587
 msgid "🔔 Pressed switch bell."
 msgstr ""
 
-#: src/buttons.rs:592
+#: src/buttons.rs:596
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:606
+#: src/buttons.rs:610
 msgid "🕶️ Light was turned off."
 msgstr ""
 
-#: src/buttons.rs:616
+#: src/buttons.rs:620
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:628
+#: src/buttons.rs:632
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:644
+#: src/buttons.rs:648
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:654
+#: src/buttons.rs:658
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:670
+#: src/buttons.rs:674
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:681
+#: src/buttons.rs:685
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
@@ -170,7 +170,7 @@ msgid "💡 Indoor light pressed."
 msgstr ""
 
 #: src/haustuer.rs:166
-msgid "💡 Multi-Press in entrance. Switch all lights."
+msgid "💡 Multi-Press in entrance. Switch outdoor lights."
 msgstr ""
 
 #: src/haustuer.rs:176

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-24 06:00+0000\n"
+"POT-Creation-Date: 2023-12-24 06:54+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -47,39 +47,39 @@ msgstr "🔋 An {}%"
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr "🔋 Batterieladung ist zurück bei {}%"
 
-#: src/buttons.rs:514
+#: src/buttons.rs:519
 msgid "{} {}"
 msgstr ""
 
-#: src/buttons.rs:534
+#: src/buttons.rs:542
 msgid "🔔 Pressed button bell."
 msgstr "🔔 Knopf für Glocke gedrückt."
 
-#: src/buttons.rs:543
+#: src/buttons.rs:551
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:555
+#: src/buttons.rs:563
 msgid "💡 Pressed switch inside. {}."
 msgstr "💡 Taster innen gedrückt. {}."
 
-#: src/buttons.rs:566
+#: src/buttons.rs:574
 msgid "💡 Pressed light button. {}."
 msgstr "💡 Licht-Knopf außen gedrückt. {}."
 
-#: src/buttons.rs:579
+#: src/buttons.rs:587
 msgid "🔔 Pressed switch bell."
 msgstr "🔔 Taster Glocke gedrückt."
 
-#: src/buttons.rs:588
+#: src/buttons.rs:596
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:602
+#: src/buttons.rs:610
 msgid "🕶️ Light was turned off."
 msgstr "🕶️ Licht wurde abgeschalten."
 
-#: src/buttons.rs:612
+#: src/buttons.rs:620
 msgid ""
 "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: "
 "{}, Swap: {}, CPU temp: {}"
@@ -87,25 +87,25 @@ msgstr ""
 "⚠️ Fehler beim Lesen der Knöpfe am Board {}. Load average: {} {} {}, Memory "
 "usage: {}, Swap: {}, CPU temp: {}"
 
-#: src/buttons.rs:624
+#: src/buttons.rs:632
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/buttons.rs:640
+#: src/buttons.rs:648
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/buttons.rs:650
+#: src/buttons.rs:658
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
 "Sonnenuntergang: {}"
 
-#: src/buttons.rs:666
+#: src/buttons.rs:674
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {}"
 
-#: src/buttons.rs:677
+#: src/buttons.rs:685
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
@@ -169,31 +169,31 @@ msgstr "Brett 58 mit Fehler {}"
 msgid "💡 Light far outdoor pressed."
 msgstr "💡 Licht am Vorgartenzaun gedrückt."
 
-#: src/haustuer.rs:136
+#: src/haustuer.rs:137
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
 
-#: src/haustuer.rs:144
+#: src/haustuer.rs:145
 msgid "🔔 Bell far outdoor pressed."
 msgstr "🔔 Taste für Glocke Vorgarten gedrückt."
 
-#: src/haustuer.rs:155
+#: src/haustuer.rs:156
 msgid "💡 Indoor light pressed."
 msgstr "💡 Taster Licht innen gedrückt."
 
-#: src/haustuer.rs:164
-msgid "💡 Multi-Press in entrance. Switch all lights."
-msgstr "💡 Knopf im Vorzimmer mehrmals gedrückt. Schalte Licht innen und aussen ein."
+#: src/haustuer.rs:166
+msgid "💡 Multi-Press in entrance. Switch outdoor lights."
+msgstr "💡 Knopf im Vorzimmer mehrmals gedrückt. Schalte Licht aussen ein."
 
-#: src/haustuer.rs:173
+#: src/haustuer.rs:176
 msgid "💡 Pressed in entrance. Switch indoor lights."
 msgstr "💡 Knopf im Vorzimmer gedrückt. Schalte Licht innen ein."
 
-#: src/haustuer.rs:183
+#: src/haustuer.rs:186
 msgid "⚠️ Error on {}, will do reset."
 msgstr "⚠️ Ein Fehler auf {} ist aufgetreten"
 
-#: src/haustuer.rs:190
+#: src/haustuer.rs:193
 msgid "👋 RST of MOD-IO done."
 msgstr "👋 RST von MOD-IO durchgeführt."
 

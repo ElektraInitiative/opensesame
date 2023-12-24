@@ -475,6 +475,10 @@ impl Buttons {
 			self.board21
 				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN)
 				.unwrap();
+		} else if outside {
+			self.board21
+				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_AUSSEN)
+				.unwrap();
 		}
 		ret
 	}

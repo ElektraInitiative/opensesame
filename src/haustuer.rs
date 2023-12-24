@@ -160,10 +160,10 @@ impl Haustuer {
 						// multi-click detected (within 1.5 sec)
 						command_sender
 							.send(CommandToButtons::SwitchLights(
-								true,
+								false,
 								true,
 								false,
-								gettext("💡 Multi-Press in entrance. Switch all lights."),
+								gettext("💡 Multi-Press in entrance. Switch outdoor lights."),
 							))
 							.await?;
 					} else {
