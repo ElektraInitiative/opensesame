@@ -117,7 +117,7 @@ impl Haustuer {
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(30));
 		let mut rst = Rst::new();
-		let mut indoor_counter = 0;
+		let mut indoor_counter = 100;
 		loop {
 			indoor_counter += 1;
 			match haustuer.handle() {
@@ -153,11 +153,11 @@ impl Haustuer {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
 							NextcloudChat::Licht,
-							gettext("💡 Indoor light pressed."),
+							gettext!("💡 Indoor light pressed {}.", indoor_counter),
 						))
 						.await?;
-					if indoor_counter < 50 {
-						// multi-click detected (within 1.5 sec)
+					if indoor_counter < 100 {
+						// multi-click detected (within 3 sec)
 						command_sender
 							.send(CommandToButtons::SwitchLights(
 								false,
