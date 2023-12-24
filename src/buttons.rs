@@ -72,7 +72,7 @@ pub enum CommandToButtons {
 	OpenDoor,
 	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
-	SwitchLights(bool, bool, String),
+	SwitchLights(bool, bool, String), // inside, outside, message
 }
 
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell

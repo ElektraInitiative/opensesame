@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-23 07:54+0000\n"
+"POT-Creation-Date: 2023-12-24 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -153,31 +153,35 @@ msgstr ""
 msgid "Board 58 with error {}"
 msgstr ""
 
-#: src/haustuer.rs:127
+#: src/haustuer.rs:129
 msgid "💡 Light far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:134
+#: src/haustuer.rs:136
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr ""
 
-#: src/haustuer.rs:142
+#: src/haustuer.rs:144
 msgid "🔔 Bell far outdoor pressed."
 msgstr ""
 
-#: src/haustuer.rs:153
+#: src/haustuer.rs:155
 msgid "💡 Indoor light pressed."
 msgstr ""
 
-#: src/haustuer.rs:160
-msgid "💡 Pressed in entrance. Switch all lights."
+#: src/haustuer.rs:164
+msgid "💡 Multi-Press in entrance. Switch all lights."
 msgstr ""
 
-#: src/haustuer.rs:168
+#: src/haustuer.rs:173
+msgid "💡 Pressed in entrance. Switch indoor lights."
+msgstr ""
+
+#: src/haustuer.rs:183
 msgid "⚠️ Error on {}, will do reset."
 msgstr ""
 
-#: src/haustuer.rs:175
+#: src/haustuer.rs:190
 msgid "👋 RST of MOD-IO done."
 msgstr ""
 

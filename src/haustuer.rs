@@ -117,7 +117,9 @@ impl Haustuer {
 	) -> Result<Never, ModuleError> {
 		let mut interval = interval(Duration::from_millis(30));
 		let mut rst = Rst::new();
+		let mut indoor_counter = 0;
 		loop {
+			indoor_counter += 1;
 			match haustuer.handle() {
 				HaustuerChange::None => (),
 				HaustuerChange::LightFarOutdoor => {
@@ -153,13 +155,26 @@ impl Haustuer {
 							gettext("💡 Indoor light pressed."),
 						))
 						.await?;
-					command_sender
-						.send(CommandToButtons::SwitchLights(
-							true,
-							true,
-							gettext("💡 Pressed in entrance. Switch all lights."),
-						))
-						.await?;
+					if indoor_counter < 50 {
+						// multi-click detected (within 1.5 sec)
+						command_sender
+							.send(CommandToButtons::SwitchLights(
+								true,
+								true,
+								gettext("💡 Multi-Press in entrance. Switch all lights."),
+							))
+							.await?;
+					} else {
+						// normal click or first click
+						command_sender
+							.send(CommandToButtons::SwitchLights(
+								true,
+								false,
+								gettext("💡 Pressed in entrance. Switch indoor lights."),
+							))
+							.await?;
+					}
+					indoor_counter = 0; // reset
 				}
 				HaustuerChange::Err(err) => {
 					nextcloud_sender

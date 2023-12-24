@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-23 06:02+0000\n"
+"POT-Creation-Date: 2023-12-24 06:00+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -165,31 +165,35 @@ msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
 msgid "Board 58 with error {}"
 msgstr "Brett 58 mit Fehler {}"
 
-#: src/haustuer.rs:127
+#: src/haustuer.rs:129
 msgid "💡 Light far outdoor pressed."
 msgstr "💡 Licht am Vorgartenzaun gedrückt."
 
-#: src/haustuer.rs:134
+#: src/haustuer.rs:136
 msgid "💡 Pressed at entrance switch. Switch lights."
 msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
 
-#: src/haustuer.rs:142
+#: src/haustuer.rs:144
 msgid "🔔 Bell far outdoor pressed."
 msgstr "🔔 Taste für Glocke Vorgarten gedrückt."
 
-#: src/haustuer.rs:153
+#: src/haustuer.rs:155
 msgid "💡 Indoor light pressed."
 msgstr "💡 Taster Licht innen gedrückt."
 
-#: src/haustuer.rs:160
-msgid "💡 Pressed in entrance. Switch all lights."
-msgstr "💡 Knopf im Vorzimmer gedrückt. Schalte Licht ein."
+#: src/haustuer.rs:164
+msgid "💡 Multi-Press in entrance. Switch all lights."
+msgstr "💡 Knopf im Vorzimmer mehrmals gedrückt. Schalte Licht innen und aussen ein."
 
-#: src/haustuer.rs:168
+#: src/haustuer.rs:173
+msgid "💡 Pressed in entrance. Switch indoor lights."
+msgstr "💡 Knopf im Vorzimmer gedrückt. Schalte Licht innen ein."
+
+#: src/haustuer.rs:183
 msgid "⚠️ Error on {}, will do reset."
 msgstr "⚠️ Ein Fehler auf {} ist aufgetreten"
 
-#: src/haustuer.rs:175
+#: src/haustuer.rs:190
 msgid "👋 RST of MOD-IO done."
 msgstr "👋 RST von MOD-IO durchgeführt."
 
@@ -213,7 +217,7 @@ msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
 
-#: src/nextcloud.rs:243
+#: src/nextcloud.rs:273
 msgid "👋 Opensesame {} init {}"
 msgstr "👋 Opensesame {} init {}"
 
