@@ -243,16 +243,31 @@ impl ClimaSensorUS {
 	async fn handle(&mut self) -> Result<Option<String>, libmodbus::Error> {
 		let mut response_temp = vec![0u16; 2];
 		let mut response_wind = vec![0u16; 2];
+		let temp : f32;
+		let wind : f32;
 
 		self.ctx
 			.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
 		self.ctx
 			.read_input_registers(REG_MEAN_WIND_SPEED, 2, &mut response_wind)?;
 
-		let temp: f32 =
-			(conv_vec_to_value_s((response_temp[0], response_temp[1])).unwrap() as f32) / 10.0;
-		let wind: f32 =
-			(conv_vec_to_value_u((response_wind[0], response_wind[1])).unwrap() as f32) / 10.0;
+		match conv_vec_to_value_s((response_temp[0], response_temp[1])) {
+			Ok(conv_response) => {
+				temp = conv_response as f32 / 10.0;
+			}
+			Err(_) => {
+				temp = ERROR_CODE_S32 as f32;
+			}
+		}
+
+		match conv_vec_to_value_u((response_wind[0], response_wind[1])) {
+			Ok(conv_response) => {
+				wind = conv_response as f32 / 10.0;
+			}
+			Err(_) => {
+				wind = ERROR_CODE_S32 as f32;
+			}
+		}
 
 		//check if new data should be published to opensensemap.org
 		match self.publish_to_opensensemap().await {
