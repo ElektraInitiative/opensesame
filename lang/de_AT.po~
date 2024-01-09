@@ -136,6 +136,7 @@ msgid "༄ Strong Wind {} m/s (Temperature: {} °C)"
 msgstr "༄  Starker Wind {} m/s (Temperatur: {} °C)"
 
 #: src/clima_sensor_us.rs:352
+#, fuzzy
 msgid "⚠️ Error in temperature measurement (Wind {} m/s)"
 msgstr "⚠️ Fehler beim Messen der Temperatur (Wind {} m/s)"
 
@@ -144,7 +145,7 @@ msgid "⚠️ Error in wind measurement (Temperature: {} °C)"
 msgstr "⚠️ Fehler beim Messen vom Wind {} m/s (Temperatur: {} °C)"
 
 #: src/clima_sensor_us.rs:358
-msgid "⚠️⚠️ Error in temperature measurement and wind measurement"
+msgid "⚠️⚠️ Error in temperatur measurement and wind measurement"
 msgstr "⚠️⚠️ Fehler beim Messen von der Temperatur und Wind"
 
 #: src/clima_sensor_us.rs:361

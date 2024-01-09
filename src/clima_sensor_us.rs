@@ -175,6 +175,9 @@ pub enum Warning {
 	HighTemp,
 	LowTemp,
 	StrongWind,
+	ErrorTemp,
+	ErrorWind,
+	ErrorBoth,
 	None,
 }
 
@@ -287,28 +290,36 @@ impl ClimaSensorUS {
 	fn set_warning_active(warning_active: &mut Warning, temp: f32, wind: f32) -> Option<String> {
 		let new_warning;
 
-		if temp > ClimaSensorUS::LOW_CANCEL_TEMP
-			&& temp < ClimaSensorUS::HIGH_CANCEL_TEMP
-			&& wind < ClimaSensorUS::OK_WIND_SPEED
-		{
-			new_warning = Warning::None;
-		} else if wind > ClimaSensorUS::STRONG_WIND_SPEED {
-			new_warning = Warning::StrongWind;
-		} else if temp > ClimaSensorUS::HIGH_WARNING_TEMP {
-			new_warning = Warning::HighTemp;
-		} else if temp < ClimaSensorUS::LOW_WARNING_TEMP {
-			new_warning = Warning::LowTemp;
-		} else if temp > ClimaSensorUS::NO_WIND_TEMP
-			&& wind < ClimaSensorUS::NO_WIND_SPEED
-			&& !matches!(warning_active, Warning::HighTemp)
-		{
-			new_warning = Warning::HighTemp;
-		} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
-			&& !matches!(warning_active, Warning::LowTemp | Warning::HighTemp)
-		{
-			new_warning = Warning::CloseWindow;
+		if temp == ERROR_CODE_S32 as f32 && wind == ERROR_CODE_U32 as f32 {
+			new_warning = Warning::ErrorBoth;
+		} else if temp == ERROR_CODE_S32 as f32 {
+			new_warning = Warning::ErrorTemp;
+		} else if wind == ERROR_CODE_U32 as f32 {
+			new_warning = Warning::ErrorWind;
 		} else {
-			new_warning = *warning_active;
+			if temp > ClimaSensorUS::LOW_CANCEL_TEMP
+				&& temp < ClimaSensorUS::HIGH_CANCEL_TEMP
+				&& wind < ClimaSensorUS::OK_WIND_SPEED
+			{
+				new_warning = Warning::None;
+			} else if wind > ClimaSensorUS::STRONG_WIND_SPEED {
+				new_warning = Warning::StrongWind;
+			} else if temp > ClimaSensorUS::HIGH_WARNING_TEMP {
+				new_warning = Warning::HighTemp;
+			} else if temp < ClimaSensorUS::LOW_WARNING_TEMP {
+				new_warning = Warning::LowTemp;
+			} else if temp > ClimaSensorUS::NO_WIND_TEMP
+				&& wind < ClimaSensorUS::NO_WIND_SPEED
+				&& !matches!(warning_active, Warning::HighTemp)
+			{
+				new_warning = Warning::HighTemp;
+			} else if temp >= ClimaSensorUS::CLOSE_WINDOW_TEMP
+				&& !matches!(warning_active, Warning::LowTemp | Warning::HighTemp)
+			{
+				new_warning = Warning::CloseWindow;
+			} else {
+				new_warning = *warning_active;
+			}
 		}
 
 		// compare old and new value of Warning
@@ -336,6 +347,15 @@ impl ClimaSensorUS {
 				}
 				Warning::StrongWind => {
 					gettext!("༄ Strong Wind {} m/s (Temperature: {} °C)", wind, temp)
+				}
+				Warning::ErrorTemp => {
+					gettext!("⚠️ Error in temperature measurement (Wind {} m/s)", wind)
+				}
+				Warning::ErrorWind => {
+					gettext!("⚠️ Error in wind measurement (Temperature: {} °C)", temp)
+				}
+				Warning::ErrorBoth => {
+					gettext("⚠️⚠️ Error in temperature measurement and wind measurement")
 				}
 				Warning::None => {
 					gettext!("🌡 ༄ Temperature {} °C and Wind {} m/s are moderate again, no warning present",
