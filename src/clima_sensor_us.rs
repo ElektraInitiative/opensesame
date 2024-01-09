@@ -243,8 +243,8 @@ impl ClimaSensorUS {
 	async fn handle(&mut self) -> Result<Option<String>, libmodbus::Error> {
 		let mut response_temp = vec![0u16; 2];
 		let mut response_wind = vec![0u16; 2];
-		let temp : f32;
-		let wind : f32;
+		let temp: f32;
+		let wind: f32;
 
 		self.ctx
 			.read_input_registers(REG_AIR_TEMP, 2, &mut response_temp)?;
