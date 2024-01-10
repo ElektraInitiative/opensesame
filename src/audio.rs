@@ -37,11 +37,15 @@ async fn play_audio_file(
 	Ok(())
 }
 
+#[derive(Debug)]
 pub enum AudioEvent {
+	CancelAll,
 	Bell,
 	FireAlarm,
+	PlayFile(String),
 }
 
+#[derive(Debug)]
 pub struct Audio {
 	bell_path: String,
 	fire_alarm_path: String,
@@ -68,6 +72,9 @@ impl Audio {
 			};
 			maybe_cancellation_token = Option::Some(CancellationToken::new());
 			match event {
+				AudioEvent::CancelAll => {
+					// This cancels the audio since any AudioEvent cancels the previous
+				}
 				AudioEvent::Bell => {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(
@@ -109,6 +116,13 @@ impl Audio {
 								.await;
 						}
 					});
+				}
+				AudioEvent::PlayFile(path) => {
+					spawn(play_audio_file(
+						path,
+						"",
+						maybe_cancellation_token.clone().unwrap(),
+					));
 				}
 			}
 		}

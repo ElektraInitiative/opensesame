@@ -1,28 +1,37 @@
-use crate::{audio::AudioEvent, buttons::CommandToButtons, config::Config, types::ModuleError};
-use futures::{never::Never, try_join};
+use std::collections::HashMap;
+
+use futures::never::Never;
 use gettextrs::gettext;
 use reqwest::{
 	header::{HeaderMap, ACCEPT, CONTENT_TYPE},
 	Client,
 };
-use std::collections::HashMap;
 use tokio::{
 	sync::mpsc::{Receiver, Sender},
 	time::{self, interval},
+	try_join,
 };
 
+use crate::{audio::AudioEvent, buttons::CommandToButtons, config::Config, types::ModuleError};
+
+use super::commands::{run_command, Command};
+
+#[derive(Debug)]
 pub enum NextcloudChat {
 	Default,
 	Ping,
 	Licht,
+	Command,
 }
 
+#[derive(Debug)]
 pub enum NextcloudStatus {
 	Online,
 	Env,
 	Door,
 }
 
+#[derive(Debug)]
 pub enum NextcloudEvent {
 	Chat(NextcloudChat, String),
 	SendStatus,
@@ -111,6 +120,20 @@ impl Nextcloud {
 			Ok(..) => (),
 			Err(error) => {
 				eprintln!("Couldn't ping {} because {}", message, error);
+			}
+		};
+	}
+
+	async fn comand(&self, message: String) {
+		let result = self.send_message_once(&message, &self.chat_commands).await;
+
+		match result {
+			Ok(..) => (),
+			Err(error) => {
+				eprintln!(
+					"Couldn't post {} to commands chat because {}",
+					message, error
+				);
 			}
 		};
 	}
@@ -228,7 +251,7 @@ impl Nextcloud {
 		self.startup_time = startup_time;
 		try_join!(
 			self.clone().message_sender_loop(nextcloud_receiver),
-			self.command_loop(nextcloud_sender, command_sender, audio_sender)
+			self.command_loop(nextcloud_sender, command_sender, audio_sender, &self.user)
 		)?;
 		Err(ModuleError::new(String::from(
 			"Exit get_background_task loop!",
@@ -251,6 +274,7 @@ impl Nextcloud {
 					NextcloudChat::Default => self.send_message(message).await,
 					NextcloudChat::Ping => self.ping(message).await,
 					NextcloudChat::Licht => self.licht(message).await,
+					NextcloudChat::Command => self.comand(message).await,
 				},
 				NextcloudEvent::SendStatus => self.set_status_in_chat().await,
 				NextcloudEvent::Status(status, message) => match status {
@@ -270,6 +294,7 @@ impl Nextcloud {
 		nextcloud_sender: Sender<NextcloudEvent>,
 		command_sender: Sender<CommandToButtons>,
 		audio_sender: Sender<AudioEvent>,
+		user: &str,
 	) -> Result<Never, ModuleError> {
 		let a = self
 			.send_message_once("Started listening to commands here", &self.chat_commands)
@@ -285,73 +310,44 @@ impl Nextcloud {
 					if status == 200 {
 						let json = response.json::<serde_json::Value>().await.unwrap();
 
+						eprintln!("json: {}", json);
+
 						let messages = json["ocs"]["data"].as_array();
+
 						for message in messages
 							.unwrap()
 							.iter()
+							.filter(|m| !m["actorId"].to_string().contains("opensesame")) // ignore messages from opensesame users
 							.map(|m| m["message"].as_str().unwrap())
 						{
-							if message.starts_with('\\') {
-								let command_and_args = message
-									.strip_prefix('\\')
-									.unwrap()
-									.split_whitespace()
-									.collect::<Vec<&str>>();
-								let command = command_and_args[0];
-								let args = &command_and_args[1..];
-								match command {
-									"status" => {
-										nextcloud_sender.send(NextcloudEvent::SendStatus).await?
-									}
-									"setpin" => {
-										// TODO: How do we access config?
-									}
-									"switchlights" => {
-										if args.len() != 2 {
-											nextcloud_sender
-												.send(NextcloudEvent::Chat(
-													NextcloudChat::Default,
-													String::from(
-														"Usage: switchlights <bool> <bool>",
-													),
-												))
-												.await?;
-										}
+							let maybe_command = Command::new(message);
 
-										let inner_light = args[0].eq_ignore_ascii_case("true");
-										let outer_light = args[1].eq_ignore_ascii_case("true");
-
-										command_sender
-											.send(CommandToButtons::SwitchLights(
-												inner_light,
-												outer_light,
-												String::from("Switch lights {} {}"),
-											))
-											.await?;
-									}
-									"opensesame" => {
-										nextcloud_sender
-											.send(NextcloudEvent::Chat(
-												NextcloudChat::Default,
-												String::from("Opening door"),
-											))
-											.await?;
-										command_sender.send(CommandToButtons::OpenDoor).await?;
-									}
-									"ring_bell" => audio_sender.send(AudioEvent::Bell).await?,
-									"fire_alarm" => {
-										audio_sender.send(AudioEvent::FireAlarm).await?
-									}
-									_ => {
-										nextcloud_sender
-											.send(NextcloudEvent::Chat(
-												NextcloudChat::Default,
-												format!("Unknown command {}!", command),
-											))
-											.await?;
-									}
+							match maybe_command {
+								Ok(command) => {
+									nextcloud_sender
+										.send(NextcloudEvent::Chat(
+											NextcloudChat::Command,
+											run_command(
+												command,
+												nextcloud_sender.clone(),
+												command_sender.clone(),
+												audio_sender.clone(),
+												user,
+											)
+											.await,
+										))
+										.await
+								}
+								Err(error_message) => {
+									nextcloud_sender
+										.send(NextcloudEvent::Chat(
+											NextcloudChat::Command,
+											error_message,
+										))
+										.await
 								}
 							}
+							.unwrap();
 						}
 						if let Some(last_message) = messages.unwrap().last() {
 							last_known_message_id = last_message["id"].to_string();

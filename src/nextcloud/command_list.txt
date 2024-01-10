@@ -1,0 +1,22 @@
+Info commands:
+   '?' show this message.
+   'open?' (or 'offen?') get door states.
+   'lights?' (or 'licht?') get lights states.
+   'battery?' (or 'batterie?') see battery status.
+   'weather?' (or 'wetter?') see weather data.
+   'status?' (or 'status?') see Opensesame state.
+   'sensors?' (or 'sensoren?') get sensor data.
+   'indoor climate?' (or 'innenklima?') see indoor environment.
+   'time?' (or 'uhrzeit?') see current time.
+   'code?' (or 'pin?') and gets a list of names and codes.
+Action commands:
+   'open!' (or 'öffnen!') open doors.
+   'lights [in|out]!' (or 'licht [innen|aussen]!') toggle lights.
+   'play <file_path>!' (or 'abspielen <file_path>!') play audio file from path.
+   'bell!' (or 'glocke!') play bell sound.
+   'alarm!' play alarm sound.
+   'all clear!' (or 'entwarnen!') cancle all playing audio.
+   'quit!' (or 'beenden!') quit Opensesame (to restart it).
+   'code add <name> <pin>!' (or pin hinzufügen <name> <pin>') add new code.
+   'code del <name>!' (or 'pin löschen <name>') remove code.
+   'code set <name> <pin>!' (or 'pin ändern <name> <pin>!') set code.

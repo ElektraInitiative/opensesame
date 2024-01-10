@@ -71,6 +71,7 @@ pub enum StateChange {
 	LightsOff,
 }
 
+#[derive(Debug)]
 pub enum CommandToButtons {
 	OpenDoor,
 	RingBell(u32, u32), // maybe implement it with interval
