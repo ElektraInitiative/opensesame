@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-09 10:40+0000\n"
+"POT-Creation-Date: 2023-12-24 06:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,83 +29,75 @@ msgstr ""
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr ""
 
-#: src/bat.rs:60
+#: src/bat.rs:66
 msgid "🪫 ON {}%"
 msgstr ""
 
-#: src/bat.rs:67
+#: src/bat.rs:73
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr ""
 
-#: src/bat.rs:83
+#: src/bat.rs:89
 msgid "🔋 ON {}%"
 msgstr ""
 
-#: src/bat.rs:89
+#: src/bat.rs:95
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr ""
 
-#: src/buttons.rs:496
-msgid "👋 Turned PWR_SWITCH off"
+#: src/buttons.rs:519
+msgid "{} {}"
 msgstr ""
 
-#: src/buttons.rs:505
-msgid "👋 Turned PWR_SWITCH on"
-msgstr ""
-
-#: src/buttons.rs:539
-msgid "{}"
-msgstr ""
-
-#: src/buttons.rs:559
+#: src/buttons.rs:542
 msgid "🔔 Pressed button bell."
 msgstr ""
 
-#: src/buttons.rs:568
+#: src/buttons.rs:551
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:580
+#: src/buttons.rs:563
 msgid "💡 Pressed switch inside. {}."
 msgstr ""
 
-#: src/buttons.rs:591
-msgid "💡 Pressed switch outside or light button. {}."
+#: src/buttons.rs:574
+msgid "💡 Pressed light button. {}."
 msgstr ""
 
-#: src/buttons.rs:604
+#: src/buttons.rs:587
 msgid "🔔 Pressed switch bell."
 msgstr ""
 
-#: src/buttons.rs:613
+#: src/buttons.rs:596
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 
-#: src/buttons.rs:627
+#: src/buttons.rs:610
 msgid "🕶️ Light was turned off."
 msgstr ""
 
-#: src/buttons.rs:637
+#: src/buttons.rs:620
 msgid "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}"
 msgstr ""
 
-#: src/buttons.rs:650
+#: src/buttons.rs:632
 msgid "🤗 Opened for {}"
 msgstr ""
 
-#: src/buttons.rs:666
+#: src/buttons.rs:648
 msgid "💡 Switch lights in and out. {}"
 msgstr ""
 
-#: src/buttons.rs:676
+#: src/buttons.rs:658
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 
-#: src/buttons.rs:692
+#: src/buttons.rs:674
 msgid "⌛ Timeout with sequence {}"
 msgstr ""
 
-#: src/buttons.rs:703
+#: src/buttons.rs:685
 msgid "⌛ Sequence {} too long"
 msgstr ""
 
@@ -145,28 +137,64 @@ msgstr ""
 msgid "⚠️ Error from weather station: {}"
 msgstr ""
 
-#: src/environment.rs:394
+#: src/environment.rs:400
 msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
 msgstr ""
 
-#: src/environment.rs:408
+#: src/environment.rs:414
 msgid "💨 Airquality is ok. {}"
 msgstr ""
 
-#: src/environment.rs:416
+#: src/environment.rs:422
 msgid "💩 Airquality is moderate. {}"
 msgstr ""
 
-#: src/environment.rs:424
+#: src/environment.rs:430
 msgid "💩 Airquality is bad! {}"
 msgstr ""
 
-#: src/environment.rs:437
+#: src/environment.rs:443
 msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
 msgstr ""
 
-#: src/environment.rs:452
+#: src/environment.rs:458
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
+msgstr ""
+
+#: src/haustuer.rs:74
+msgid "Board 58 with error {}"
+msgstr ""
+
+#: src/haustuer.rs:129
+msgid "💡 Light far outdoor pressed."
+msgstr ""
+
+#: src/haustuer.rs:137
+msgid "💡 Pressed at entrance switch. Switch lights."
+msgstr ""
+
+#: src/haustuer.rs:145
+msgid "🔔 Bell far outdoor pressed."
+msgstr ""
+
+#: src/haustuer.rs:156
+msgid "💡 Indoor light pressed."
+msgstr ""
+
+#: src/haustuer.rs:166
+msgid "💡 Multi-Press in entrance. Switch outdoor lights."
+msgstr ""
+
+#: src/haustuer.rs:176
+msgid "💡 Pressed in entrance. Switch indoor lights."
+msgstr ""
+
+#: src/haustuer.rs:186
+msgid "⚠️ Error on {}, will do reset."
+msgstr ""
+
+#: src/haustuer.rs:193
+msgid "👋 RST of MOD-IO done."
 msgstr ""
 
 #: src/mod_ir_temp.rs:199
@@ -189,12 +217,20 @@ msgstr ""
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr ""
 
-#: src/nextcloud.rs:243
+#: src/nextcloud.rs:273
 msgid "👋 Opensesame {} init {}"
 msgstr ""
 
 #: src/ping.rs:63
 msgid "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, Memory usage {}, Swap {}, CPU temp {}, Startup {} Bat {}"
+msgstr ""
+
+#: src/pwr.rs:75
+msgid "👋 Turned PWR switch OFF"
+msgstr ""
+
+#: src/pwr.rs:84
+msgid "👋 Turned PWR switch ON"
 msgstr ""
 
 #: src/sensors.rs:273

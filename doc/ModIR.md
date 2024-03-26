@@ -1,4 +1,5 @@
 # [MOD-IR-TEMP](https://www.olimex.com/Products/Modules/Sensors/MOD-IR-TEMP/open-source-hardware) Module Description
+
 ## Setup and Wiring
 The setup and wiring instructions are the same as those provided in the [Environment-documentation](./Environment.md)
 

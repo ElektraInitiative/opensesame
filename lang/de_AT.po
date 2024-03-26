@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: opensesame 0.7.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-09 10:40+0000\n"
+"POT-Creation-Date: 2023-12-24 06:54+0000\n"
 "PO-Revision-Date: 2022-10-02 13:40+0200\n"
 "Last-Translator: Markus Raab <markus@libelektra.org>\n"
 "Language-Team: German <markus@libelektra.org>\n"
@@ -31,64 +31,56 @@ msgstr "🚨 Audio Feueralarm!"
 msgid "Couldn't send SIGUSR2 to other opensesame instance: {}"
 msgstr "SIGUSR2 konnte nicht zu anderen Opensesame-Instanz gesendet werden: {}"
 
-#: src/bat.rs:60
+#: src/bat.rs:66
 msgid "🪫 ON {}%"
 msgstr "🪫 An {}%"
 
-#: src/bat.rs:67
+#: src/bat.rs:73
 msgid "🪫 Battery Capacity is below {}% at {}%"
 msgstr "🪫 Batterieladung ist unter {}% auf {}%"
 
-#: src/bat.rs:83
+#: src/bat.rs:89
 msgid "🔋 ON {}%"
 msgstr "🔋 An {}%"
 
-#: src/bat.rs:89
+#: src/bat.rs:95
 msgid "🔋 Battery Capacity is back to {}%"
 msgstr "🔋 Batterieladung ist zurück bei {}%"
 
-#: src/buttons.rs:496
-msgid "👋 Turned PWR_SWITCH off"
-msgstr "👋 PWR_SWITCH ausgeschalten"
+#: src/buttons.rs:519
+msgid "{} {}"
+msgstr ""
 
-#: src/buttons.rs:505
-msgid "👋 Turned PWR_SWITCH on"
-msgstr "👋 PWR_SWITCH eingeschalten"
-
-#: src/buttons.rs:539
-msgid "{}"
-msgstr "{}"
-
-#: src/buttons.rs:559
+#: src/buttons.rs:542
 msgid "🔔 Pressed button bell."
 msgstr "🔔 Knopf für Glocke gedrückt."
 
-#: src/buttons.rs:568
+#: src/buttons.rs:551
 msgid "🔕 Did not ring bell (button was pressed) because the time 🌜 is {}, {}"
 msgstr "🔕 Läute Glocke nicht (Knopf gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:580
+#: src/buttons.rs:563
 msgid "💡 Pressed switch inside. {}."
 msgstr "💡 Taster innen gedrückt. {}."
 
-#: src/buttons.rs:591
-msgid "💡 Pressed switch outside or light button. {}."
-msgstr "💡 Taster oder Knopf außen gedrückt. {}."
+#: src/buttons.rs:574
+msgid "💡 Pressed light button. {}."
+msgstr "💡 Licht-Knopf außen gedrückt. {}."
 
-#: src/buttons.rs:604
+#: src/buttons.rs:587
 msgid "🔔 Pressed switch bell."
 msgstr "🔔 Taster Glocke gedrückt."
 
-#: src/buttons.rs:613
+#: src/buttons.rs:596
 msgid "🔕 Did not ring bell (taster outside) because the time 🌜 is {}, {}"
 msgstr ""
 "🔕 Läute Glocke nicht (Taster außen gedrückt) weil Uhrzeit 🌜 ist {}, {}"
 
-#: src/buttons.rs:627
+#: src/buttons.rs:610
 msgid "🕶️ Light was turned off."
 msgstr "🕶️ Licht wurde abgeschalten."
 
-#: src/buttons.rs:637
+#: src/buttons.rs:620
 msgid ""
 "⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: "
 "{}, Swap: {}, CPU temp: {}"
@@ -96,25 +88,25 @@ msgstr ""
 "⚠️ Fehler beim Lesen der Knöpfe am Board {}. Load average: {} {} {}, Memory "
 "usage: {}, Swap: {}, CPU temp: {}"
 
-#: src/buttons.rs:650
+#: src/buttons.rs:632
 msgid "🤗 Opened for {}"
 msgstr "🤗 Für {} geöffnet"
 
-#: src/buttons.rs:666
+#: src/buttons.rs:648
 msgid "💡 Switch lights in and out. {}"
 msgstr "💡 Schalte Licht innen und außen ein. {}"
 
-#: src/buttons.rs:676
+#: src/buttons.rs:658
 msgid "🕶️ Don't switch lights as its day. Now: {} Sunrise: {} Sunset: {}"
 msgstr ""
 "🕶️ Schalte Lichter nicht ein, da es Tag ist. Jetzt: {} Sonnenaufgang: {} "
 "Sonnenuntergang: {}"
 
-#: src/buttons.rs:692
+#: src/buttons.rs:674
 msgid "⌛ Timeout with sequence {}"
 msgstr "⌛ Timeout mit Sequenz {}"
 
-#: src/buttons.rs:703
+#: src/buttons.rs:685
 msgid "⌛ Sequence {} too long"
 msgstr "⌛ Zu lange Sequenz {}"
 
@@ -126,8 +118,12 @@ msgstr "🌡️ Hohe Temperatur {} °C, Fenster schließen (Wind {} m/s)"
 msgid "🌡️ Heat Alert {} °C, turn on PV cooling (Wind {} m/s)"
 msgstr "🌡️ Hitzewarnung {} °C, PV Kühlung einschalten (Wind {} m/s)"
 
+<<<<<<< HEAD
+#: src/clima_sensor_us.rs:317
+=======
 #: src/clima_sensor_us.rs:343
 #, fuzzy
+>>>>>>> master
 msgid "🌡 Freezing Temperature {} °C, yield is in danger (Wind {} m/s)"
 msgstr "🌡 Gefrierpunkt um {} °C unterschritten, Ernte in Gefahr (Wind {} m/s)"
 
@@ -158,30 +154,66 @@ msgstr ""
 msgid "⚠️ Error from weather station: {}"
 msgstr "⚠️ Ein Fehler ist beim ausführen der Wetterstation aufgetreten: {}"
 
-#: src/environment.rs:394
+#: src/environment.rs:400
 msgid "⚠️ Error {:#02b} reading environment! Status: {:#02b}. {}"
 msgstr ""
 "⚠️ Fehler {:#02b} beim Lesen vom Environment-Sensor! Status: {:#02b}. {}"
 
-#: src/environment.rs:408
+#: src/environment.rs:414
 msgid "💨 Airquality is ok. {}"
 msgstr "💨 Luftqualität ist ok. {}"
 
-#: src/environment.rs:416
+#: src/environment.rs:422
 msgid "💩 Airquality is moderate. {}"
 msgstr "💩 Luftqualität ist moderat. {}"
 
-#: src/environment.rs:424
+#: src/environment.rs:430
 msgid "💩 Airquality is bad! {}"
 msgstr "💩 Luftqualität ist schlecht! {}"
 
-#: src/environment.rs:437
+#: src/environment.rs:443
 msgid "🚨 Possible fire alarm! Ring bell once! ⏰. {}"
 msgstr "🚨 Mögicher Feuer-Alarm! Läute Glocke 1x! ⏰. {}"
 
-#: src/environment.rs:452
+#: src/environment.rs:458
 msgid "🚨 Possible fire alarm! (don't ring yet). {}"
 msgstr "🚨 Möglicher Feueralarm! (läute noch nicht). {}"
+
+#: src/haustuer.rs:74
+msgid "Board 58 with error {}"
+msgstr "Brett 58 mit Fehler {}"
+
+#: src/haustuer.rs:129
+msgid "💡 Light far outdoor pressed."
+msgstr "💡 Licht am Vorgartenzaun gedrückt."
+
+#: src/haustuer.rs:137
+msgid "💡 Pressed at entrance switch. Switch lights."
+msgstr "💡 Knopf beim Vorgartenzaun gedrückt. Schalte Licht ein."
+
+#: src/haustuer.rs:145
+msgid "🔔 Bell far outdoor pressed."
+msgstr "🔔 Taste für Glocke Vorgarten gedrückt."
+
+#: src/haustuer.rs:156
+msgid "💡 Indoor light pressed."
+msgstr "💡 Taster Licht innen gedrückt."
+
+#: src/haustuer.rs:166
+msgid "💡 Multi-Press in entrance. Switch outdoor lights."
+msgstr "💡 Knopf im Vorzimmer mehrmals gedrückt. Schalte Licht aussen ein."
+
+#: src/haustuer.rs:176
+msgid "💡 Pressed in entrance. Switch indoor lights."
+msgstr "💡 Knopf im Vorzimmer gedrückt. Schalte Licht innen ein."
+
+#: src/haustuer.rs:186
+msgid "⚠️ Error on {}, will do reset."
+msgstr "⚠️ Ein Fehler auf {} ist aufgetreten"
+
+#: src/haustuer.rs:193
+msgid "👋 RST of MOD-IO done."
+msgstr "👋 RST von MOD-IO durchgeführt."
 
 #: src/mod_ir_temp.rs:199
 msgid "🌡️🌡️ ModIR both sensors too hot! Ambient: {} °C, Object: {} °C"
@@ -203,7 +235,7 @@ msgstr "🌡 ModIR warnung wurde entfernt! Ambient: {} °C, Objekt: {} °C"
 msgid "⚠️ Error while handling ModIR: {}"
 msgstr "⚠️ Ein Fehler ist bei der Behandlung von ModIR aufgetreten: {}"
 
-#: src/nextcloud.rs:243
+#: src/nextcloud.rs:273
 msgid "👋 Opensesame {} init {}"
 msgstr "👋 Opensesame {} init {}"
 
@@ -214,6 +246,14 @@ msgid ""
 msgstr ""
 "{} Ping! Version {}, {}, Status {}, Error {}, Load {} {} {}, "
 "Speicherauslastung {}, Swap {}, CPU temp {}, Startup {} Bat {}"
+
+#: src/pwr.rs:75
+msgid "👋 Turned PWR switch OFF"
+msgstr "👋 PWR switch AUS geschalten"
+
+#: src/pwr.rs:84
+msgid "👋 Turned PWR switch ON"
+msgstr "👋 PWR switch EIN geschalten"
 
 #: src/sensors.rs:273
 msgid "Fire Alarm {}"
@@ -242,6 +282,12 @@ msgstr "🚨 Befehl für Alarm empfangen"
 #: src/signals.rs:174
 msgid "🔔 Received bell"
 msgstr "🔔 Befehl für Glocke empfangen"
+
+#~ msgid "👋 Turned PWR_SWITCH off"
+#~ msgstr "👋 PWR_SWITCH ausgeschalten"
+
+#~ msgid "{}"
+#~ msgstr "{}"
 
 #~ msgid "{}. {}"
 #~ msgstr "{}. {}"

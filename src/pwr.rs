@@ -1,8 +1,19 @@
+// needs UEXT PIN 3 connected with PWR-SWITCH https://www.olimex.com/Products/Duino/Shields/PWR-SWITCH/
+
 use gpio_cdev::{Chip, LineHandle, LineRequestFlags};
 
-use crate::config::Config;
+use systemstat::Duration;
+use tokio::sync::mpsc::Sender;
+use tokio::time::sleep;
 
-const GPIO_PWR_LINE: u32 = 202;
+use crate::nextcloud::NextcloudChat;
+use crate::nextcloud::NextcloudEvent;
+use gettextrs::gettext;
+
+use crate::config::Config;
+use crate::types::ModuleError;
+
+const GPIO_PWR_LINE: u32 = 202; // UEXT1 (e.g. LIME-2 Shield) UART4-TX GPIO202 PG10
 
 pub struct Pwr {
 	state: bool,
@@ -49,5 +60,31 @@ impl Pwr {
 			None => (),
 		}
 		self.state = state;
+	}
+
+	pub async fn do_reset(
+		&mut self,
+		nextcloud_sender: Sender<NextcloudEvent>,
+	) -> Result<(), ModuleError> {
+		if self.enabled() {
+			self.switch(false);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR switch OFF"),
+				))
+				.await?;
+			sleep(Duration::from_secs(30)).await;
+
+			self.switch(true);
+			nextcloud_sender
+				.send(NextcloudEvent::Chat(
+					NextcloudChat::Ping,
+					gettext("👋 Turned PWR switch ON"),
+				))
+				.await?;
+			sleep(Duration::from_secs(10)).await;
+		}
+		Ok(())
 	}
 }

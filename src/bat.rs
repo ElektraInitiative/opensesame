@@ -23,6 +23,12 @@ pub struct Bat {
 	capacity_threshold: u8,
 }
 
+impl Default for Bat {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl Bat {
 	pub fn new() -> Self {
 		Self {

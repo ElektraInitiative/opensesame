@@ -5,7 +5,7 @@ use libmodbus::*;
 use std::env;
 
 ///Constants
-const DEVICE: &'static str = "/dev/ttyS5";
+const DEVICE: &str = "/dev/ttyS5";
 const BAUDRATE: i32 = 9600;
 const PARITY: char = 'N';
 const DATA_BITS: i32 = 8;
@@ -31,11 +31,11 @@ fn main() {
 		// open Modbus connection
 		ctx.connect().expect("Verbindung mit ctx Fehlerhaft!");
 
-		ctx.write_registers(KY_REG, 2, &vec![0, 0x1267])
+		ctx.write_registers(KY_REG, 2, &[0, 0x1267])
 			.expect("Error while writing register KY_REG");
 		ctx.write_registers(reg, 2, &value)
 			.expect("Error while writing register as given by command-line argument");
-		ctx.write_registers(KY_REG, 2, &vec![0, 0])
+		ctx.write_registers(KY_REG, 2, &[0, 0])
 			.expect("Error while writing register KY_REG");
 
 		// close Modbus connection

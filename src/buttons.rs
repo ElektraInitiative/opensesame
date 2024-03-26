@@ -14,17 +14,14 @@ use systemstat::{Platform, System};
 
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
-use tokio::time::sleep;
 
 use crate::audio::AudioEvent;
 use crate::config::Config;
 use crate::nextcloud::NextcloudChat;
 use crate::nextcloud::NextcloudEvent;
-use crate::pwr::Pwr;
 
 use crate::types::ModuleError;
 use crate::validator::{Validation, Validator};
-use crate::watchdog;
 
 pub struct Buttons {
 	pub sequence: Vec<u8>,
@@ -75,7 +72,7 @@ pub enum CommandToButtons {
 	OpenDoor,
 	RingBell(u32, u32), // maybe implement it with interval
 	RingBellAlarm(u32),
-	SwitchLights(bool, bool, String), // This also need to implement the sending of a Message to nextcloud, which is now in Garage
+	SwitchLights(bool, bool, bool, String), // inside, outside, permanent, message
 }
 
 const BELL_MINIMUM_PERIOD: u32 = 20; // = 200ms shortest period time for bell
@@ -108,7 +105,7 @@ const RELAY_LICHT_AUSSEN: u8 = 0x01 << 1;
 
 const ALL_RELAYS: u8 = RELAY_DOOR | RELAY_LICHT_AUSSEN;
 
-const PINS1_INIT: u8 = 0b01100000;
+const PINS1_INIT: u8 = 0b01100000 + 15; // add 15 to avoid "⌛ Timeout mit Sequenz [15]" error
 
 // board 21
 
@@ -118,6 +115,7 @@ pub const BUTTON_LIGHT: u8 = 0x01;
 pub const BUTTON_BELL: u8 = 0x01 << 1;
 
 pub const TASTER_AUSSEN: u8 = BUTTON_LIGHT;
+// don't exist anymore, are now in haustuer.rs
 pub const TASTER_INNEN: u8 = 0x01 << 2;
 pub const TASTER_GLOCKE: u8 = 0x01 << 3; // = GPIO3 with external pull-up
 
@@ -168,6 +166,7 @@ impl Buttons {
 		self.board20
 			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
 			.expect("I2C Communication to Buttons does not work");
+		// Info: typical point to trigger shutdown via panic
 		self.board21
 			.smbus_write_byte_data(SET_TRIS, ALL_BUTTONS)
 			.unwrap();
@@ -305,9 +304,7 @@ impl Buttons {
 		let epins1 = self.board20.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins1 {
 			if self.failed_counter > 3 {
-				self.pins1 = PINS1_INIT;
-				self.pins2 = PINS2_INIT;
-				self.init();
+				self.do_reset();
 				return Err(format!("Board 20 with error {}", error));
 			}
 			self.failed_counter += 1;
@@ -317,9 +314,7 @@ impl Buttons {
 		let epins2 = self.board21.smbus_read_byte_data(GET_PORTS);
 		if let Err(error) = epins2 {
 			if self.failed_counter > 3 {
-				self.pins1 = PINS1_INIT;
-				self.pins2 = PINS2_INIT;
-				self.init();
+				self.do_reset();
 				return Err(format!("Board 21 with error {}", error));
 			}
 			self.failed_counter += 1;
@@ -437,8 +432,8 @@ impl Buttons {
 
 	/// returns what was done
 	/// usually extends light time
-	/// on double press event (on true) -> make light permanent on (until next press event)
-	pub fn switch_lights(&mut self, inside: bool, outside: bool) -> String {
+	/// if permanent==true: on double press event (on true) -> make light permanent on (until next press event)
+	pub fn switch_lights(&mut self, inside: bool, outside: bool, permanent: bool) -> String {
 		assert!(
 			inside || outside,
 			"logic error, at least one must be switched on!"
@@ -463,7 +458,7 @@ impl Buttons {
 			self.light_permanent = false;
 			self.light_timeout = 30; // turn off soon
 			return format!("Light {} not permanent anymore", which);
-		} else if inside && self.light_timeout > init_light_timeout - 200 {
+		} else if permanent && self.light_timeout > init_light_timeout - 200 {
 			self.light_permanent = true;
 			ret = "Light now permanently on".to_string();
 		} else if self.light_timeout > 1 {
@@ -480,40 +475,24 @@ impl Buttons {
 			self.board21
 				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_INNEN)
 				.unwrap();
+		} else if outside {
+			self.board21
+				.smbus_write_byte_data(SET_RELAYS_ON, RELAY_LICHT_AUSSEN)
+				.unwrap();
 		}
 		ret
 	}
 
-	async fn do_reset(
-		nextcloud_sender: Sender<NextcloudEvent>,
-		pwr: &mut Pwr,
-	) -> Result<(), ModuleError> {
-		if pwr.enabled() {
-			pwr.switch(false);
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(
-					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH off"),
-				))
-				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
-
-			pwr.switch(true);
-			nextcloud_sender
-				.send(NextcloudEvent::Chat(
-					NextcloudChat::Ping,
-					gettext("👋 Turned PWR_SWITCH on"),
-				))
-				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
-		}
-		Ok(())
+	fn do_reset(&mut self) {
+		self.pins1 = PINS1_INIT;
+		self.pins2 = PINS2_INIT;
+		self.init();
+		// communication hopefully works again
 	}
 
 	pub async fn get_background_task(
 		mut self,
 		mut validator: Validator,
-		mut pwr: Pwr,
 		time_format: String,
 		mut command_receiver: Receiver<CommandToButtons>,
 		nextcloud_sender: Sender<NextcloudEvent>,
@@ -532,11 +511,15 @@ impl Buttons {
 					CommandToButtons::RingBell(period, counter) => {
 						self.ring_bell(period, counter);
 					}
-					CommandToButtons::SwitchLights(inside, outside, _text) => {
+					CommandToButtons::SwitchLights(inside, outside, permanent, text) => {
 						nextcloud_sender
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
-								gettext!("{}", self.switch_lights(inside, outside)),
+								gettext!(
+									"{} {}",
+									self.switch_lights(inside, outside, permanent),
+									text
+								),
 							))
 							.await?;
 					}
@@ -578,7 +561,7 @@ impl Buttons {
 								NextcloudChat::Licht,
 								gettext!(
 									"💡 Pressed switch inside. {}.",
-									self.switch_lights(true, true)
+									self.switch_lights(true, true, true)
 								),
 							))
 							.await?;
@@ -588,8 +571,8 @@ impl Buttons {
 							.send(NextcloudEvent::Chat(
 								NextcloudChat::Licht,
 								gettext!(
-									"💡 Pressed switch outside or light button. {}.",
-									self.switch_lights(false, true),
+									"💡 Pressed light button. {}.",
+									self.switch_lights(false, true, false),
 								),
 							))
 							.await?;
@@ -636,7 +619,6 @@ impl Buttons {
 					nextcloud_sender
 						.send(NextcloudEvent::Chat(NextcloudChat::Ping, gettext!("⚠️ Error reading buttons of board {}. Load average: {} {} {}, Memory usage: {}, Swap: {}, CPU temp: {}", board, loadavg.one, loadavg.five, loadavg.fifteen, sys.memory().unwrap().total, sys.swap().unwrap().total, sys.cpu_temp().unwrap())))
 						.await?;
-					Buttons::do_reset(nextcloud_sender.clone(), &mut pwr).await?;
 				}
 			}
 			// Validation start
@@ -664,7 +646,7 @@ impl Buttons {
 								NextcloudChat::Licht,
 								gettext!(
 									"💡 Switch lights in and out. {}",
-									self.switch_lights(true, true)
+									self.switch_lights(true, true, false)
 								),
 							))
 							.await?;

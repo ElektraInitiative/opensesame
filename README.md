@@ -19,12 +19,12 @@ For what is missing, see [TODO.md](TODO.md).
 
 ## Disclaimer
 
-Currently there is no full beginner-friendly documentation on how to setup the system.
+Currently there is no complete beginner-friendly documentation on how to setup the system.
 If you are interested, please open an issue.
 [Installation](/doc/Install.md) is not difficult, though.
 
 As hardware hacking is involved I cannot guarantee that anything will work for you.
-It works for me, though.
+It works for me and worked for someone else, too.
 
 ## Quality Goals
 
@@ -46,7 +46,7 @@ On each Olimex, the same software runs but differently configured using Elektra.
 
 E.g. to set a new PIN 1234 for "us":
 
-kdb set user:/sw/libelektra/opensesame/#0/current/validator/us "[14, 15, 13, 15, 11, 15, 7, 15]"
+`kdb set user:/sw/libelektra/opensesame/#0/current/validator/us "[14, 15, 13, 15, 11, 15, 7, 15]"`
 
 Deployment is done via Ansible, see [an example](/ansible/playbook.yaml).
 

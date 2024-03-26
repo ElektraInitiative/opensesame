@@ -204,6 +204,7 @@ impl<'a> Signals<'a> {
 					if self.environment_enabled {
 						self.sigterm().await?;
 					}
+					panic!("Sigterm received");
 				}
 			}
 		}

@@ -4,7 +4,8 @@ use tokio::{fs::File, io::AsyncWriteExt, time::Interval};
 
 use crate::types::ModuleError;
 
-pub const SAFE_TIMEOUT: u64 = 15 * 1000; // safe to wait if trigger was done just before
+// irrelevant, as watchdog trigger happens async
+// pub const SAFE_TIMEOUT: u64 = 15 * 1000; // safe to wait if trigger was done just before
 
 pub struct Watchdog {}
 
