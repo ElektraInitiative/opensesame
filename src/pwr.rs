@@ -12,7 +12,6 @@ use gettextrs::gettext;
 
 use crate::config::Config;
 use crate::types::ModuleError;
-use crate::watchdog;
 
 const GPIO_PWR_LINE: u32 = 202; // UEXT1 (e.g. LIME-2 Shield) UART4-TX GPIO202 PG10
 
@@ -75,7 +74,7 @@ impl Pwr {
 					gettext("👋 Turned PWR switch OFF"),
 				))
 				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+			sleep(Duration::from_secs(30)).await;
 
 			self.switch(true);
 			nextcloud_sender
@@ -84,7 +83,7 @@ impl Pwr {
 					gettext("👋 Turned PWR switch ON"),
 				))
 				.await?;
-			sleep(Duration::from_millis(watchdog::SAFE_TIMEOUT)).await;
+			sleep(Duration::from_secs(10)).await;
 		}
 		Ok(())
 	}
