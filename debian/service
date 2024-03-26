@@ -2,6 +2,7 @@
 Description=opensesame
 Wants=network-online.target nss-lookup.target
 After=network.target network-online.target nss-lookup.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -18,6 +19,7 @@ IOSchedulingClass=realtime
 IOSchedulingPriority=0
 
 Restart=always
+RestartSec=1s
 ExecStart=/usr/bin/opensesame
 
 [Install]
